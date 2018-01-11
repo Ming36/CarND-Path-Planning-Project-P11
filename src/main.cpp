@@ -9,19 +9,28 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 
+#include "prediction.hpp"
+
 //using namespace std;
 
 // for convenience
 using json = nlohmann::json;
 
-// For converting back and forth between radians and degrees.
+/**
+ * Basic parameter helpers
+ */
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+double mps2mph(double x) { return x * 2.23694; }
+double mph2mps(double x) { return x / 2.23694; }
+double mps2pointdist(double x) { return x * 0.020; }
 
-// Checks if the SocketIO event has JSON data.
-// If there is data the JSON object in string format will be returned,
-// else the empty string "" will be returned.
+/**
+ * Checks if the SocketIO event has JSON data.
+ * If there is data the JSON object in string format will be returned,
+ * else the empty string "" will be returned.
+ */
 std::string hasData(std::string s) {
   auto found_null = s.find("null");
   auto b1 = s.find_first_of("[");
@@ -34,10 +43,16 @@ std::string hasData(std::string s) {
   return "";
 }
 
+/**
+ * Calculate Cartesian distance between two (x,y) points
+ */
 double distance(double x1, double y1, double x2, double y2) {
 	return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 }
 
+/**
+ * Find closest waypoint ahead or behind
+ */
 int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
                     const std::vector<double> &maps_y) {
 	
@@ -56,6 +71,9 @@ int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
 	return closestWaypoint;
 }
 
+/**
+ * Find next waypoint ahead
+ */
 int NextWaypoint(double x, double y, double theta,
                  const std::vector<double> &maps_x,
                  const std::vector<double> &maps_y) {
@@ -80,11 +98,14 @@ int NextWaypoint(double x, double y, double theta,
   return closestWaypoint;
 }
 
-// Transform from Cartesian x,y coordinates to Frenet s,d coordinates
+/**
+ * Transform a position from Cartesian x,y coordinates to Frenet s,d coordinates
+ */
 std::vector<double> getFrenet(double x, double y, double theta,
                               const std::vector<double> &maps_x,
                               const std::vector<double> &maps_y) {
 
+  // Find previous and next waypoints from map data
   int next_wp = NextWaypoint(x,y, theta, maps_x, maps_y);
 	int prev_wp;
 	prev_wp = next_wp - 1;
@@ -92,37 +113,70 @@ std::vector<double> getFrenet(double x, double y, double theta,
     prev_wp  = maps_x.size() - 1;
 	}
 
-	double n_x = maps_x[next_wp] - maps_x[prev_wp];
-	double n_y = maps_y[next_wp] - maps_y[prev_wp];
-	double x_x = x - maps_x[prev_wp];
-	double x_y = y - maps_y[prev_wp];
+  // Waypoint vector x and y components from prev waypoint to next waypoint
+	double vx_wp = maps_x[next_wp] - maps_x[prev_wp];
+	double vy_wp = maps_y[next_wp] - maps_y[prev_wp];
 
-	// find the projection of x onto n
-	double proj_norm = (x_x * n_x + x_y * n_y) / (n_x * n_x + n_y * n_y);
-	double proj_x = proj_norm * n_x;
-	double proj_y = proj_norm * n_y;
-	double frenet_d = distance(x_x, x_y, proj_x, proj_y);
+  // Position vector x and y components from prev waypoint to position coord
+  double vx_Pos = x - maps_x[prev_wp];
+	double vy_Pos = y - maps_y[prev_wp];
 
-	//see if d value is positive or negative by comparing it to a center point
+	// Find the projection of position vector onto waypoint vector
+	double proj_length = ((vx_Pos * vx_wp + vy_Pos * vy_wp) /
+                        (vx_wp * vx_wp + vy_wp * vy_wp));
+	
+  // Find the endpoint (x,y) of projection onto waypoint vector
+  double proj_endpt_x = proj_length * vx_wp;
+	double proj_endpt_y = proj_length * vy_wp;
+  
+  // Frenet d value is the normal distance from the endpoint to the position coord
+	double frenet_d = distance(vx_Pos, vy_Pos, proj_endpt_x, proj_endpt_y);
+
+	// See if d value is positive or negative by comparing it to a center point (1000, 2000)
 	double center_x = 1000 - maps_x[prev_wp];
 	double center_y = 2000 - maps_y[prev_wp];
-	double centerToPos = distance(center_x, center_y, x_x, x_y);
-	double centerToRef = distance(center_x, center_y, proj_x, proj_y);
+	double centerToPos = distance(center_x, center_y, vx_Pos, vy_Pos);
+	double centerToRef = distance(center_x, center_y, proj_endpt_x, proj_endpt_y);
   if(centerToPos <= centerToRef) {
 		frenet_d *= -1;
 	}
 
-	// calculate s value
+	// Calculate s value
 	double frenet_s = 0;
+  // Accumulate s values up to the previous waypoint
 	for (int i = 0; i < prev_wp; i++) {
 		frenet_s += distance(maps_x[i], maps_y[i], maps_x[i+1], maps_y[i+1]);
 	}
-	frenet_s += distance(0, 0, proj_x, proj_y);
+  // Add length of the position coord's projection along waypoint vector
+	frenet_s += distance(0, 0, proj_endpt_x, proj_endpt_y);
 
 	return {frenet_s, frenet_d};
 }
 
-// Transform from Frenet s,d coordinates to Cartesian x,y
+
+std::vector<double> getFrenetVel(double x, double y, double vx, double vy,
+                                 const std::vector<double> &maps_x,
+                                 const std::vector<double> &maps_y,
+                                 const std::vector<double> &maps_dx,
+                                 const std::vector<double> &maps_dy) {
+  
+  int closest_wp = ClosestWaypoint(x, y, maps_x, maps_y);
+  double dx = maps_dx[closest_wp];
+  double dy = maps_dy[closest_wp];
+  
+  double frenet_d_dot = (vx * dx + vy * dy);
+  double frenet_s_dot = sqrt(vx*vx + vy*vy - frenet_d_dot*frenet_d_dot);
+  
+  /*
+  std::cout << "vx:" << vx << ",vy:" << vy << ",dx:" << dx << ",dy:" << dy << ",d_dot:" << frenet_d_dot << ",s_dot:" << frenet_s_dot << std::endl;
+  */
+  
+  return {frenet_s_dot, frenet_d_dot};
+}
+
+/**
+ * Transform from Frenet s,d coordinates to Cartesian x,y
+ */
 std::vector<double> getXY(double s, double d, const std::vector<double> &maps_s,
                           const std::vector<double> &maps_x,
                           const std::vector<double> &maps_y) {
@@ -149,6 +203,9 @@ std::vector<double> getXY(double s, double d, const std::vector<double> &maps_s,
 	return {x, y};
 }
 
+/**
+ * Main loop
+ */
 int main() {
   uWS::Hub h;
 
@@ -160,7 +217,7 @@ int main() {
   std::vector<double> map_waypoints_dy;
 
   // Waypoint map to read from
-  std::string map_file_ = "../data/highway_map.csv";
+  std::string map_file_ = "../../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
@@ -230,10 +287,78 @@ int main() {
           
           //std::cout << sensor_fusion << std::endl;
         
+          Vehicle car_ego = Vehicle(-1);
+          car_ego.UpdateState(car_x, car_y, car_s, car_d, car_speed, 0, car_s, car_d);
+          
           /**
            * Prediction
            */
-
+          
+          std::cout << "Detected cars:" << std::endl;
+          constexpr double kSensorRange = 100.; // m
+          std::vector<Vehicle> cars_detected;
+          for (int i = 0; i < sensor_fusion.size(); ++i) {
+            double sensed_x = sensor_fusion[i][1];
+            double sensed_y = sensor_fusion[i][2];
+            double dist_to_sensed = distance(car_x, car_y, sensed_x, sensed_y);
+            
+            if (dist_to_sensed < kSensorRange) {
+              int sensed_id = sensor_fusion[i][0];
+              double sensed_vx = sensor_fusion[i][3];
+              double sensed_vy = sensor_fusion[i][4];
+              double sensed_s = sensor_fusion[i][5];
+              double sensed_d = sensor_fusion[i][6];
+              // Calculate s_dot and d_dot
+              std::vector<double> v_frenet = getFrenetVel(sensed_x, sensed_y, sensed_vx, sensed_vy, map_waypoints_x, map_waypoints_y, map_waypoints_dx, map_waypoints_dy);
+              double calc_s_dot = v_frenet[0];
+              double calc_d_dot = v_frenet[1];
+              
+              Vehicle sensed_car = Vehicle(sensed_id);
+              sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d, calc_s_dot, calc_d_dot, car_s, car_d);
+              
+              cars_detected.push_back(sensed_car);
+            }
+          }
+          
+          std::sort(cars_detected.begin(), cars_detected.end(),
+                    [ ](const Vehicle &lhs, const Vehicle &rhs)
+                       { return lhs.s_rel > rhs.s_rel; } );
+          
+          // Print out diagram of sensed cars for debugging
+          std::cout << std::endl;
+          std::string lane_mark;
+          for (int i = 100; i > -100; i = i - 10) {
+            for (int j_lane = 1; j_lane <= 3; ++j_lane) {
+              std::cout << "|";
+              lane_mark = "  ";
+              for (int k = 0; k < cars_detected.size(); ++k) {
+                if ((cars_detected[k].s_rel <= i+4) && (cars_detected[k].s_rel > i-6) && (cars_detected[k].lane == j_lane)) {
+                  if (cars_detected[k].veh_id < 10) {
+                    lane_mark = "0" + std::to_string(cars_detected[k].veh_id);
+                  }
+                  else {
+                    lane_mark = std::to_string(cars_detected[k].veh_id);
+                  }
+                }
+                else if ((i == 0) && (j_lane == car_ego.lane)) {
+                  lane_mark = "@@";
+                }
+              }
+              std::cout << lane_mark;
+            }
+            std::cout << "|" << std::endl;
+          }
+          std::cout << std::endl;
+          
+          /*
+          for (int i = 0; i < cars_detected.size(); ++i) {
+            std::cout << "ID: " << cars_detected[i].veh_id
+                      << ", Lane: " << cars_detected[i].lane
+                      << ", s_rel: " << cars_detected[i].s_rel
+                      << ", s_dot: " << mps2mph(cars_detected[i].s_dot)
+                      << std::endl;
+          }
+          */
           
           /**
            * Behavior Planning
@@ -255,11 +380,18 @@ int main() {
           std::vector<double> next_y_vals;
 
           // The car will visit each (x,y) point sequentially every .02 seconds
-          double dist_inc = 0.1;
+          double target_speed = 49.;
+          double dist_inc = mps2pointdist(mph2mps(target_speed));
           for(int i = 0; i < 50; i++)
           {
-            next_x_vals.push_back(car_x + (dist_inc * i)*cos(deg2rad(car_yaw)));
-            next_y_vals.push_back(car_y + (dist_inc * i)*sin(deg2rad(car_yaw)));
+            double new_car_s = car_s + (i+1) * dist_inc;
+            double new_car_d = car_d;
+            std::vector<double> new_car_xy = getXY(new_car_s, new_car_d,
+                                                   map_waypoints_s,
+                                                   map_waypoints_x,
+                                                   map_waypoints_y);
+            next_x_vals.push_back(new_car_xy[0]);
+            next_y_vals.push_back(new_car_xy[1]);
           }
           
           msgJson["next_x"] = next_x_vals;

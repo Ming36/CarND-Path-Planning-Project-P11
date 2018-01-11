@@ -34,6 +34,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		3F7CFB4E2005DE3A003CE28A /* prediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F7CFB4C2005DE3A003CE28A /* prediction.cpp */; };
 		97458F1B28654B978EE87D96 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FD0584EDACC341879BD5C354 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -62,6 +63,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3F7CFB4C2005DE3A003CE28A /* prediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = prediction.cpp; path = src/prediction.cpp; sourceTree = "<group>"; };
+		3F7CFB4D2005DE3A003CE28A /* prediction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = prediction.hpp; path = src/prediction.hpp; sourceTree = "<group>"; };
 		4B3492DC7EB740E9860BEA58 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		57B2FC4C542C4035BEC48A1C /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		6A8B11EF28BE406EA18001E7 /* path_planning */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = path_planning; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -133,6 +136,8 @@
 			isa = PBXGroup;
 			children = (
 				FD0584EDACC341879BD5C354 /* main.cpp */,
+				3F7CFB4C2005DE3A003CE28A /* prediction.cpp */,
+				3F7CFB4D2005DE3A003CE28A /* prediction.hpp */,
 			);
 			name = "Source Files";
 			sourceTree = "<group>";
@@ -213,6 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F7CFB4E2005DE3A003CE28A /* prediction.cpp in Sources */,
 				97458F1B28654B978EE87D96 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
