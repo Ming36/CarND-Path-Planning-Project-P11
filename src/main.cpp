@@ -9,22 +9,16 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 
+#include "path_helper.hpp"
+#include "vehicle.hpp"
 #include "prediction.hpp"
+#include "behavior.hpp"
+#include "trajectory.hpp"
 
 //using namespace std;
 
 // for convenience
 using json = nlohmann::json;
-
-/**
- * Basic parameter helpers
- */
-constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
-double mps2mph(double x) { return x * 2.23694; }
-double mph2mps(double x) { return x / 2.23694; }
-double mps2pointdist(double x) { return x * 0.020; }
 
 /**
  * Checks if the SocketIO event has JSON data.
@@ -44,163 +38,35 @@ std::string hasData(std::string s) {
 }
 
 /**
- * Calculate Cartesian distance between two (x,y) points
+ * Debug print output of the road lanes with detected vehicle positions
  */
-double distance(double x1, double y1, double x2, double y2) {
-	return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-}
-
-/**
- * Find closest waypoint ahead or behind
- */
-int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
-                    const std::vector<double> &maps_y) {
-	
-  double closestLen = 100000; //large number
-	int closestWaypoint = 0;
-
-	for (int i = 0; i < maps_x.size(); i++) {
-		double map_x = maps_x[i];
-		double map_y = maps_y[i];
-		double dist = distance(x,y,map_x,map_y);
-		if (dist < closestLen) {
-			closestLen = dist;
-			closestWaypoint = i;
-		}
-	}
-	return closestWaypoint;
-}
-
-/**
- * Find next waypoint ahead
- */
-int NextWaypoint(double x, double y, double theta,
-                 const std::vector<double> &maps_x,
-                 const std::vector<double> &maps_y) {
-
-  int closestWaypoint = ClosestWaypoint(x, y, maps_x, maps_y);
-
-	double map_x = maps_x[closestWaypoint];
-	double map_y = maps_y[closestWaypoint];
-
-	double heading = atan2((map_y-y), (map_x-x));
-
-	double angle = fabs(theta-heading);
-  angle = std::min(2*pi()-angle, angle);
-
-  if (angle > pi()/4) {
-    closestWaypoint++;
-    if (closestWaypoint == maps_x.size()) {
-      closestWaypoint = 0;
+void DebugPrintRoad(const std::vector<DetectedVehicle> cars_detected,
+                    const EgoVehicle ego_car) {
+  std::cout << "Detected cars:" << std::endl;
+  std::cout << std::endl;
+  std::string lane_mark;
+  for (int i = 100; i > -100; i = i - 10) {
+    for (int j_lane = 1; j_lane <= 3; ++j_lane) {
+      std::cout << "|";
+      lane_mark = "  ";
+      for (int k = 0; k < cars_detected.size(); ++k) {
+        if ((cars_detected[k].s_rel_ <= i+4) && (cars_detected[k].s_rel_ > i-6) && (cars_detected[k].lane_ == j_lane)) {
+          if (cars_detected[k].veh_id_ < 10) {
+            lane_mark = "0" + std::to_string(cars_detected[k].veh_id_);
+          }
+          else {
+            lane_mark = std::to_string(cars_detected[k].veh_id_);
+          }
+        }
+        else if ((i == 0) && (j_lane == ego_car.lane_)) {
+          lane_mark = "@@";
+        }
+      }
+      std::cout << lane_mark;
     }
+    std::cout << "|" << std::endl;
   }
-
-  return closestWaypoint;
-}
-
-/**
- * Transform a position from Cartesian x,y coordinates to Frenet s,d coordinates
- */
-std::vector<double> getFrenet(double x, double y, double theta,
-                              const std::vector<double> &maps_x,
-                              const std::vector<double> &maps_y) {
-
-  // Find previous and next waypoints from map data
-  int next_wp = NextWaypoint(x,y, theta, maps_x, maps_y);
-	int prev_wp;
-	prev_wp = next_wp - 1;
-	if (next_wp == 0) {
-    prev_wp  = maps_x.size() - 1;
-	}
-
-  // Waypoint vector x and y components from prev waypoint to next waypoint
-	double vx_wp = maps_x[next_wp] - maps_x[prev_wp];
-	double vy_wp = maps_y[next_wp] - maps_y[prev_wp];
-
-  // Position vector x and y components from prev waypoint to position coord
-  double vx_Pos = x - maps_x[prev_wp];
-	double vy_Pos = y - maps_y[prev_wp];
-
-	// Find the projection of position vector onto waypoint vector
-	double proj_length = ((vx_Pos * vx_wp + vy_Pos * vy_wp) /
-                        (vx_wp * vx_wp + vy_wp * vy_wp));
-	
-  // Find the endpoint (x,y) of projection onto waypoint vector
-  double proj_endpt_x = proj_length * vx_wp;
-	double proj_endpt_y = proj_length * vy_wp;
-  
-  // Frenet d value is the normal distance from the endpoint to the position coord
-	double frenet_d = distance(vx_Pos, vy_Pos, proj_endpt_x, proj_endpt_y);
-
-	// See if d value is positive or negative by comparing it to a center point (1000, 2000)
-	double center_x = 1000 - maps_x[prev_wp];
-	double center_y = 2000 - maps_y[prev_wp];
-	double centerToPos = distance(center_x, center_y, vx_Pos, vy_Pos);
-	double centerToRef = distance(center_x, center_y, proj_endpt_x, proj_endpt_y);
-  if(centerToPos <= centerToRef) {
-		frenet_d *= -1;
-	}
-
-	// Calculate s value
-	double frenet_s = 0;
-  // Accumulate s values up to the previous waypoint
-	for (int i = 0; i < prev_wp; i++) {
-		frenet_s += distance(maps_x[i], maps_y[i], maps_x[i+1], maps_y[i+1]);
-	}
-  // Add length of the position coord's projection along waypoint vector
-	frenet_s += distance(0, 0, proj_endpt_x, proj_endpt_y);
-
-	return {frenet_s, frenet_d};
-}
-
-
-std::vector<double> getFrenetVel(double x, double y, double vx, double vy,
-                                 const std::vector<double> &maps_x,
-                                 const std::vector<double> &maps_y,
-                                 const std::vector<double> &maps_dx,
-                                 const std::vector<double> &maps_dy) {
-  
-  int closest_wp = ClosestWaypoint(x, y, maps_x, maps_y);
-  double dx = maps_dx[closest_wp];
-  double dy = maps_dy[closest_wp];
-  
-  double frenet_d_dot = (vx * dx + vy * dy);
-  double frenet_s_dot = sqrt(vx*vx + vy*vy - frenet_d_dot*frenet_d_dot);
-  
-  /*
-  std::cout << "vx:" << vx << ",vy:" << vy << ",dx:" << dx << ",dy:" << dy << ",d_dot:" << frenet_d_dot << ",s_dot:" << frenet_s_dot << std::endl;
-  */
-  
-  return {frenet_s_dot, frenet_d_dot};
-}
-
-/**
- * Transform from Frenet s,d coordinates to Cartesian x,y
- */
-std::vector<double> getXY(double s, double d, const std::vector<double> &maps_s,
-                          const std::vector<double> &maps_x,
-                          const std::vector<double> &maps_y) {
-	
-  int prev_wp = -1;
-	while (s > maps_s[prev_wp+1] && (prev_wp < (int)(maps_s.size()-1))) {
-		prev_wp++;
-	}
-
-	int wp2 = (prev_wp+1) % maps_x.size();
-
-	double heading = atan2((maps_y[wp2] - maps_y[prev_wp]),
-                         (maps_x[wp2] - maps_x[prev_wp]));
-	// the x,y,s along the segment
-	double seg_s = (s - maps_s[prev_wp]);
-	double seg_x = maps_x[prev_wp] + seg_s * cos(heading);
-	double seg_y = maps_y[prev_wp] + seg_s * sin(heading);
-
-	double perp_heading = heading - pi()/2;
-
-	double x = seg_x + d * cos(perp_heading);
-	double y = seg_y + d * sin(perp_heading);
-
-	return {x, y};
+  std::cout << std::endl;
 }
 
 /**
@@ -209,20 +75,17 @@ std::vector<double> getXY(double s, double d, const std::vector<double> &maps_s,
 int main() {
   uWS::Hub h;
 
-  // Load up map values for waypoint's x,y,s and d normalized normal vectors
+  // Load up map values for waypoint's x,y,s and dx,dy normal vectors
   std::vector<double> map_waypoints_x;
   std::vector<double> map_waypoints_y;
   std::vector<double> map_waypoints_s;
   std::vector<double> map_waypoints_dx;
   std::vector<double> map_waypoints_dy;
-
-  // Waypoint map to read from
+  
   std::string map_file_ = "../../data/highway_map.csv";
-  // The max s value before wrapping around the track back to 0
-  double max_s = 6945.554;
+  //constexpr double kMaxS = 6945.554; // max before track wraps back to 0
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
-
   std::string line;
   while (getline(in_map_, line)) {
   	std::istringstream iss(line);
@@ -243,8 +106,11 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
+  // Instantiate ego car object to hold its data
+  EgoVehicle ego_car = EgoVehicle();
+  
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy]
+               &map_waypoints_dx, &map_waypoints_dy, &ego_car]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -264,93 +130,88 @@ int main() {
 
           /**
            * Sensor Fusion
+           *   1. Update ego car's state
+           *   2. Process detected cars within sensor range
+           *   3. Sort detected cars to start from farthest ahead of ego car
+           * Output:
+           *   ego_car, cars_detected
            */
 
         	// Main car's localization Data
-          double car_x = j[1]["x"];
-          double car_y = j[1]["y"];
-          double car_s = j[1]["s"];
-          double car_d = j[1]["d"];
-          double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
+          const double car_x = j[1]["x"];
+          const double car_y = j[1]["y"];
+          const double car_s = j[1]["s"];
+          const double car_d = j[1]["d"];
+          const double car_yaw = j[1]["yaw"];
+          const double car_speed = j[1]["speed"];
 
           // Previous path data given to the Planner
-          auto previous_path_x = j[1]["previous_path_x"];
-          auto previous_path_y = j[1]["previous_path_y"];
+          const auto previous_path_x = j[1]["previous_path_x"];
+          const auto previous_path_y = j[1]["previous_path_y"];
           
           // Previous path's end s and d values
-          double end_path_s = j[1]["end_path_s"];
-          double end_path_d = j[1]["end_path_d"];
+          //const double end_path_s = j[1]["end_path_s"];
+          //const double end_path_d = j[1]["end_path_d"];
 
           // List of detected cars on same side of road
-          auto sensor_fusion = j[1]["sensor_fusion"];
+          const auto sensor_fusion = j[1]["sensor_fusion"];
           
-          //std::cout << sensor_fusion << std::endl;
-        
-          Vehicle car_ego = Vehicle(-1);
-          car_ego.UpdateState(car_x, car_y, car_s, car_d, car_speed, 0, car_s, car_d);
+          // Update ego car's state
+          std::vector<double> calc_sd = GetFrenet(car_x, car_y, car_yaw, map_waypoints_x, map_waypoints_y);
           
-          /**
-           * Prediction
-           */
+          // DEBUG check accuracy of sensed vs calculated s,d
+          //std::cout << "car_s: " << car_s << ", calc_s: " << calc_sd[0] << ", gap: " << car_s - calc_sd[0] << std::endl;
+          //std::cout << "car_d: " << car_d << ", calc_d: " << calc_sd[1] << ", gap: " << car_d - calc_sd[1] << std::endl;
           
-          std::cout << "Detected cars:" << std::endl;
+          // TODO Calculate s_dot, d_dot using speed and yaw
+          const double car_s_dot = car_speed; // DUMMY use speed as s_dot
+          const double car_d_dot = 0; // DUMMY fix d_dot to zero
+          
+          ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot);
+          
+          // Process detected cars within sensor range
           constexpr double kSensorRange = 100.; // m
-          std::vector<Vehicle> cars_detected;
+          std::vector<DetectedVehicle> cars_detected;
+          
+          // Check all vehicles for distance
           for (int i = 0; i < sensor_fusion.size(); ++i) {
-            double sensed_x = sensor_fusion[i][1];
-            double sensed_y = sensor_fusion[i][2];
-            double dist_to_sensed = distance(car_x, car_y, sensed_x, sensed_y);
+            const double sensed_x = sensor_fusion[i][1];
+            const double sensed_y = sensor_fusion[i][2];
+            const double dist_to_sensed = Distance(car_x, car_y, sensed_x, sensed_y);
             
+            // Only process vehicles within sensor range
             if (dist_to_sensed < kSensorRange) {
-              int sensed_id = sensor_fusion[i][0];
-              double sensed_vx = sensor_fusion[i][3];
-              double sensed_vy = sensor_fusion[i][4];
-              double sensed_s = sensor_fusion[i][5];
-              double sensed_d = sensor_fusion[i][6];
-              // Calculate s_dot and d_dot
-              std::vector<double> v_frenet = getFrenetVel(sensed_x, sensed_y, sensed_vx, sensed_vy, map_waypoints_x, map_waypoints_y, map_waypoints_dx, map_waypoints_dy);
-              double calc_s_dot = v_frenet[0];
-              double calc_d_dot = v_frenet[1];
+              const int sensed_id = sensor_fusion[i][0];
+              const double sensed_vx = sensor_fusion[i][3];
+              const double sensed_vy = sensor_fusion[i][4];
+              const double sensed_s = sensor_fusion[i][5];
+              const double sensed_d = sensor_fusion[i][6];
               
-              Vehicle sensed_car = Vehicle(sensed_id);
-              sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d, calc_s_dot, calc_d_dot, car_s, car_d);
+              // Calculate s_dot and d_dot
+              const int sensed_closest_wp = ClosestWaypoint(sensed_x, sensed_y,
+                                                            map_waypoints_x,
+                                                            map_waypoints_y);
+              const std::vector<double> v_frenet = GetFrenetVelocity(sensed_vx, sensed_vy, sensed_closest_wp, map_waypoints_dx, map_waypoints_dy);
+              const double calc_s_dot = v_frenet[0];
+              const double calc_d_dot = v_frenet[1];
+              
+              // Build detected car object and add to array
+              DetectedVehicle sensed_car = DetectedVehicle(sensed_id);
+              sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d,
+                                     calc_s_dot, calc_d_dot);
+              sensed_car.UpdateRelDist(ego_car.s_, ego_car.d_);
               
               cars_detected.push_back(sensed_car);
             }
           }
           
+          // Sort detected cars to start from farthest ahead of ego car
           std::sort(cars_detected.begin(), cars_detected.end(),
-                    [ ](const Vehicle &lhs, const Vehicle &rhs)
-                       { return lhs.s_rel > rhs.s_rel; } );
-          
-          // Print out diagram of sensed cars for debugging
-          std::cout << std::endl;
-          std::string lane_mark;
-          for (int i = 100; i > -100; i = i - 10) {
-            for (int j_lane = 1; j_lane <= 3; ++j_lane) {
-              std::cout << "|";
-              lane_mark = "  ";
-              for (int k = 0; k < cars_detected.size(); ++k) {
-                if ((cars_detected[k].s_rel <= i+4) && (cars_detected[k].s_rel > i-6) && (cars_detected[k].lane == j_lane)) {
-                  if (cars_detected[k].veh_id < 10) {
-                    lane_mark = "0" + std::to_string(cars_detected[k].veh_id);
-                  }
-                  else {
-                    lane_mark = std::to_string(cars_detected[k].veh_id);
-                  }
-                }
-                else if ((i == 0) && (j_lane == car_ego.lane)) {
-                  lane_mark = "@@";
-                }
-              }
-              std::cout << lane_mark;
-            }
-            std::cout << "|" << std::endl;
-          }
-          std::cout << std::endl;
+                    [ ](const DetectedVehicle &lhs, const DetectedVehicle &rhs)
+                       { return lhs.s_rel_ > rhs.s_rel_; } ); // lambda sort
           
           /*
+          // DEBUG print detected car stats
           for (int i = 0; i < cars_detected.size(); ++i) {
             std::cout << "ID: " << cars_detected[i].veh_id
                       << ", Lane: " << cars_detected[i].lane
@@ -360,46 +221,66 @@ int main() {
           }
           */
           
+          
+          /**
+           * Prediction
+           *   1. Predict detected car behaviors and sort by lane
+           *   2. Predict trajectories for each vehicle over fixed time horizon
+           * Output:
+           *   veh_preds_lanetoleft, veh_preds_curlane, veh_preds_lanetoright
+           */
+          std::vector<DetectedVehicle> veh_preds_lanetoleft;
+          std::vector<DetectedVehicle> veh_preds_curlane;
+          std::vector<DetectedVehicle> veh_preds_lanetoright;
+          
+          
           /**
            * Behavior Planning
+           *   1. Use FSM to decide behavior ("KL", "PLCL", "PLCR", "LCL", "LCR")
+           *   Example criteria to decide lane change:
+           *     Check distance and speed of current preceding vehicle,
+           *     Find lane with fastest preceding vehicles,
+           *     Find lane with farthest preceding vehicles
+           * Output:
+           *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
            */
-
+          CarBehavior car_target_behavior;
           
           /**
            * Trajectory Generation
+           *   1. Generate potential end states for target behavior with perturbations
+           *   2. Generate potential JMT trajectories for each end state
+           *   3. Evaluate trajectories with cost function to select best trajectory
+           *       (keep following distance, prevent collisions, keep lane center,
+           *        minimize lateral jerk, etc)
+           *   4. Rate limit best trajectory
+           *   5. Convert best trajectory from (s,d) to (x,y)
+           * Output:
+           *   next_xy_vals [trajectory_x, trajectory_y]
            */
+          
+          // DUMMY trajectory path (x,y) coordinates
+          Trajectory next_xy_vals = GetTrajectory(car_s, car_d, map_waypoints_x, map_waypoints_y, map_waypoints_s);
           
           
           /**
            * Control
+           *   1. Pack and send JSON path trajectory coordinates
            */
           
           // Output vector of (x,y) path trajectory values to json message
           json msgJson;
-          std::vector<double> next_x_vals;
-          std::vector<double> next_y_vals;
-
-          // The car will visit each (x,y) point sequentially every .02 seconds
-          double target_speed = 49.;
-          double dist_inc = mps2pointdist(mph2mps(target_speed));
-          for(int i = 0; i < 50; i++)
-          {
-            double new_car_s = car_s + (i+1) * dist_inc;
-            double new_car_d = car_d;
-            std::vector<double> new_car_xy = getXY(new_car_s, new_car_d,
-                                                   map_waypoints_s,
-                                                   map_waypoints_x,
-                                                   map_waypoints_y);
-            next_x_vals.push_back(new_car_xy[0]);
-            next_y_vals.push_back(new_car_xy[1]);
-          }
-          
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          msgJson["next_x"] = next_xy_vals.coord1;
+          msgJson["next_y"] = next_xy_vals.coord2;
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
-          //this_thread::sleep_for(chrono::milliseconds(1000));
+          // Slow down path planning process loop
+          //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+          
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+          
+          // DEBUG print out diagram of sensed cars for debugging
+          DebugPrintRoad(cars_detected, ego_car);
         }
       } else {
         // Manual driving

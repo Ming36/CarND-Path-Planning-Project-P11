@@ -176,4 +176,8 @@ dependencies: \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/src/QR/ColPivHouseholderQR.h \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/json.hpp \
-  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_helper.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp
