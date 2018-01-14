@@ -13,12 +13,15 @@
 #include <math.h>
 #include <vector>
 
-constexpr double pi();
-double deg2rad(double x);
-double rad2deg(double x);
-double mps2mph(double x);
-double mph2mps(double x);
-double mps2pointdist(double x);
+/**
+ * Basic parameter helpers
+ */
+constexpr double pi() { return M_PI; }
+inline double deg2rad(double x) { return x * pi() / 180; }
+inline double rad2deg(double x) { return x * 180 / pi(); }
+inline double mps2mph(double x) { return x * 2.23694; }
+inline double mph2mps(double x) { return x / 2.23694; }
+inline double mps2pointdist(double x) { return x * 0.020; }
 
 double Distance(double x1, double y1, double x2, double y2);
 

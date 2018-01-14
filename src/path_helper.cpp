@@ -8,16 +8,6 @@
 #include "path_helper.hpp"
 
 /**
- * Basic parameter helpers
- */
-constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
-double mps2mph(double x) { return x * 2.23694; }
-double mph2mps(double x) { return x / 2.23694; }
-double mps2pointdist(double x) { return x * 0.020; }
-
-/**
  * Calculate Cartesian distance between two (x,y) points
  */
 double Distance(double x1, double y1, double x2, double y2) {

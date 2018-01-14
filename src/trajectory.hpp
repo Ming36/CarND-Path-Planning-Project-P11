@@ -12,15 +12,11 @@
 
 #include <vector>
 #include "path_helper.hpp"
+#include "vehicle.hpp"
 
-struct Trajectory {
-  std::vector<double> coord1;
-  std::vector<double> coord2;
-};
-
-Trajectory GetTrajectory(double car_s, double car_d,
-                                               const std::vector<double> &maps_x,
-                                               const std::vector<double> &maps_y,
-                                               const std::vector<double> &maps_s);
+VehTrajectory GetTrajectory(double car_s, double car_d,
+                            const std::vector<double> &maps_x,
+                            const std::vector<double> &maps_y,
+                            const std::vector<double> &maps_s);
 
 #endif /* trajectory_hpp */

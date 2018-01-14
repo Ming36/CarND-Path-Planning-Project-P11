@@ -15,12 +15,34 @@
 #include <string>
 #include <math.h>
 
+enum VehIntents {
+  kUnknown = -1,
+  kKeepLane = 0,
+  kPlanLaneChangeLeft = 1,
+  kPlanLaneChangeRight = 2,
+  kLaneChangeLeft = 3,
+  kLaneChangeRight = 4
+};
+
+struct VehBehavior {
+  VehIntents intent;
+  int car_ahead_id;
+  int target_lane;
+  double target_time;
+  std::vector<double> target_state_vals;
+};
+
+struct VehTrajectory {
+  std::vector<double> x;
+  std::vector<double> y;
+  std::vector<double> s;
+  std::vector<double> d;
+  std::vector<double> t;
+  double probability;
+};
+
 class Vehicle {
 public:
-  /*
-   std::map<std::string, int> lane_direction = {{"PLCL", 1}, {"LCL", 1},
-   {"LCR", -1}, {"PLCR", -1}};
-   */
   
   int veh_id_;
   int lane_;
@@ -41,14 +63,17 @@ public:
   double d_prev_;
   double d_dot_prev_;
   
-  std::string intent_; // "KL", "LCL", "LCR"
-  std::vector<double*> state_; // array of pointers to current state values
-  std::vector<double> trajectory_s_;
-  std::vector<double> trajectory_d_;
+  VehIntents intent_;
+  VehTrajectory trajectory_;
+  
+  //std::vector<double*> state_vals_; // array of pointers to current state values
+  //std::vector<double> trajectory_s_;
+  //std::vector<double> trajectory_d_;
   
   /**
    * Constructor
    */
+  Vehicle();
   Vehicle(int veh_id);
   
   /**
@@ -71,7 +96,8 @@ public:
   /**
    * Constructor
    */
-  EgoVehicle(int id = -1);
+  EgoVehicle();
+  EgoVehicle(int id);
   
   /**
    * Destructor
@@ -88,6 +114,7 @@ public:
   /**
    * Constructor
    */
+  DetectedVehicle();
   DetectedVehicle(int id);
   
   /**

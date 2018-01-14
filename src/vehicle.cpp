@@ -10,9 +10,13 @@
 /**
  * Constructor
  */
+Vehicle::Vehicle() {
+  intent_ = kUnknown;
+}
 Vehicle::Vehicle(int veh_id) {
   veh_id_ = veh_id;
-  state_ = {&s_, &s_dot_, &s_dot_dot_, &d_, &d_dot_, &d_dot_dot_};
+  intent_ = kUnknown;
+  //state_vals_ = {&s_, &s_dot_, &s_dot_dot_, &d_, &d_dot_, &d_dot_dot_};
 }
 
 /**
@@ -72,6 +76,7 @@ void Vehicle::UpdateState(double x, double y, double s, double d, double s_dot, 
 /**
  * Constructor
  */
+EgoVehicle::EgoVehicle() : Vehicle() { }
 EgoVehicle::EgoVehicle(int id) : Vehicle(id) { }
 
 /**
@@ -83,6 +88,7 @@ EgoVehicle::~EgoVehicle() { }
 /**
  * Constructor
  */
+DetectedVehicle::DetectedVehicle() : Vehicle() { }
 DetectedVehicle::DetectedVehicle(int id) : Vehicle(id) { }
 
 /**

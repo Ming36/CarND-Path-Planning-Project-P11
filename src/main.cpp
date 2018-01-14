@@ -40,26 +40,36 @@ std::string hasData(std::string s) {
 /**
  * Debug print output of the road lanes with detected vehicle positions
  */
-void DebugPrintRoad(const std::vector<DetectedVehicle> cars_detected,
-                    const EgoVehicle ego_car) {
+void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
+                    const EgoVehicle &ego_car) {
+  
   std::cout << "Detected cars:" << std::endl;
   std::cout << std::endl;
   std::string lane_mark;
-  for (int i = 100; i > -100; i = i - 10) {
+  std::map<int, DetectedVehicle>::const_iterator it;
+  
+  for (double i = 100; i > -100; i = i - 10) {
     for (int j_lane = 1; j_lane <= 3; ++j_lane) {
       std::cout << "|";
       lane_mark = "  ";
-      for (int k = 0; k < cars_detected.size(); ++k) {
-        if ((cars_detected[k].s_rel_ <= i+4) && (cars_detected[k].s_rel_ > i-6) && (cars_detected[k].lane_ == j_lane)) {
-          if (cars_detected[k].veh_id_ < 10) {
-            lane_mark = "0" + std::to_string(cars_detected[k].veh_id_);
+      
+      if ((i == 0) && (j_lane == ego_car.lane_)) {
+        lane_mark = "@@"; // mark ego car
+      }
+      else {
+        // Detected cars as map
+        it = detected_cars.begin();
+        while (it != detected_cars.end()) {
+          if ((it->second.s_rel_ <= i+4) && (it->second.s_rel_ > i-6) &&
+              (it->second.lane_ == j_lane)) {
+            if (it->second.veh_id_ < 10) {
+              lane_mark = "0" + std::to_string(it->second.veh_id_);
+            }
+            else {
+              lane_mark = std::to_string(it->second.veh_id_);
+            }
           }
-          else {
-            lane_mark = std::to_string(cars_detected[k].veh_id_);
-          }
-        }
-        else if ((i == 0) && (j_lane == ego_car.lane_)) {
-          lane_mark = "@@";
+          it++;
         }
       }
       std::cout << lane_mark;
@@ -106,11 +116,12 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  // Instantiate ego car object to hold its data
-  EgoVehicle ego_car = EgoVehicle();
+  // Instantiate ego car object and map of detected cars to hold their data
+  EgoVehicle ego_car = EgoVehicle(-1);
+  std::map<int, DetectedVehicle> detected_cars;
   
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy, &ego_car]
+               &map_waypoints_dx, &map_waypoints_dy, &ego_car, &detected_cars]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -134,7 +145,7 @@ int main() {
            *   2. Process detected cars within sensor range
            *   3. Sort detected cars to start from farthest ahead of ego car
            * Output:
-           *   ego_car, cars_detected
+           *   ego_car, detected_cars
            */
 
         	// Main car's localization Data
@@ -171,17 +182,16 @@ int main() {
           
           // Process detected cars within sensor range
           constexpr double kSensorRange = 100.; // m
-          std::vector<DetectedVehicle> cars_detected;
           
           // Check all vehicles for distance
           for (int i = 0; i < sensor_fusion.size(); ++i) {
+            const int sensed_id = sensor_fusion[i][0];
             const double sensed_x = sensor_fusion[i][1];
             const double sensed_y = sensor_fusion[i][2];
             const double dist_to_sensed = Distance(car_x, car_y, sensed_x, sensed_y);
             
-            // Only process vehicles within sensor range
             if (dist_to_sensed < kSensorRange) {
-              const int sensed_id = sensor_fusion[i][0];
+              // Vehicle within sensor range
               const double sensed_vx = sensor_fusion[i][3];
               const double sensed_vy = sensor_fusion[i][4];
               const double sensed_s = sensor_fusion[i][5];
@@ -195,20 +205,60 @@ int main() {
               const double calc_s_dot = v_frenet[0];
               const double calc_d_dot = v_frenet[1];
               
-              // Build detected car object and add to array
-              DetectedVehicle sensed_car = DetectedVehicle(sensed_id);
-              sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d,
-                                     calc_s_dot, calc_d_dot);
-              sensed_car.UpdateRelDist(ego_car.s_, ego_car.d_);
-              
-              cars_detected.push_back(sensed_car);
+              if (detected_cars.count(sensed_id) == 0) {
+                // New sensed vehicle, build detected vehicle object to add
+                DetectedVehicle sensed_car = DetectedVehicle(sensed_id);
+                sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d,
+                                       calc_s_dot, calc_d_dot);
+                sensed_car.UpdateRelDist(ego_car.s_, ego_car.d_);
+                
+                detected_cars[sensed_car.veh_id_] = sensed_car;
+              }
+              else {
+                // Vehicle already in map, just update values
+                detected_cars[sensed_id].UpdateState(sensed_x, sensed_y,
+                                                     sensed_s, sensed_d,
+                                                     calc_s_dot, calc_d_dot);
+                detected_cars[sensed_id].UpdateRelDist(ego_car.s_, ego_car.d_);
+              }
+            }
+            else {
+              // Vehicle outside of sensor range, remove it from map
+              if (detected_cars.count(sensed_id) > 0) {
+                detected_cars.erase(sensed_id);
+              }
             }
           }
           
-          // Sort detected cars to start from farthest ahead of ego car
+          // Sort detected vehicle id's by lane
+          std::map<int, std::vector<int>> car_ids_by_lane;
+          std::map<int, DetectedVehicle>::iterator it = detected_cars.begin();
+          while (it != detected_cars.end()) {
+            car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
+            it++;
+          }
+          
+          
+          // DEBUG Print out car id's sorted by lane
+          std::cout << "Cars sorted by lane:" << std::endl;
+          std::map<int, std::vector<int>>::iterator it2 = car_ids_by_lane.begin();
+          while (it2 != car_ids_by_lane.end()) {
+            std::cout << "lane #" << it2->first << " - ";
+            for (int i=0; i < it2->second.size(); ++i) {
+              std::cout << it2->second[i] << ", ";
+            }
+            std::cout << std::endl;
+            it2++;
+          }
+          std::cout << std::endl;
+          
+          
+          // Sort detected cars vector to start from farthest ahead of ego car
+          /*
           std::sort(cars_detected.begin(), cars_detected.end(),
                     [ ](const DetectedVehicle &lhs, const DetectedVehicle &rhs)
                        { return lhs.s_rel_ > rhs.s_rel_; } ); // lambda sort
+          */
           
           /*
           // DEBUG print detected car stats
@@ -227,16 +277,16 @@ int main() {
            *   1. Predict detected car behaviors and sort by lane
            *   2. Predict trajectories for each vehicle over fixed time horizon
            * Output:
-           *   veh_preds_lanetoleft, veh_preds_curlane, veh_preds_lanetoright
+           *   detected_cars, car_ids_by_lane
            */
-          std::vector<DetectedVehicle> veh_preds_lanetoleft;
-          std::vector<DetectedVehicle> veh_preds_curlane;
-          std::vector<DetectedVehicle> veh_preds_lanetoright;
+          constexpr double kPredictTime = 1.0; // sec
+          PredictBehavior(detected_cars, car_ids_by_lane);
+          PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
           
           
           /**
            * Behavior Planning
-           *   1. Use FSM to decide behavior ("KL", "PLCL", "PLCR", "LCL", "LCR")
+           *   1. Use FSM to decide intent ("KL", "PLCL", "PLCR", "LCL", "LCR")
            *   Example criteria to decide lane change:
            *     Check distance and speed of current preceding vehicle,
            *     Find lane with fastest preceding vehicles,
@@ -244,7 +294,8 @@ int main() {
            * Output:
            *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
            */
-          CarBehavior car_target_behavior;
+          VehBehavior car_target_behavior;
+          
           
           /**
            * Trajectory Generation
@@ -260,7 +311,7 @@ int main() {
            */
           
           // DUMMY trajectory path (x,y) coordinates
-          Trajectory next_xy_vals = GetTrajectory(car_s, car_d, map_waypoints_x, map_waypoints_y, map_waypoints_s);
+          VehTrajectory next_xy_vals = GetTrajectory(car_s, car_d, map_waypoints_x, map_waypoints_y, map_waypoints_s);
           
           
           /**
@@ -270,8 +321,8 @@ int main() {
           
           // Output vector of (x,y) path trajectory values to json message
           json msgJson;
-          msgJson["next_x"] = next_xy_vals.coord1;
-          msgJson["next_y"] = next_xy_vals.coord2;
+          msgJson["next_x"] = next_xy_vals.x;
+          msgJson["next_y"] = next_xy_vals.y;
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
           // Slow down path planning process loop
@@ -280,7 +331,7 @@ int main() {
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
           
           // DEBUG print out diagram of sensed cars for debugging
-          DebugPrintRoad(cars_detected, ego_car);
+          DebugPrintRoad(detected_cars, ego_car);
         }
       } else {
         // Manual driving
