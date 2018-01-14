@@ -12,6 +12,7 @@
 
 #include <math.h>
 #include <vector>
+#include "Eigen-3.3/Eigen/Dense"
 
 /**
  * Basic parameter helpers
@@ -44,5 +45,8 @@ std::vector<double> GetXY(double s, double d,
                           const std::vector<double> &maps_s,
                           const std::vector<double> &maps_x,
                           const std::vector<double> &maps_y);
+
+std::vector<double> JMT(std::vector< double> start, std::vector <double> end,
+                        double t_end);
 
 #endif /* path_helper_hpp */

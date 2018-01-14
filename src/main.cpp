@@ -46,7 +46,6 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
   std::cout << "Detected cars:" << std::endl;
   std::cout << std::endl;
   std::string lane_mark;
-  std::map<int, DetectedVehicle>::const_iterator it;
   
   for (double i = 100; i > -100; i = i - 10) {
     for (int j_lane = 1; j_lane <= 3; ++j_lane) {
@@ -58,8 +57,8 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
       }
       else {
         // Detected cars as map
-        it = detected_cars.begin();
-        while (it != detected_cars.end()) {
+        for (std::map<int, DetectedVehicle>::const_iterator it =
+             detected_cars.begin(); it != detected_cars.end(); ++it) {
           if ((it->second.s_rel_ <= i+4) && (it->second.s_rel_ > i-6) &&
               (it->second.lane_ == j_lane)) {
             if (it->second.veh_id_ < 10) {
@@ -69,7 +68,6 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
               lane_mark = std::to_string(it->second.veh_id_);
             }
           }
-          it++;
         }
       }
       std::cout << lane_mark;
@@ -232,23 +230,21 @@ int main() {
           
           // Sort detected vehicle id's by lane
           std::map<int, std::vector<int>> car_ids_by_lane;
-          std::map<int, DetectedVehicle>::iterator it = detected_cars.begin();
-          while (it != detected_cars.end()) {
+          for (std::map<int, DetectedVehicle>::iterator it = detected_cars.begin();
+               it != detected_cars.end(); ++it) {
             car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
-            it++;
           }
           
           
           // DEBUG Print out car id's sorted by lane
           std::cout << "Cars sorted by lane:" << std::endl;
-          std::map<int, std::vector<int>>::iterator it2 = car_ids_by_lane.begin();
-          while (it2 != car_ids_by_lane.end()) {
-            std::cout << "lane #" << it2->first << " - ";
-            for (int i=0; i < it2->second.size(); ++i) {
-              std::cout << it2->second[i] << ", ";
+          for (std::map<int, std::vector<int>>::iterator it = car_ids_by_lane.begin();
+               it != car_ids_by_lane.end(); ++it) {
+            std::cout << "lane #" << it->first << " - ";
+            for (int i=0; i < it->second.size(); ++i) {
+              std::cout << it->second[i] << ", ";
             }
             std::cout << std::endl;
-            it2++;
           }
           std::cout << std::endl;
           
