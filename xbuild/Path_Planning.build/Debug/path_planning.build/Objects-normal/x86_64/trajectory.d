@@ -1,7 +1,7 @@
 dependencies: \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp \
-  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_helper.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/Dense \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/Core \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/src/Core/util/DisableStupidWarnings.h \

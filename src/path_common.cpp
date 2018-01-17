@@ -1,11 +1,11 @@
 //
-//  path_helper.cpp
+//  path_common.cpp
 //  Path_Planning
 //
 //  Created by Student on 1/12/18.
 //
 
-#include "path_helper.hpp"
+#include "path_common.hpp"
 
 /**
  * Calculate Cartesian distance between two (x,y) points
@@ -211,13 +211,18 @@ std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
    [0.0, 10.0, 0.0, 0.0, 0.0, 0.0]
    */
   
+  const double t_end2 = t_end * t_end;
+  const double t_end3 = t_end2 * t_end;
+  const double t_end4 = t_end3 * t_end;
+  const double t_end5 = t_end4 * t_end;
+  
   Eigen::MatrixXd A = Eigen::MatrixXd(3, 3);
-  A << pow(t_end,3), pow(t_end, 4), pow(t_end, 5),
-       3*pow(t_end, 2), 4*pow(t_end,3), 5*pow(t_end,4),
-       6*t_end, 12*pow(t_end,2), 20*pow(t_end,3);
+  A << t_end3, t_end4, t_end5,
+       3*t_end2, 4*t_end3, 5*t_end4,
+       6*t_end, 12*t_end2, 20*t_end3;
   
   Eigen::MatrixXd B = Eigen::MatrixXd(3,1);
-  B << end[0]-(start[0]+start[1]*t_end+0.5*start[2]*pow(t_end,2)),
+  B << end[0]-(start[0]+start[1]*t_end+0.5*start[2]*t_end2),
        end[1]-(start[1]+start[2]*t_end),
        end[2]-start[2];
   
@@ -225,10 +230,18 @@ std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
   Eigen::MatrixXd C = Ai * B;
   
   std::vector <double> result = {start[0], start[1], 0.5*start[2]};
-  for(int i = 0; i < C.size(); i++)
-  {
+  for(int i = 0; i < C.size(); i++) {
     result.push_back(C.data()[i]);
   }
   
   return result;
 }
+
+double EvalPoly(double x, std::vector<double> coeffs){
+  double y = 0;
+  for (int i=0; i < coeffs.size(); ++i) {
+    y += coeffs[i] * pow(x, i);
+  }
+  return y;
+}
+

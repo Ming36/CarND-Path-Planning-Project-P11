@@ -37,7 +37,7 @@
 		3F6BCFFC20081E700054E514 /* vehicle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BCFFA20081E700054E514 /* vehicle.cpp */; };
 		3F6BCFFF2009500B0054E514 /* behavior.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BCFFD2009500B0054E514 /* behavior.cpp */; };
 		3F6BD002200950270054E514 /* trajectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BD000200950270054E514 /* trajectory.cpp */; };
-		3F6BD005200951BB0054E514 /* path_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BD003200951BB0054E514 /* path_helper.cpp */; };
+		3F6BD005200951BB0054E514 /* path_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BD003200951BB0054E514 /* path_common.cpp */; };
 		3F7CFB4E2005DE3A003CE28A /* prediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F7CFB4C2005DE3A003CE28A /* prediction.cpp */; };
 		97458F1B28654B978EE87D96 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FD0584EDACC341879BD5C354 /* main.cpp */; };
 /* End PBXBuildFile section */
@@ -73,8 +73,8 @@
 		3F6BCFFE2009500B0054E514 /* behavior.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = behavior.hpp; path = src/behavior.hpp; sourceTree = "<group>"; };
 		3F6BD000200950270054E514 /* trajectory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = trajectory.cpp; path = src/trajectory.cpp; sourceTree = "<group>"; };
 		3F6BD001200950270054E514 /* trajectory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = trajectory.hpp; path = src/trajectory.hpp; sourceTree = "<group>"; };
-		3F6BD003200951BB0054E514 /* path_helper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = path_helper.cpp; path = src/path_helper.cpp; sourceTree = "<group>"; };
-		3F6BD004200951BB0054E514 /* path_helper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = path_helper.hpp; path = src/path_helper.hpp; sourceTree = "<group>"; };
+		3F6BD003200951BB0054E514 /* path_common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = path_common.cpp; path = src/path_common.cpp; sourceTree = "<group>"; };
+		3F6BD004200951BB0054E514 /* path_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = path_common.hpp; path = src/path_common.hpp; sourceTree = "<group>"; };
 		3F7CFB4C2005DE3A003CE28A /* prediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = prediction.cpp; path = src/prediction.cpp; sourceTree = "<group>"; };
 		3F7CFB4D2005DE3A003CE28A /* prediction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = prediction.hpp; path = src/prediction.hpp; sourceTree = "<group>"; };
 		4B3492DC7EB740E9860BEA58 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
@@ -148,8 +148,8 @@
 			isa = PBXGroup;
 			children = (
 				FD0584EDACC341879BD5C354 /* main.cpp */,
-				3F6BD004200951BB0054E514 /* path_helper.hpp */,
-				3F6BD003200951BB0054E514 /* path_helper.cpp */,
+				3F6BD004200951BB0054E514 /* path_common.hpp */,
+				3F6BD003200951BB0054E514 /* path_common.cpp */,
 				3F6BCFFB20081E700054E514 /* vehicle.hpp */,
 				3F6BCFFA20081E700054E514 /* vehicle.cpp */,
 				3F7CFB4D2005DE3A003CE28A /* prediction.hpp */,
@@ -238,7 +238,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F6BD005200951BB0054E514 /* path_helper.cpp in Sources */,
+				3F6BD005200951BB0054E514 /* path_common.cpp in Sources */,
 				3F7CFB4E2005DE3A003CE28A /* prediction.cpp in Sources */,
 				3F6BD002200950270054E514 /* trajectory.cpp in Sources */,
 				3F6BCFFF2009500B0054E514 /* behavior.cpp in Sources */,

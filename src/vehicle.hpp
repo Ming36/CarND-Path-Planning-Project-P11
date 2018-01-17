@@ -15,6 +15,8 @@
 #include <string>
 #include <math.h>
 
+#include "path_common.hpp"
+
 enum VehIntents {
   kUnknown = -1,
   kKeepLane = 0,
@@ -81,7 +83,7 @@ public:
    */
   virtual ~Vehicle();
   
-  void UpdateState(double x, double y, double s, double d, double s_dot, double d_dot);
+  void UpdateState(double x, double y, double s, double d, double s_dot, double d_dot, double s_dot_dot, double d_dot_dot);
   
 };
 
@@ -89,9 +91,14 @@ public:
 class EgoVehicle : public Vehicle {
 public:
   
-  std::vector<double> coeffs_JMT_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_dot_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_dot_dot_; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_s_; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_s_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_s_dot_dot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  
+  std::vector<double> coeffs_JMT_d_; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_d_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_d_dot_dot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+
 
   /**
    * Constructor

@@ -11,10 +11,10 @@
 #include <stdio.h>
 
 #include <vector>
-#include "path_helper.hpp"
+#include "path_common.hpp"
 #include "vehicle.hpp"
 
-VehTrajectory GetTrajectory(double car_s, double car_d,
+void GetTrajectory(EgoVehicle &ego_car, double target_t,
                             const std::vector<double> &maps_x,
                             const std::vector<double> &maps_y,
                             const std::vector<double> &maps_s);

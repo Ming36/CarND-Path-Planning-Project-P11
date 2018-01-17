@@ -12,7 +12,7 @@
 
 #include <vector>
 #include <map>
-#include "path_helper.hpp"
+#include "path_common.hpp"
 #include "vehicle.hpp"
 
 void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,

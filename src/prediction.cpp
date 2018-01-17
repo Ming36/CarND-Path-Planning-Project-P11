@@ -19,7 +19,7 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       DetectedVehicle* cur_car = &detected_cars[cur_car_id];
       
       // Predict behavior for this detected car
-      constexpr double kLatVelLaneChange = 5.0; // mph
+      
       if ((cur_car->intent_ == kKeepLane) && (cur_car->d_dot_ > mph2mps(kLatVelLaneChange))) {
         cur_car->intent_ = kLaneChangeRight;
         
