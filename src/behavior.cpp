@@ -9,14 +9,14 @@
 
 
 
-VehBehavior VehBehaviorFSM(EgoVehicle ego_car,
-                           std::vector<DetectedVehicle> veh_preds_lanetoleft,
-                           std::vector<DetectedVehicle> veh_preds_curlane,
-                           std::vector<DetectedVehicle> veh_preds_lanetoright) {
-  
-  VehBehavior target_behavior;
-  target_behavior.intent = kKeepLane;
-  target_behavior.target_lane = ego_car.lane_; // DUMMY
-  target_behavior.target_state_vals = {30, 0, 0, 6, 0, 0}; // DUMMY
-  return target_behavior;
+void VehBehaviorFSM(EgoVehicle &ego_car,
+                    const std::map<int, DetectedVehicle> &detected_cars,
+                    const std::map<int, std::vector<int>> &car_ids_by_lane) {
+  ego_car.behavior_.intent = kKeepLane;
+  ego_car.behavior_.target_lane = ego_car.lane_; // DUMMY
+  ego_car.behavior_.target_time = kPredictTime;
+
+  if (ego_car.s_ > 220) {
+    ego_car.behavior_.target_lane = 1; // DUMMY
+  }
 }

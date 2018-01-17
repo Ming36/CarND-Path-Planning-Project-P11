@@ -18,9 +18,9 @@
  * Constant parameters
  */
 constexpr double kSensorRange = 100.; // m
-constexpr double kPredictTime = 2.0; // sec
+constexpr double kPredictTime = 3.0; // sec
 constexpr double kLaneWidth = 4.0; // m
-constexpr double kLatVelLaneChange = 5.0; // mph
+constexpr double kLatVelLaneChange = 5.0; // mph (2.2352 m/s)
 constexpr double kTargetSpeed = 44.7387; // mph (20 m/s)
 constexpr double kSimCycleTime = 0.02; // sec
 constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
@@ -61,5 +61,7 @@ std::vector<double> JMT(std::vector< double> start, std::vector <double> end,
                         double t_end);
 
 double EvalPoly(double x, std::vector<double> coeffs);
+
+std::vector<double> DiffPoly(std::vector<double> coeffs);
 
 #endif /* path_helper_hpp */

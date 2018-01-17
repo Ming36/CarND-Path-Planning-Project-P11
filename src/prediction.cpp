@@ -60,7 +60,7 @@ void PredictTrajectory(std::map<int, DetectedVehicle> &detected_cars,
       int cur_car_id = it->second[i];
       DetectedVehicle* cur_car = &detected_cars[cur_car_id];
       
-      
+      // TODO Generate trajectories for each detected car
       
     }
   }

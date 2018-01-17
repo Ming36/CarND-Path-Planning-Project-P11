@@ -119,19 +119,15 @@ int main() {
   std::map<int, DetectedVehicle> detected_cars;
   long int count = 0;
   
-  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy, &ego_car, &detected_cars, &count]
+  h.onMessage([&count, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+               &map_waypoints_dx, &map_waypoints_dy, &ego_car, &detected_cars]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
                 
-    // Store time at start of processing received data for latency estimation
-    auto t_msg = std::chrono::high_resolution_clock::now();
-    auto t_msg_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(t_msg);
-    auto value = t_msg_ms.time_since_epoch();
-    long duration = value.count();
-                
-    //auto t_msg_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-    //            (std::chrono::high_resolution_clock::now());
+    // DEBUG Log time at start of processing received data
+    auto t_msg = std::chrono::time_point_cast<std::chrono::milliseconds>
+                (std::chrono::high_resolution_clock::now())
+                .time_since_epoch().count();
                 
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -158,6 +154,7 @@ int main() {
            */
 
           count++;
+          
           //std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
           //std::cout << "Loop #" << count << std::endl;
           
@@ -166,70 +163,52 @@ int main() {
           const double car_y = j[1]["y"];
           const double car_s = j[1]["s"];
           const double car_d = j[1]["d"];
-          const double car_yaw = j[1]["yaw"];
-          const double car_speed = j[1]["speed"];
+          //const double car_yaw = j[1]["yaw"];
+          //const double car_speed = j[1]["speed"];
 
           // Previous path data given to the Planner
           const auto previous_path_x = j[1]["previous_path_x"];
           const auto previous_path_y = j[1]["previous_path_y"];
           
           // Previous path's end s and d values
-          const double end_path_s = j[1]["end_path_s"];
-          const double end_path_d = j[1]["end_path_d"];
+          //const double end_path_s = j[1]["end_path_s"];
+          //const double end_path_d = j[1]["end_path_d"];
 
           // List of detected cars on same side of road
           const auto sensor_fusion = j[1]["sensor_fusion"];
-          
-          // Update ego car's state
-          //std::vector<double> calc_sd = GetFrenet(car_x, car_y, car_yaw, map_waypoints_x, map_waypoints_y);
-          
-          // DEBUG check accuracy of sensed vs calculated s,d
-          //std::cout << "car_s: " << car_s << ", calc_s: " << calc_sd[0] << ", gap: " << car_s - calc_sd[0] << std::endl;
-          //std::cout << "car_d: " << car_d << ", calc_d: " << calc_sd[1] << ", gap: " << car_d - calc_sd[1] << std::endl;
-          
-          // TODO Calculate s_dot, d_dot using speed and yaw
-          /*
-          std::cout << "last trajectory size: " << ego_car.trajectory_.s.size() << ", prev path x size: " << previous_path_x.size() << std::endl;
-          int end = 0;
-          if (ego_car.trajectory_.s.size() > 0) {
-            end = ego_car.trajectory_.s.size()-1;
-            std::cout << "prev traj end s: " << ego_car.trajectory_.s[end] << ", end path s: " << end_path_s << std::endl;
-          }
-           */
 
-          double idx_last_s = 0;
+          // Calculate s_dot, s_dot_dot and d_dot, d_dot_dot by finding index
+          // of last processed trajectory point from previous path and evaluate
+          // that time with the derivative polynomial coefficients
+          double idx_last_pt = 0;
           if ((previous_path_x.size() > 0) &&
               (ego_car.trajectory_.s.size() > previous_path_x.size())) {
-            idx_last_s = ego_car.trajectory_.s.size() - previous_path_x.size() - 1;
+            idx_last_pt = (ego_car.trajectory_.s.size()
+                           - previous_path_x.size() - 1);
           }
-          double car_s_dot = EvalPoly(kSimCycleTime * idx_last_s, ego_car.coeffs_JMT_s_dot_);
-          double car_s_dot_dot = EvalPoly(kSimCycleTime * idx_last_s,
+          double car_s_dot = EvalPoly(kSimCycleTime * idx_last_pt,
+                                      ego_car.coeffs_JMT_s_dot_);
+
+          double car_s_dot_dot = EvalPoly(kSimCycleTime * idx_last_pt,
                                           ego_car.coeffs_JMT_s_dot_dot_);
 
-          /*
-          double car_s_dot = 0;
-          for (int i=0; i < ego_car.trajectory_.s.size(); ++i) {
-            if (car_s > ego_car.trajectory_.s[i]) {
-              car_s_dot = EvalPoly(kSimCycleTime * (i+1), ego_car.coeffs_JMT_s_dot_);
-            }
-          }
-           */
+          double car_d_dot = EvalPoly(kSimCycleTime * idx_last_pt,
+                                      ego_car.coeffs_JMT_d_dot_);
           
-          //const double car_s_dot = mph2mps(car_speed); // DUMMY use speed as s_dot
-          const double car_d_dot = 0; // DUMMY fix d_dot to zero
+          double car_d_dot_dot = EvalPoly(kSimCycleTime * idx_last_pt,
+                                          ego_car.coeffs_JMT_d_dot_dot_);
           
-          //std::cout << "s: " << car_s << ", ego_car s: " << ego_car.s_ << std::endl;
-          ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot, car_s_dot_dot, 0);
-          //std::cout << "new ego_car s: " << ego_car.s_ << std::endl;
+          // Update ego car's state values
+          ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot,
+                              car_s_dot_dot, car_d_dot_dot);
           
-          
-          
-          // Check all vehicles for distance
+          // Check all sensor fusion vehicles for distance from ego car
           for (int i = 0; i < sensor_fusion.size(); ++i) {
             const int sensed_id = sensor_fusion[i][0];
             const double sensed_x = sensor_fusion[i][1];
             const double sensed_y = sensor_fusion[i][2];
-            const double dist_to_sensed = Distance(car_x, car_y, sensed_x, sensed_y);
+            const double dist_to_sensed = Distance(car_x, car_y, sensed_x,
+                                                   sensed_y);
             
             if (dist_to_sensed < kSensorRange) {
               // Vehicle within sensor range
@@ -242,15 +221,21 @@ int main() {
               const int sensed_closest_wp = ClosestWaypoint(sensed_x, sensed_y,
                                                             map_waypoints_x,
                                                             map_waypoints_y);
-              const std::vector<double> v_frenet = GetFrenetVelocity(sensed_vx, sensed_vy, sensed_closest_wp, map_waypoints_dx, map_waypoints_dy);
+              
+              const std::vector<double> v_frenet = GetFrenetVelocity(sensed_vx,
+                                                   sensed_vy, sensed_closest_wp,
+                                            map_waypoints_dx, map_waypoints_dy);
+              
               const double calc_s_dot = v_frenet[0];
               const double calc_d_dot = v_frenet[1];
               
               if (detected_cars.count(sensed_id) == 0) {
                 // New sensed vehicle, build detected vehicle object to add
                 DetectedVehicle sensed_car = DetectedVehicle(sensed_id);
+                
                 sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d,
                                        calc_s_dot, calc_d_dot, 0, 0);
+                
                 sensed_car.UpdateRelDist(ego_car.s_, ego_car.d_);
                 
                 detected_cars[sensed_car.veh_id_] = sensed_car;
@@ -259,7 +244,9 @@ int main() {
                 // Vehicle already in map, just update values
                 detected_cars[sensed_id].UpdateState(sensed_x, sensed_y,
                                                      sensed_s, sensed_d,
-                                                     calc_s_dot, calc_d_dot, 0, 0);
+                                                     calc_s_dot, calc_d_dot,
+                                                     0, 0);
+                
                 detected_cars[sensed_id].UpdateRelDist(ego_car.s_, ego_car.d_);
               }
             }
@@ -333,7 +320,8 @@ int main() {
            * Output:
            *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
            */
-          VehBehavior car_target_behavior;
+          
+          VehBehaviorFSM(ego_car, detected_cars, car_ids_by_lane);
           
           
           /**
@@ -350,11 +338,12 @@ int main() {
            */
           
           // DUMMY trajectory path (x,y) coordinates
-          GetTrajectory(ego_car, kPredictTime, map_waypoints_x, map_waypoints_y, map_waypoints_s);
+          GetTrajectory(ego_car, map_waypoints_x, map_waypoints_y, map_waypoints_s);
           
           
           // DEBUG Basic telemetry output
-          std::cout << count << ", t: " << duration << ", idx_last_s: " << idx_last_s
+          std::cout << count << ", t: " << t_msg
+          << ", idx_last_pt: " << idx_last_pt
           << ", x: " << car_x
           << ", y: " << car_y
           << ", s: " << car_s
@@ -363,16 +352,17 @@ int main() {
           << ", d: " << car_d
           << ", d_dot: " << ego_car.d_dot_
           << ", d_dot_dot: " << ego_car.d_dot_dot_;
-          /*
+          
           std::cout << ", traj_x: ";
           for (int i=0; i < ego_car.trajectory_.x.size(); ++i) {
             std::cout << ego_car.trajectory_.x[i] << ";";
           }
+          
           std::cout << ", traj_y: ";
           for (int i=0; i < ego_car.trajectory_.y.size(); ++i) {
             std::cout << ego_car.trajectory_.y[i] << ";";
           }
-          */
+          
           std::cout << ", traj_s: ";
           for (int i=0; i < ego_car.trajectory_.s.size(); ++i) {
             std::cout << ego_car.trajectory_.s[i] << ";";
@@ -385,28 +375,6 @@ int main() {
           
           std::cout << std::endl;
           
-          /*
-          double dist_inc = 0.5;
-          std::vector<double> next_x_vals;
-          std::vector<double> next_y_vals;
-          for(int i = 0; i < 50; i++)
-          {
-            next_x_vals.push_back(car_x+(dist_inc*i)*cos(deg2rad(car_yaw)));
-            next_y_vals.push_back(car_y+(dist_inc*i)*sin(deg2rad(car_yaw)));
-          }
-          ego_car.trajectory_.x = next_x_vals;
-          ego_car.trajectory_.y = next_y_vals;
-          */
-          /*
-          std::vector<double> start_state_s = {0,0,0};
-          std::vector<double> end_state_s = {40,20,0};
-          std::vector<double> JMT_test_coeffs = JMT(start_state_s, end_state_s, 4);
-          std::cout << "JMT: ";
-          for (int i=0; i < JMT_test_coeffs.size(); ++i) {
-            std::cout << JMT_test_coeffs[i] << ", ";
-          }
-          std::cout << std::endl;
-          */
           
           /**
            * Control
@@ -422,7 +390,7 @@ int main() {
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 
           // Slow down path planning process loop
-          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
           // DEBUG print out diagram of sensed cars for debugging
           //DebugPrintRoad(detected_cars, ego_car);

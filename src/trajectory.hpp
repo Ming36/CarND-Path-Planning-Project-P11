@@ -14,7 +14,7 @@
 #include "path_common.hpp"
 #include "vehicle.hpp"
 
-void GetTrajectory(EgoVehicle &ego_car, double target_t,
+void GetTrajectory(EgoVehicle &ego_car,
                             const std::vector<double> &maps_x,
                             const std::vector<double> &maps_y,
                             const std::vector<double> &maps_s);

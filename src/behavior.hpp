@@ -11,11 +11,11 @@
 #include <stdio.h>
 
 #include <string>
+#include <map>
 #include "vehicle.hpp"
 
-VehBehavior VehBehaviorFSM(EgoVehicle ego_car,
-                           std::vector<DetectedVehicle> veh_preds_lanetoleft,
-                           std::vector<DetectedVehicle> veh_preds_curlane,
-                           std::vector<DetectedVehicle> veh_preds_lanetoright);
+void VehBehaviorFSM(EgoVehicle &ego_car,
+                    const std::map<int, DetectedVehicle> &detected_cars,
+                    const std::map<int, std::vector<int>> &car_ids_by_lane);
 
 #endif /* behavior_hpp */

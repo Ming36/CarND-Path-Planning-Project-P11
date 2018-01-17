@@ -17,7 +17,6 @@ Vehicle::Vehicle() {
 Vehicle::Vehicle(int veh_id) {
   veh_id_ = veh_id;
   intent_ = kUnknown;
-  //state_vals_ = {&s_, &s_dot_, &s_dot_dot_, &d_, &d_dot_, &d_dot_dot_};
 }
 
 /**
@@ -30,26 +29,19 @@ Vehicle::~Vehicle() { }
  */
 void Vehicle::UpdateState(double x, double y, double s, double d, double s_dot, double d_dot, double s_dot_dot, double d_dot_dot) {
   
-  // Store previous values to calculate s_dot_dot and d_dot_dot later
-  s_prev_ = s_;
-  s_dot_prev_ = s_dot_;
-  d_prev_ = d_;
-  d_dot_prev_ = d_dot_;
-  
   // Update state values
   x_ = x;
   y_ = y;
   s_ = s;
-  d_ = d;
   s_dot_ = s_dot;
-  d_dot_ = d_dot;
   s_dot_dot_ = s_dot_dot;
+  d_ = d;
+  d_dot_ = d_dot;
   d_dot_dot_ = d_dot_dot;
   
   // Detect lane
   int lane = 0;
   double n = 0;
-  
   while (d > n * kLaneWidth) {
     lane++;
     n = n + 1.0;

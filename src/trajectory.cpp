@@ -7,7 +7,7 @@
 
 #include "trajectory.hpp"
 
-void GetTrajectory(EgoVehicle &ego_car, const double t_tgt,
+void GetTrajectory(EgoVehicle &ego_car,
                    const std::vector<double> &maps_x,
                    const std::vector<double> &maps_y,
                    const std::vector<double> &maps_s) {
@@ -18,32 +18,22 @@ void GetTrajectory(EgoVehicle &ego_car, const double t_tgt,
   std::vector<double> next_d_vals;
   std::vector<double> next_t_vals;
   
+  const double t_tgt = ego_car.behavior_.target_time;
   const double v_tgt = mph2mps(kTargetSpeed); // mph -> m/s
-  const double d_tgt = ego_car.d_; // DUMMY Keep lane
   
-  // Generate D trajectory
+  // Set target D based on target lane
+  const double d_tgt = 2.0 + (ego_car.behavior_.target_lane-1) * 4.0;
+  
+  // Generate S trajectory
+  
   double s_est;
   double s_dot_est;
   double s_dot_dot_est;
   
-  /*
-  constexpr double min_t = 1.0; // sec
-  double t_est;
-  double a_est = (target_speed - ego_car.s_dot_) / min_t;
-
-  if (a_est > max_a) {
-    a_est = max_a;
-    t_est = (target_speed - ego_car.s_dot_) / max_a;
-  }
-  else {
-    t_est = min_t;
-  }
-  */
+  // Set estimated s, s_dot, s_dot_dot to keep a reasonable JMT with basic kinematics
+  const double t_maxa = (v_tgt - ego_car.s_dot_) / kMaxA;
   
-  // Set estimated s, v, a to keep a reasonable JMT with basic kinematics
-  double t_amax = (v_tgt - ego_car.s_dot_) / kMaxA;
-  
-  if (t_amax > t_tgt) {
+  if (t_maxa > t_tgt) {
     // Cut off target v and a to limit t
     s_dot_est = ego_car.s_dot_ + kMaxA * t_tgt;
     s_dot_dot_est = kMaxA;
@@ -60,31 +50,33 @@ void GetTrajectory(EgoVehicle &ego_car, const double t_tgt,
   std::vector<double> end_state_s = {s_est, s_dot_est, s_dot_dot_est};
   
   ego_car.coeffs_JMT_s_ = JMT(start_state_s, end_state_s, t_tgt);
+  ego_car.coeffs_JMT_s_dot_ = DiffPoly(ego_car.coeffs_JMT_s_);
+  ego_car.coeffs_JMT_s_dot_dot_ = DiffPoly(ego_car.coeffs_JMT_s_dot_);
   
+  /*
   ego_car.coeffs_JMT_s_dot_ = {ego_car.coeffs_JMT_s_[1], 2*ego_car.coeffs_JMT_s_[2], 3*ego_car.coeffs_JMT_s_[3], 4*ego_car.coeffs_JMT_s_[4], 5*ego_car.coeffs_JMT_s_[5]};
   
   ego_car.coeffs_JMT_s_dot_dot_ = {2*ego_car.coeffs_JMT_s_[2], 6*ego_car.coeffs_JMT_s_[3], 12*ego_car.coeffs_JMT_s_[4], 20*ego_car.coeffs_JMT_s_[5]};
+  */
   
   // Generate D trajectory
   
-  double d_est;
-  double d_dot_est;
-  double d_dot_dot_est;
-  
-  d_est = d_tgt;
-  d_dot_est = 0;
-  d_dot_dot_est = 0;
-  
-  // TODO Set estimated d, v, a to keep a reasonable JMT with basic kinematics
+  double d_est = d_tgt;
+  double d_dot_est = 0;
+  double d_dot_dot_est = 0;
   
   std::vector<double> start_state_d = {ego_car.d_, ego_car.d_dot_, ego_car.d_dot_dot_};
   std::vector<double> end_state_d = {d_est, d_dot_est, d_dot_dot_est};
   
   ego_car.coeffs_JMT_d_ = JMT(start_state_d, end_state_d, t_tgt);
+  ego_car.coeffs_JMT_d_dot_ = DiffPoly(ego_car.coeffs_JMT_d_);
+  ego_car.coeffs_JMT_d_dot_dot_ = DiffPoly(ego_car.coeffs_JMT_d_dot_);
   
+  /*
   ego_car.coeffs_JMT_d_dot_ = {ego_car.coeffs_JMT_d_[1], 2*ego_car.coeffs_JMT_d_[2], 3*ego_car.coeffs_JMT_d_[3], 4*ego_car.coeffs_JMT_d_[4], 5*ego_car.coeffs_JMT_d_[5]};
   
   ego_car.coeffs_JMT_d_dot_dot_ = {2*ego_car.coeffs_JMT_d_[2], 6*ego_car.coeffs_JMT_d_[3], 12*ego_car.coeffs_JMT_d_[4], 20*ego_car.coeffs_JMT_d_[5]};
+  */
   
   for(int i = 0; i < (t_tgt / kSimCycleTime); i++) {
     double t = (i+1) * kSimCycleTime;

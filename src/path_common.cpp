@@ -237,11 +237,19 @@ std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
   return result;
 }
 
-double EvalPoly(double x, std::vector<double> coeffs){
+double EvalPoly(double x, std::vector<double> coeffs) {
   double y = 0;
   for (int i=0; i < coeffs.size(); ++i) {
     y += coeffs[i] * pow(x, i);
   }
   return y;
+}
+
+std::vector<double> DiffPoly(std::vector<double> coeffs) {
+  std::vector<double> diff_coeffs;
+  for (int i=1; i < coeffs.size(); ++i) {
+    diff_coeffs.push_back(i*coeffs[i]);
+  }
+  return diff_coeffs;
 }
 
