@@ -8,21 +8,17 @@
 #include "trajectory.hpp"
 
 void GetTrajectory(EgoVehicle &ego_car,
-                   const std::vector<double> &maps_x,
-                   const std::vector<double> &maps_y,
-                   const std::vector<double> &maps_s) {
-
-  std::vector<double> next_x_vals;
-  std::vector<double> next_y_vals;
-  std::vector<double> next_s_vals;
-  std::vector<double> next_d_vals;
-  std::vector<double> next_t_vals;
+                   const std::vector<double> &map_hires_s,
+                   const std::vector<double> &map_hires_x,
+                   const std::vector<double> &map_hires_y) {
   
   const double t_tgt = ego_car.behavior_.target_time;
   const double v_tgt = mph2mps(kTargetSpeed); // mph -> m/s
   
+  // TODO Slow down target speed by curvature and d value
+  
   // Set target D based on target lane
-  const double d_tgt = 2.0 + (ego_car.behavior_.target_lane-1) * 4.0;
+  double d_tgt = 2.0 + (ego_car.behavior_.target_lane-1) * 4.0;
   
   // Generate S trajectory
   
@@ -48,16 +44,10 @@ void GetTrajectory(EgoVehicle &ego_car,
   
   std::vector<double> start_state_s = {ego_car.s_, ego_car.s_dot_, ego_car.s_dot_dot_};
   std::vector<double> end_state_s = {s_est, s_dot_est, s_dot_dot_est};
-  
+
   ego_car.coeffs_JMT_s_ = JMT(start_state_s, end_state_s, t_tgt);
   ego_car.coeffs_JMT_s_dot_ = DiffPoly(ego_car.coeffs_JMT_s_);
   ego_car.coeffs_JMT_s_dot_dot_ = DiffPoly(ego_car.coeffs_JMT_s_dot_);
-  
-  /*
-  ego_car.coeffs_JMT_s_dot_ = {ego_car.coeffs_JMT_s_[1], 2*ego_car.coeffs_JMT_s_[2], 3*ego_car.coeffs_JMT_s_[3], 4*ego_car.coeffs_JMT_s_[4], 5*ego_car.coeffs_JMT_s_[5]};
-  
-  ego_car.coeffs_JMT_s_dot_dot_ = {2*ego_car.coeffs_JMT_s_[2], 6*ego_car.coeffs_JMT_s_[3], 12*ego_car.coeffs_JMT_s_[4], 20*ego_car.coeffs_JMT_s_[5]};
-  */
   
   // Generate D trajectory
   
@@ -72,31 +62,55 @@ void GetTrajectory(EgoVehicle &ego_car,
   ego_car.coeffs_JMT_d_dot_ = DiffPoly(ego_car.coeffs_JMT_d_);
   ego_car.coeffs_JMT_d_dot_dot_ = DiffPoly(ego_car.coeffs_JMT_d_dot_);
   
-  /*
-  ego_car.coeffs_JMT_d_dot_ = {ego_car.coeffs_JMT_d_[1], 2*ego_car.coeffs_JMT_d_[2], 3*ego_car.coeffs_JMT_d_[3], 4*ego_car.coeffs_JMT_d_[4], 5*ego_car.coeffs_JMT_d_[5]};
-  
-  ego_car.coeffs_JMT_d_dot_dot_ = {2*ego_car.coeffs_JMT_d_[2], 6*ego_car.coeffs_JMT_d_[3], 12*ego_car.coeffs_JMT_d_[4], 20*ego_car.coeffs_JMT_d_[5]};
-  */
-  
-  for(int i = 0; i < (t_tgt / kSimCycleTime); i++) {
-    double t = (i+1) * kSimCycleTime;
+  // Look up (s,d) vals for each sim cycle time step and convert to raw (x,y)
+  std::vector<double> raw_x_vals;
+  std::vector<double> raw_y_vals;
+  std::vector<double> raw_s_vals;
+  std::vector<double> raw_d_vals;
+  std::vector<double> raw_t_vals;
+  const int num_pts = t_tgt / kSimCycleTime;
+
+  for (int i = 0; i < num_pts; ++i) { // TODO fix initial index
+    double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
     
-    double new_car_s = EvalPoly(t, ego_car.coeffs_JMT_s_);
-    double new_car_d = EvalPoly(t, ego_car.coeffs_JMT_d_);
+    double raw_s = EvalPoly(t, ego_car.coeffs_JMT_s_);
+    double raw_d = EvalPoly(t, ego_car.coeffs_JMT_d_);
     
-    std::vector<double> new_car_xy = GetXY(new_car_s, new_car_d,
-                                           maps_s, maps_x, maps_y);
+    std::vector<double> raw_xy = GetHiresXY(raw_s, raw_d, map_hires_s,
+                                            map_hires_x, map_hires_y);
     
-    next_x_vals.push_back(new_car_xy[0]);
-    next_y_vals.push_back(new_car_xy[1]);
-    next_s_vals.push_back(new_car_s);
-    next_d_vals.push_back(new_car_d);
-    next_t_vals.push_back(t);
+    raw_x_vals.push_back(raw_xy[0]);
+    raw_y_vals.push_back(raw_xy[1]);
+    raw_s_vals.push_back(raw_s);
+    raw_d_vals.push_back(raw_d);
+    raw_t_vals.push_back(t);
   }
   
-  ego_car.trajectory_.x = next_x_vals;
-  ego_car.trajectory_.y = next_y_vals;
-  ego_car.trajectory_.s = next_s_vals;
-  ego_car.trajectory_.d = next_d_vals;
-  ego_car.trajectory_.t = next_t_vals;
+  ego_car.trajectory_.x.clear();
+  ego_car.trajectory_.y.clear();
+  ego_car.trajectory_.s.clear();
+  ego_car.trajectory_.d.clear();
+  ego_car.trajectory_.t.clear();
+  
+  ego_car.trajectory_.x = raw_x_vals;
+  ego_car.trajectory_.y = raw_y_vals;
+  ego_car.trajectory_.s = raw_s_vals;
+  ego_car.trajectory_.d = raw_d_vals;
+  ego_car.trajectory_.t = raw_t_vals;
+  
+  /*
+  std::vector<double> car_sd = GetHiresFrenet(ego_car.x_, ego_car.y_,
+                                              map_hires_s,
+                                              map_hires_x,
+                                              map_hires_y);
+  
+  std::vector<double> car_xy = GetHiresXY(car_sd[0], car_sd[1], map_hires_s,
+                                          map_hires_x, map_hires_y);
+  
+  std::cout << "x: " << ego_car.x_ << ", y: " << ego_car.y_
+            << ", xy->s: " << ego_car.s_ << ", xy->d: " << ego_car.d_
+            << ", sd->x: " << raw_x_vals[0] << ", sd->y: " << raw_y_vals[1];
+  
+  std::cout << "" << std::endl;
+  */
 }

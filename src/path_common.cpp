@@ -15,10 +15,55 @@ double Distance(double x1, double y1, double x2, double y2) {
 }
 
 /**
+ * Interpolate map waypoints with higher resolution (s at every 1m)
+ */
+std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
+                                                std::vector<double> &map_x,
+                                                std::vector<double> &map_y,
+                                                std::vector<double> &map_dx,
+                                                std::vector<double> &map_dy) {
+  
+  // Add initial map point back to end of map points for wrap-around
+  map_s.push_back(kMaxS);
+  map_x.push_back(map_x[0]);
+  map_y.push_back(map_y[0]);
+  map_dx.push_back(map_dx[0]);
+  map_dy.push_back(map_dy[0]);
+  
+  // Make splines by s axis
+  tk::spline spline_s_x;
+  tk::spline spline_s_y;
+  tk::spline spline_s_dx;
+  tk::spline spline_s_dy;
+  spline_s_x.set_points(map_s, map_x);
+  spline_s_y.set_points(map_s, map_y);
+  spline_s_dx.set_points(map_s, map_dx);
+  spline_s_dy.set_points(map_s, map_dy);
+  
+  // Interpolate hires map from splines for s at every 1m
+  std::vector<double> interp_s;
+  std::vector<double> interp_x;
+  std::vector<double> interp_y;
+  std::vector<double> interp_dx;
+  std::vector<double> interp_dy;
+  for (double s=0.; s < kMaxS; s = s + 1.) {
+    interp_s.push_back(s);
+    interp_x.push_back(spline_s_x(s));
+    interp_y.push_back(spline_s_y(s));
+    interp_dx.push_back(spline_s_dx(s));
+    interp_dy.push_back(spline_s_dy(s));
+  }
+  
+  return {interp_s, interp_x, interp_y, interp_dx, interp_dy};
+}
+
+/**
  * Find closest waypoint ahead or behind
  */
 int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
                     const std::vector<double> &maps_y) {
+  
+  // TODO Make this a more efficient search
   
   double closestLen = 100000; //large number
   int closestWaypoint = 0;
@@ -36,109 +81,86 @@ int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
 }
 
 /**
- * Find next waypoint ahead
+ * Transform from Frenet (s,d) coordinates to Cartesian (x,y)
  */
-int NextWaypoint(double x, double y, double theta,
-                 const std::vector<double> &maps_x,
-                 const std::vector<double> &maps_y) {
+std::vector<double> GetHiresXY(double s, double d,
+                               const std::vector<double> &map_hires_s,
+                               const std::vector<double> &map_hires_x,
+                               const std::vector<double> &map_hires_y) {
   
-  int closestWaypoint = ClosestWaypoint(x, y, maps_x, maps_y);
-  
-  //std::cout << "closest waypt: " << closestWaypoint;
-  
-  double map_x = maps_x[closestWaypoint];
-  double map_y = maps_y[closestWaypoint];
-  
-  double heading = atan2((map_y-y), (map_x-x));
-  
-  double angle = fabs(theta-heading);
-  angle = std::min(2*pi()-angle, angle);
-  
-  if (angle > pi()/4) {
-    closestWaypoint++;
-    if (closestWaypoint == maps_x.size()) {
-      closestWaypoint = 0;
-    }
+  int wp1 = -1;
+  while ((s > map_hires_s[wp1+1]) &&
+         (wp1 < (int)(map_hires_s.size()-1))) {
+    wp1++;
   }
   
-  //std::cout << ", next waypt: " << closestWaypoint << std::endl;
+  int wp2 = (wp1+1) % map_hires_x.size();
   
-  return closestWaypoint;
+  double theta_wp = atan2((map_hires_y[wp2] - map_hires_y[wp1]),
+                          (map_hires_x[wp2] - map_hires_x[wp1]));
+  
+  // The x,y,s along the segment between waypoints
+  double seg_s = s - map_hires_s[wp1];
+  double seg_x = map_hires_x[wp1] + seg_s * cos(theta_wp);
+  double seg_y = map_hires_y[wp1] + seg_s * sin(theta_wp);
+  
+  double theta_perp = theta_wp - pi()/2;
+  double x = seg_x + d * cos(theta_perp);
+  double y = seg_y + d * sin(theta_perp);
+  
+  return {x, y};
 }
 
 /**
- * Transform a position from Cartesian x,y coordinates to Frenet s,d coordinates
+ * Transform from Cartesian (x,y) coordinates to Frenet (s,d)
  */
-std::vector<double> GetFrenet(double x, double y, double theta,
-                              const std::vector<double> &maps_x,
-                              const std::vector<double> &maps_y) {
+std::vector<double> GetHiresFrenet(double x, double y,
+                                   const std::vector<double> &map_hires_s,
+                                   const std::vector<double> &map_hires_x,
+                                   const std::vector<double> &map_hires_y) {
   
-  // Find previous and next waypoints from map data
-  int next_wp = NextWaypoint(x,y, theta, maps_x, maps_y);
-  int prev_wp;
-  prev_wp = next_wp - 1;
-  if (next_wp == 0) {
-    prev_wp  = maps_x.size() - 1;
+  int close_wp = ClosestWaypoint(x, y, map_hires_x, map_hires_y);
+  int next_wp = close_wp + 1;
+  if (next_wp > map_hires_x.size() - 1) { next_wp  = 0; }
+  int prev_wp = close_wp - 1;
+  if (prev_wp < 0) { prev_wp = map_hires_x.size() - 1; }
+  
+  double dist_nextwp = Distance(x, y, map_hires_x[next_wp], map_hires_y[next_wp]);
+  double dist_prevwp = Distance(x, y, map_hires_x[prev_wp], map_hires_y[prev_wp]);
+
+  int wp1;
+  int wp2;
+  if (dist_nextwp < dist_prevwp) {
+    wp1 = close_wp;
+    wp2 = next_wp;
+  }
+  else {
+    wp1 = prev_wp;
+    wp2 = close_wp;
   }
   
-  /*
-   // TODO: Improve accuracy
-   int close_wp = ClosestWaypoint(x, y, maps_x, maps_y);
-   int next_wp = close_wp + 1;
-   if (next_wp > maps_x.size() - 1) {
-   next_wp  = 0;
-   }
-   int prev_wp = close_wp - 1;
-   if (prev_wp < 0) {
-   prev_wp = maps_x.size() - 1;
-   }
-   */
-  
-  //std::cout << "prev waypt: " << prev_wp << ", next_wp: " << next_wp << std::endl;
-  
   // Waypoint vector x and y components from prev waypoint to next waypoint
-  double vx_wp = maps_x[next_wp] - maps_x[prev_wp];
-  double vy_wp = maps_y[next_wp] - maps_y[prev_wp];
+  double vx_wp = map_hires_x[wp2] - map_hires_x[wp1];
+  double vy_wp = map_hires_y[wp2] - map_hires_y[wp1];
   
   // Position vector x and y components from prev waypoint to position coord
-  double vx_pos = x - maps_x[prev_wp];
-  double vy_pos = y - maps_y[prev_wp];
+  double vx_pos = x - map_hires_x[wp1];
+  double vy_pos = y - map_hires_y[wp1];
   
   // Find the projection of position vector onto waypoint vector
   double proj_length = ((vx_pos * vx_wp + vy_pos * vy_wp) /
                         (vx_wp * vx_wp + vy_wp * vy_wp));
+  double frenet_s = map_hires_s[wp1] + proj_length;
   
-  // Find the endpoint (x,y) of projection onto waypoint vector
-  double proj_endpt_x = proj_length * vx_wp;
-  double proj_endpt_y = proj_length * vy_wp;
-  
-  // Frenet d value is the normal distance from the endpoint to the position coord
-  double frenet_d = Distance(vx_pos, vy_pos, proj_endpt_x, proj_endpt_y);
-  
-  // See if d value is positive or negative by comparing it to a center point (1000, 2000)
-  double center_x = 1000 - maps_x[prev_wp];
-  double center_y = 2000 - maps_y[prev_wp];
-  double centerToPos = Distance(center_x, center_y, vx_pos, vy_pos);
-  double centerToRef = Distance(center_x, center_y, proj_endpt_x, proj_endpt_y);
-  if(centerToPos <= centerToRef) {
-    frenet_d *= -1;
-  }
-  
-  // Calculate s value
-  double frenet_s = 0;
-  // Accumulate s values up to the previous waypoint
-  for (int i = 0; i < prev_wp; i++) {
-    frenet_s += Distance(maps_x[i], maps_y[i], maps_x[i+1], maps_y[i+1]);
-  }
-  // Add length of the position coord's projection along waypoint vector
-  frenet_s += Distance(0, 0, proj_endpt_x, proj_endpt_y);
+  double frenet_d = sqrt(pow(Distance(map_hires_x[wp1], map_hires_y[wp1], x, y), 2)
+                         - pow(proj_length, 2));
   
   return {frenet_s, frenet_d};
 }
 
 /**
- * Calculate Frenet velocities s_dot,d_dot from vx,vy and d normal vector
- * based on closest map waypoint's dx,dy
+ * Calculate Frenet velocities (s_dot,d_dot) from (vx,vy) and d normal vector
+ * based on closest map waypoint's (dx,dy)
  */
 std::vector<double> GetFrenetVelocity(double vx, double vy, int closest_wp,
                                       const std::vector<double> &maps_dx,
@@ -155,40 +177,12 @@ std::vector<double> GetFrenetVelocity(double vx, double vy, int closest_wp,
 }
 
 /**
- * Transform from Frenet s,d coordinates to Cartesian x,y
+ * Calculate the Jerk Minimizing Trajectory that connects the initial state
+ * to the final state in time t_end.
  */
-std::vector<double> GetXY(double s, double d, const std::vector<double> &maps_s,
-                          const std::vector<double> &maps_x,
-                          const std::vector<double> &maps_y) {
-  
-  int prev_wp = -1;
-  while (s > maps_s[prev_wp+1] && (prev_wp < (int)(maps_s.size()-1))) {
-    prev_wp++;
-  }
-  
-  int wp2 = (prev_wp+1) % maps_x.size();
-  
-  double heading = atan2((maps_y[wp2] - maps_y[prev_wp]),
-                         (maps_x[wp2] - maps_x[prev_wp]));
-  // the x,y,s along the segment
-  double seg_s = (s - maps_s[prev_wp]);
-  double seg_x = maps_x[prev_wp] + seg_s * cos(heading);
-  double seg_y = maps_y[prev_wp] + seg_s * sin(heading);
-  
-  double perp_heading = heading - pi()/2;
-  
-  double x = seg_x + d * cos(perp_heading);
-  double y = seg_y + d * sin(perp_heading);
-  
-  return {x, y};
-}
-
 std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
                         double t_end) {
   /*
-   Calculate the Jerk Minimizing Trajectory that connects the initial state
-   to the final state in time t_end.
-   
    INPUTS
    
    start - the vehicles start location given as a length three array
@@ -237,6 +231,9 @@ std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
   return result;
 }
 
+/**
+ * Evaluate a polynomial with form f(x) = a0 + a1*x + a2*x^2 + ... at x
+ */
 double EvalPoly(double x, std::vector<double> coeffs) {
   double y = 0;
   for (int i=0; i < coeffs.size(); ++i) {
@@ -245,6 +242,10 @@ double EvalPoly(double x, std::vector<double> coeffs) {
   return y;
 }
 
+/**
+ * Differentiate a polynomial with form f(x) = a0 + a1*x + a2*x^2 + ... to get
+ * the derivative polynomial's coefficients
+ */
 std::vector<double> DiffPoly(std::vector<double> coeffs) {
   std::vector<double> diff_coeffs;
   for (int i=1; i < coeffs.size(); ++i) {

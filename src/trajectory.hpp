@@ -15,8 +15,8 @@
 #include "vehicle.hpp"
 
 void GetTrajectory(EgoVehicle &ego_car,
-                            const std::vector<double> &maps_x,
-                            const std::vector<double> &maps_y,
-                            const std::vector<double> &maps_s);
+                   const std::vector<double> &map_hires_s,
+                   const std::vector<double> &map_hires_x,
+                   const std::vector<double> &map_hires_y);
 
 #endif /* trajectory_hpp */

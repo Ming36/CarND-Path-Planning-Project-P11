@@ -67,6 +67,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3F332F9C200FDEEF0058D3FF /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spline.h; path = src/spline.h; sourceTree = "<group>"; };
 		3F6BCFFA20081E700054E514 /* vehicle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = vehicle.cpp; path = src/vehicle.cpp; sourceTree = "<group>"; };
 		3F6BCFFB20081E700054E514 /* vehicle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = vehicle.hpp; path = src/vehicle.hpp; sourceTree = "<group>"; };
 		3F6BCFFD2009500B0054E514 /* behavior.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = behavior.cpp; path = src/behavior.cpp; sourceTree = "<group>"; };
@@ -158,6 +159,7 @@
 				3F6BCFFD2009500B0054E514 /* behavior.cpp */,
 				3F6BD001200950270054E514 /* trajectory.hpp */,
 				3F6BD000200950270054E514 /* trajectory.cpp */,
+				3F332F9C200FDEEF0058D3FF /* spline.h */,
 			);
 			name = "Source Files";
 			sourceTree = "<group>";
