@@ -27,19 +27,21 @@ Vehicle::~Vehicle() { }
 /**
  * Updates vehicle's state values
  */
-void Vehicle::UpdateState(double x, double y, double s, double d, double s_dot, double d_dot, double s_dot_dot, double d_dot_dot) {
+void Vehicle::UpdateState(double x, double y, double s, double d,
+                          double s_dot, double d_dot,
+                          double s_dotdot, double d_dotdot) {
   
   // Update state values
-  x_ = x;
-  y_ = y;
-  s_ = s;
-  s_dot_ = s_dot;
-  s_dot_dot_ = s_dot_dot;
-  d_ = d;
-  d_dot_ = d_dot;
-  d_dot_dot_ = d_dot_dot;
+  state_.x = x;
+  state_.y = y;
+  state_.s = s;
+  state_.s_dot = s_dot;
+  state_.s_dotdot = s_dotdot;
+  state_.d = d;
+  state_.d_dot = d_dot;
+  state_.d_dotdot = d_dotdot;
   
-  // Detect lane
+  // Detect lane number (1 is closest to middle of road)
   int lane = 0;
   double n = 0;
   while (d > n * kLaneWidth) {
@@ -56,19 +58,19 @@ void Vehicle::UpdateState(double x, double y, double s, double d, double s_dot, 
 EgoVehicle::EgoVehicle() : Vehicle() {
   coeffs_JMT_s_ = {0, 0, 0};
   coeffs_JMT_s_dot_ = {0, 0, 0};
-  coeffs_JMT_s_dot_dot_ = {0, 0, 0};
+  coeffs_JMT_s_dotdot_ = {0, 0, 0};
   coeffs_JMT_d_ = {0, 0, 0};
   coeffs_JMT_d_dot_ = {0, 0, 0};
-  coeffs_JMT_d_dot_dot_ = {0, 0, 0};
+  coeffs_JMT_d_dotdot_ = {0, 0, 0};
 }
 
 EgoVehicle::EgoVehicle(int id) : Vehicle(id) {
   coeffs_JMT_s_ = {0, 0, 0};
   coeffs_JMT_s_dot_ = {0, 0, 0};
-  coeffs_JMT_s_dot_dot_ = {0, 0, 0};
+  coeffs_JMT_s_dotdot_ = {0, 0, 0};
   coeffs_JMT_d_ = {0, 0, 0};
   coeffs_JMT_d_dot_ = {0, 0, 0};
-  coeffs_JMT_d_dot_dot_ = {0, 0, 0};
+  coeffs_JMT_d_dotdot_ = {0, 0, 0};
 }
 
 /**
@@ -92,6 +94,6 @@ DetectedVehicle::~DetectedVehicle() { }
  * Calculate relative (s,d) from ego car
  */
 void DetectedVehicle::UpdateRelDist(double s_ego, double d_ego) {
-  s_rel_ = s_ - s_ego;
-  d_rel_ = d_ - d_ego;
+  s_rel_ = state_.s - s_ego;
+  d_rel_ = state_.d - d_ego;
 }

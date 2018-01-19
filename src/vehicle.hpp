@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <vector>
+#include <deque>
+#include <map>
 #include <string>
 #include <math.h>
 
@@ -29,17 +31,23 @@ enum VehIntents {
 struct VehBehavior {
   VehIntents intent;
   int car_ahead_id;
-  int target_lane;
-  double target_time;
-  std::vector<double> target_state_vals;
+  int tgt_lane;
+  double tgt_time;
+};
+
+struct VehState {
+  double x;
+  double y;
+  double s;
+  double s_dot;
+  double s_dotdot;
+  double d;
+  double d_dot;
+  double d_dotdot;
 };
 
 struct VehTrajectory {
-  std::vector<double> x;
-  std::vector<double> y;
-  std::vector<double> s;
-  std::vector<double> d;
-  std::vector<double> t;
+  std::deque<VehState> states;
   double probability;
 };
 
@@ -48,19 +56,9 @@ public:
   
   int veh_id_;
   int lane_;
-  double x_;
-  double y_;
-  
-  double s_;
-  double s_dot_;
-  double s_dot_dot_;
-  
-  double d_;
-  double d_dot_;
-  double d_dot_dot_;
-
+  VehState state_;
+  VehTrajectory traj_;
   VehIntents intent_;
-  VehTrajectory trajectory_;
   
   /**
    * Constructor
@@ -75,7 +73,7 @@ public:
   
   void UpdateState(double x, double y, double s, double d,
                    double s_dot, double d_dot,
-                   double s_dot_dot, double d_dot_dot);
+                   double s_dotdot, double d_dotdot);
   
 };
 
@@ -83,16 +81,17 @@ public:
 class EgoVehicle : public Vehicle {
 public:
   
-  VehBehavior behavior_;
+  //int idx_prev_path_;
+  VehBehavior tgt_behavior_;
   
   std::vector<double> coeffs_JMT_s_; // [a0, a1, a2, a3, a4, a5]
   std::vector<double> coeffs_JMT_s_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_s_dot_dot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  std::vector<double> coeffs_JMT_s_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
   
   std::vector<double> coeffs_JMT_d_; // [a0, a1, a2, a3, a4, a5]
   std::vector<double> coeffs_JMT_d_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_d_dot_dot_; // [2*a2, 6*a3, 12*a4, 20*a5]
-
+  std::vector<double> coeffs_JMT_d_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  
   /**
    * Constructor
    */
@@ -110,6 +109,7 @@ public:
   
   double s_rel_;
   double d_rel_;
+  std::map<VehIntents, VehTrajectory> pred_trajs_;
   
   /**
    * Constructor

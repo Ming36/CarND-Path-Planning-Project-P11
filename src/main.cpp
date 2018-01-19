@@ -114,7 +114,7 @@ int main() {
   }
   
   // Reinterpolate map waypoints
-  std::vector<std::vector<double>> hires_waypts = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw);
+  std::vector<std::vector<double>> waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw);
   
   // Instantiate ego car object and map of detected cars to hold their data
   EgoVehicle ego_car = EgoVehicle(-1);
@@ -124,7 +124,7 @@ int main() {
                 (std::chrono::high_resolution_clock::now())
                 .time_since_epoch().count();
   
-  h.onMessage([&count, &t_last, &hires_waypts, &ego_car, &detected_cars]
+  h.onMessage([&count, &t_last, &waypts_interp, &ego_car, &detected_cars]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
                 
@@ -167,17 +167,16 @@ int main() {
           // List of detected cars on same side of road
           const auto sensor_fusion = j[1]["sensor_fusion"];
           
-          std::vector<double> map_hires_s = hires_waypts[0];
-          std::vector<double> map_hires_x = hires_waypts[1];
-          std::vector<double> map_hires_y = hires_waypts[2];
-          std::vector<double> map_hires_dx = hires_waypts[3];
-          std::vector<double> map_hires_dy = hires_waypts[4];
+          std::vector<double> map_interp_s = waypts_interp[0];
+          std::vector<double> map_interp_x = waypts_interp[1];
+          std::vector<double> map_interp_y = waypts_interp[2];
+          std::vector<double> map_interp_dx = waypts_interp[3];
+          std::vector<double> map_interp_dy = waypts_interp[4];
           
           // DEBUG Log raw car (x,y) values every cycle
           //std::cout << "t: " << t_msg << ", x: " << car_x << ", y: " << car_y << std::endl;
           
           // Run path planning algorithm at slower cycle time
-          constexpr int kPathCycleTimeMS = 2000; // ms
           if ((t_msg - t_last) > kPathCycleTimeMS) {
             
             //std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
@@ -196,9 +195,9 @@ int main() {
             
             // Get (s,d) from interpolated waypoints
             std::vector<double> car_sd = GetHiresFrenet(car_x, car_y,
-                                                        map_hires_s,
-                                                        map_hires_x,
-                                                        map_hires_y);
+                                                        map_interp_s,
+                                                        map_interp_x,
+                                                        map_interp_y);
             const double car_s = car_sd[0];
             const double car_d = car_sd[1];
             
@@ -206,28 +205,28 @@ int main() {
             // Calculate s_dot, s_dot_dot and d_dot, d_dot_dot by finding index
             // of last processed trajectory point from previous path and evaluate
             // that time with the derivative polynomial coefficients
-            double idx_last_pt = 0;
-            if ((previous_path_x.size() > 0) &&
-                (ego_car.trajectory_.x.size() > previous_path_x.size())) {
-              
-              idx_last_pt = (ego_car.trajectory_.x.size()
-                             - previous_path_x.size() - 1);
+            int idx_current_pt = 0;
+            if (ego_car.traj_.states.size() > previous_path_x.size()) {
+              idx_current_pt = (ego_car.traj_.states.size()
+                                        - previous_path_x.size() - 1);
             }
-            double car_s_dot = EvalPoly(kSimCycleTime * idx_last_pt,
+            
+            double t_current_pt = kSimCycleTime * idx_current_pt;
+            
+            double car_s_dot = EvalPoly(t_current_pt,
                                         ego_car.coeffs_JMT_s_dot_);
 
-            double car_s_dot_dot = EvalPoly(kSimCycleTime * idx_last_pt,
-                                            ego_car.coeffs_JMT_s_dot_dot_);
-
-            double car_d_dot = EvalPoly(kSimCycleTime * idx_last_pt,
+            double car_d_dot = EvalPoly(t_current_pt,
                                         ego_car.coeffs_JMT_d_dot_);
+
+            double car_s_dotdot = EvalPoly(t_current_pt,
+                                            ego_car.coeffs_JMT_s_dotdot_);
             
-            double car_d_dot_dot = EvalPoly(kSimCycleTime * idx_last_pt,
-                                            ego_car.coeffs_JMT_d_dot_dot_);
+            double car_d_dotdot = EvalPoly(t_current_pt,
+                                            ego_car.coeffs_JMT_d_dotdot_);
             
             // Update ego car's state values
-            ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot,
-                                car_s_dot_dot, car_d_dot_dot);
+            ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot, car_s_dotdot, car_d_dotdot);
             
             // Check all sensor fusion vehicles for distance from ego car
             for (int i = 0; i < sensor_fusion.size(); ++i) {
@@ -246,12 +245,12 @@ int main() {
                 
                 // Calculate s_dot and d_dot
                 const int sensed_closest_wp = ClosestWaypoint(sensed_x, sensed_y,
-                                                              map_hires_x,
-                                                              map_hires_y);
+                                                              map_interp_x,
+                                                              map_interp_y);
                 
                 const std::vector<double> v_frenet = GetFrenetVelocity(sensed_vx,
                                                      sensed_vy, sensed_closest_wp,
-                                                     map_hires_dx, map_hires_dy);
+                                                     map_interp_dx, map_interp_dy);
                 
                 const double calc_s_dot = v_frenet[0];
                 const double calc_d_dot = v_frenet[1];
@@ -263,7 +262,7 @@ int main() {
                   sensed_car.UpdateState(sensed_x, sensed_y, sensed_s, sensed_d,
                                          calc_s_dot, calc_d_dot, 0, 0);
                   
-                  sensed_car.UpdateRelDist(ego_car.s_, ego_car.d_);
+                  sensed_car.UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
                   
                   detected_cars[sensed_car.veh_id_] = sensed_car;
                 }
@@ -271,10 +270,9 @@ int main() {
                   // Vehicle already in map, just update values
                   detected_cars[sensed_id].UpdateState(sensed_x, sensed_y,
                                                        sensed_s, sensed_d,
-                                                       calc_s_dot, calc_d_dot,
-                                                       0, 0);
+                                                       calc_s_dot, calc_d_dot, 0, 0);
                   
-                  detected_cars[sensed_id].UpdateRelDist(ego_car.s_, ego_car.d_);
+                  detected_cars[sensed_id].UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
                 }
               }
               else {
@@ -362,49 +360,46 @@ int main() {
              *   next_xy_vals [trajectory_x, trajectory_y]
              */
             
-            // Generate the ego car's trajectory path (x,y) coordinates
-            GetFinalTrajectory(ego_car, map_hires_s, map_hires_x, map_hires_y);
-            
-            /*
-            // The car will visit each (x,y) point sequentially every .02 seconds
-            std::vector<double> next_x_vals;
-            std::vector<double> next_y_vals;
-            double target_speed = 45.;
-            double dist_inc = mps2pointdist(mph2mps(target_speed));
-            for(int i = 0; i < 1000; i++)
-            {
-              double new_car_s = car_s + (i+1);
-              double new_car_d = 10;
-              //double new_car_s = car_s + (i+1) * dist_inc;
-              //double new_car_d = car_d;
-              std::vector<double> new_car_xy = GetXY(new_car_s, new_car_d,
-                                                     map_waypoints_s, map_waypoints_x, map_waypoints_y);
-              next_x_vals.push_back(new_car_xy[0]);
-              next_y_vals.push_back(new_car_xy[1]);
+            // Remove trajectory points that were already consumed
+            if (idx_current_pt > 0) {
+              for (int i=0; i <= idx_current_pt; ++i) {
+                ego_car.traj_.states.pop_front();
+              }
             }
-            */
             
-            /*
+            // If near end of previous path, append new trajectory points to
+            // the end of the current one
+            int min_num_pts = kPathBufferTime / kSimCycleTime;
+            if (previous_path_x.size() < min_num_pts) {
+              VehTrajectory new_traj = GetFinalTrajectory(ego_car, map_interp_s, map_interp_x, map_interp_y);
+              for (int i=0; i < new_traj.states.size(); ++i) {
+                ego_car.traj_.states.push_back(new_traj.states[i]);
+              }
+              std::cout << "New trajectory appended!" << std::endl;
+            }
+            
+            
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
-            << ", idx_last_pt: " << idx_last_pt
+            << ", num_prev_path: " << previous_path_x.size()
+            << ", idx_current_pt: " << idx_current_pt
             << ", x: " << car_x
             << ", y: " << car_y
             << ", s: " << car_s
-            << ", s_dot: " << ego_car.s_dot_
-            << ", s_dot_dot: " << ego_car.s_dot_dot_
+            << ", s_dot: " << ego_car.state_.s_dot
+            << ", s_dotdot: " << ego_car.state_.s_dotdot
             << ", d: " << car_d
-            << ", d_dot: " << ego_car.d_dot_
-            << ", d_dot_dot: " << ego_car.d_dot_dot_;
+            << ", d_dot: " << ego_car.state_.d_dot
+            << ", d_dotdot: " << ego_car.state_.d_dotdot;
             
             std::cout << ", traj_x: ";
-            for (int i=0; i < ego_car.trajectory_.x.size(); ++i) {
-              std::cout << ego_car.trajectory_.x[i] << ";";
+            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+              std::cout << ego_car.traj_.states[i].x << ";";
             }
             
             std::cout << ", traj_y: ";
-            for (int i=0; i < ego_car.trajectory_.y.size(); ++i) {
-              std::cout << ego_car.trajectory_.y[i] << ";";
+            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+              std::cout << ego_car.traj_.states[i].y << ";";
             }
             
             std::cout << ", prev_path_x: ";
@@ -414,38 +409,42 @@ int main() {
             
             std::cout << ", prev_path_y: ";
             for (int i=0; i < previous_path_y.size(); ++i) {
-              std::cout << previous_path_y << ";";
+              std::cout << previous_path_y[i] << ";";
             }
             
             std::cout << ", traj_s: ";
-            for (int i=0; i < ego_car.trajectory_.s.size(); ++i) {
-              std::cout << ego_car.trajectory_.s[i] << ";";
+            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+              std::cout << ego_car.traj_.states[i].s << ";";
             }
             
             std::cout << ", traj_d: ";
-            for (int i=0; i < ego_car.trajectory_.d.size(); ++i) {
-              std::cout << ego_car.trajectory_.d[i] << ";";
+            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+              std::cout << ego_car.traj_.states[i].d << ";";
             }
             
             std::cout << std::endl;
-            */
+            
             
             /**
              * Control
              *   1. Pack and send JSON path trajectory coordinates
              */
             
-            // Send back the first 0.5 sec of previous path and append the new
-            // trajectory after that
+            std::vector<double> next_x_vals;
+            std::vector<double> next_y_vals;
+            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+              next_x_vals.push_back(ego_car.traj_.states[i].x);
+              next_y_vals.push_back(ego_car.traj_.states[i].y);
+            }
             
             // Output vector of (x,y) path trajectory values to json message
             json msgJson;
             //msgJson["next_x"] = next_x_vals;
             //msgJson["next_y"] = next_y_vals;
-            msgJson["next_x"] = ego_car.trajectory_.x;
-            msgJson["next_y"] = ego_car.trajectory_.y;
+            msgJson["next_x"] = next_x_vals;
+            msgJson["next_y"] = next_y_vals;
             auto msg = "42[\"control\","+ msgJson.dump()+"]";
-            
+
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
             
             // DEBUG print out diagram of sensed cars for debugging

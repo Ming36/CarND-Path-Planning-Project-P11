@@ -19,8 +19,10 @@
 /**
  * Constant parameters
  */
+constexpr int kPathCycleTimeMS = 200; // ms
 constexpr double kSensorRange = 100.; // m
-constexpr double kPredictTime = 3.0; // sec
+constexpr double kPredictTime = 2.0; // sec
+constexpr double kPathBufferTime = 1.0; // sec
 constexpr double kLaneWidth = 4.0; // m
 constexpr double kLatVelLaneChange = 5.0; // mph (2.2352 m/s)
 constexpr double kTargetSpeedMPH = 49.; // mph
