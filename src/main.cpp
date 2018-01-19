@@ -201,6 +201,7 @@ int main() {
                                                         map_hires_y);
             const double car_s = car_sd[0];
             const double car_d = car_sd[1];
+            
 
             // Calculate s_dot, s_dot_dot and d_dot, d_dot_dot by finding index
             // of last processed trajectory point from previous path and evaluate
@@ -362,7 +363,7 @@ int main() {
              */
             
             // Generate the ego car's trajectory path (x,y) coordinates
-            GetTrajectory(ego_car, map_hires_s, map_hires_x, map_hires_y);
+            GetFinalTrajectory(ego_car, map_hires_s, map_hires_x, map_hires_y);
             
             /*
             // The car will visit each (x,y) point sequentially every .02 seconds
@@ -383,7 +384,7 @@ int main() {
             }
             */
             
-            
+            /*
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
             << ", idx_last_pt: " << idx_last_pt
@@ -427,12 +428,15 @@ int main() {
             }
             
             std::cout << std::endl;
-            
+            */
             
             /**
              * Control
              *   1. Pack and send JSON path trajectory coordinates
              */
+            
+            // Send back the first 0.5 sec of previous path and append the new
+            // trajectory after that
             
             // Output vector of (x,y) path trajectory values to json message
             json msgJson;
