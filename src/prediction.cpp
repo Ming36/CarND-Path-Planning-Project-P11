@@ -10,13 +10,13 @@
 void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
                      const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
-  for (std::map<int, std::vector<int>>::const_iterator it = car_ids_by_lane.begin();
+  for (auto it = car_ids_by_lane.begin();
        it != car_ids_by_lane.end(); ++it) {
     
     // Loop through each lane's vector of car id's
     for (int i=0; i < it->second.size(); ++i) {
-      int cur_car_id = it->second[i];
-      DetectedVehicle* cur_car = &detected_cars[cur_car_id];
+      int cur_car_id = it->second.at(i);
+      DetectedVehicle* cur_car = &detected_cars.at(cur_car_id);
       
       // Predict behavior for this detected car
       
@@ -48,17 +48,15 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
   }
 }
 
-void PredictTrajectory(std::map<int, DetectedVehicle> &detected_cars,
+void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
                        const std::map<int, std::vector<int>> &car_ids_by_lane,
                        double predict_time) {
   
-  for (std::map<int, std::vector<int>>::const_iterator it = car_ids_by_lane.begin();
-       it != car_ids_by_lane.end(); ++it) {
-    
+  for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
     // Loop through each lane's vector of car id's
     for (int i=0; i < it->second.size(); ++i) {
-      int cur_car_id = it->second[i];
-      DetectedVehicle* cur_car = &detected_cars[cur_car_id];
+      auto cur_car_id = it->second.at(i);
+      DetectedVehicle cur_car = detected_cars.at(cur_car_id);
       
       // TODO Generate trajectories for each detected car
       

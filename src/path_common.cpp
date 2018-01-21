@@ -21,7 +21,8 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
                                                 std::vector<double> &map_x,
                                                 std::vector<double> &map_y,
                                                 std::vector<double> &map_dx,
-                                                std::vector<double> &map_dy) {
+                                                std::vector<double> &map_dy,
+                                                double s_dist_inc) {
   
   // Add initial map point back to end of map points for wrap-around
   map_s.push_back(kMaxS);
@@ -46,7 +47,7 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
   std::vector<double> interp_y;
   std::vector<double> interp_dx;
   std::vector<double> interp_dy;
-  for (double s=0.; s < kMaxS; s = s + 1.) {
+  for (double s=0.; s < kMaxS; s = s + s_dist_inc) {
     interp_s.push_back(s);
     interp_x.push_back(spline_s_x(s));
     interp_y.push_back(spline_s_y(s));

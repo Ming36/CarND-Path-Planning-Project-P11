@@ -32,6 +32,7 @@ struct VehBehavior {
   VehIntents intent;
   int car_ahead_id;
   int tgt_lane;
+  double tgt_speed;
   double tgt_time;
 };
 

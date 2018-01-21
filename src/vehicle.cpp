@@ -62,6 +62,8 @@ EgoVehicle::EgoVehicle() : Vehicle() {
   coeffs_JMT_d_ = {0, 0, 0};
   coeffs_JMT_d_dot_ = {0, 0, 0};
   coeffs_JMT_d_dotdot_ = {0, 0, 0};
+  
+  tgt_behavior_.tgt_speed = mph2mps(kTargetSpeedMPH);
 }
 
 EgoVehicle::EgoVehicle(int id) : Vehicle(id) {

@@ -66,7 +66,7 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
   VehTrajectory new_traj;
   const int num_pts = t_tgt / kSimCycleTime;
 
-  for (int i = 1; i < num_pts; ++i) { // TODO fix initial index
+  for (int i = 1; i < num_pts; ++i) {
     double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
     
     VehState state;
@@ -106,22 +106,24 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
   return new_traj;
 }
 
-VehTrajectory GetFinalTrajectory(EgoVehicle &ego_car,
+VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
                                  const std::vector<double> &map_interp_s,
                                  const std::vector<double> &map_interp_x,
                                  const std::vector<double> &map_interp_y) {
   
   // Set target time and speed
   const double t_tgt = ego_car.tgt_behavior_.tgt_time;
-  const double v_tgt = mph2mps(kTargetSpeedMPH); // mph -> m/s
+  const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
   
   // Set target D based on target lane
-  double d_tgt = 1.9 + (ego_car.tgt_behavior_.tgt_lane-1) * 4.0;
+  double d_tgt = (kLaneWidth/2) + (ego_car.tgt_behavior_.tgt_lane-1)*kLaneWidth;
 
   // Calculate initial trajectory
   VehTrajectory traj = GetTrajectory(ego_car, t_tgt, v_tgt, d_tgt,
                                      map_interp_s, map_interp_x, map_interp_y);
 
+  // TODO also check for over accel
+  
   // Check for (x,y) overspeed and recalculate trajectory to compensate
   double v_peak = 0;
   double xy_speed = 0;

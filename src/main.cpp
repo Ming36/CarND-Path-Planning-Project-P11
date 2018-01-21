@@ -57,8 +57,7 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
       }
       else {
         // Detected cars as map
-        for (std::map<int, DetectedVehicle>::const_iterator it =
-             detected_cars.begin(); it != detected_cars.end(); ++it) {
+        for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
           if ((it->second.s_rel_ <= i+4) && (it->second.s_rel_ > i-6) &&
               (it->second.lane_ == j_lane)) {
             if (it->second.veh_id_ < 10) {
@@ -66,6 +65,12 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
             }
             else {
               lane_mark = std::to_string(it->second.veh_id_);
+              
+              // DEBUG
+              if (lane_mark.length() > 2) {
+                std::cout << "ID error" << std::endl;
+              }
+              
             }
           }
         }
@@ -114,7 +119,7 @@ int main() {
   }
   
   // Reinterpolate map waypoints
-  std::vector<std::vector<double>> waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw);
+  std::vector<std::vector<double>> waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw, kMapInterpInc);
   
   // Instantiate ego car object and map of detected cars to hold their data
   EgoVehicle ego_car = EgoVehicle(-1);
@@ -201,7 +206,6 @@ int main() {
             const double car_s = car_sd[0];
             const double car_d = car_sd[1];
             
-
             // Calculate s_dot, s_dot_dot and d_dot, d_dot_dot by finding index
             // of last processed trajectory point from previous path and evaluate
             // that time with the derivative polynomial coefficients
@@ -230,7 +234,7 @@ int main() {
             
             // Check all sensor fusion vehicles for distance from ego car
             for (int i = 0; i < sensor_fusion.size(); ++i) {
-              const int sensed_id = sensor_fusion[i][0];
+              int sensed_id = sensor_fusion[i][0];
               const double sensed_x = sensor_fusion[i][1];
               const double sensed_y = sensor_fusion[i][2];
               const double dist_to_sensed = Distance(car_x, car_y, sensed_x,
@@ -263,30 +267,39 @@ int main() {
                                          calc_s_dot, calc_d_dot, 0, 0);
                   
                   sensed_car.UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
-                  
+    
+                  //detected_cars.insert(std::pair<int, DetectedVehicle>(sensed_id, sensed_car));
                   detected_cars[sensed_car.veh_id_] = sensed_car;
+                  
+                  // DEBUG
+                  //std::cout << "Added ID: " << detected_cars[sensed_id].veh_id_ << std::endl;
                 }
                 else {
                   // Vehicle already in map, just update values
-                  detected_cars[sensed_id].UpdateState(sensed_x, sensed_y,
+                  detected_cars.at(sensed_id).UpdateState(sensed_x, sensed_y,
                                                        sensed_s, sensed_d,
                                                        calc_s_dot, calc_d_dot, 0, 0);
                   
-                  detected_cars[sensed_id].UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
+                  detected_cars.at(sensed_id).UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
+
+                  // DEBUG
+                  //std::cout << "Updated ID: " << detected_cars.at(sensed_id).veh_id_ << std::endl;
                 }
               }
               else {
                 // Vehicle outside of sensor range, remove it from map
                 if (detected_cars.count(sensed_id) > 0) {
                   detected_cars.erase(sensed_id);
+
+                  // DEBUG
+                  //std::cout << "Erased ID: " << sensed_id << std::endl;
                 }
               }
             }
             
             // Sort detected vehicle id's by lane
             std::map<int, std::vector<int>> car_ids_by_lane;
-            for (std::map<int, DetectedVehicle>::iterator
-                 it = detected_cars.begin();
+            for (auto it = detected_cars.begin();
                  it != detected_cars.end(); ++it) {
               car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
             }
@@ -294,7 +307,7 @@ int main() {
             /*
             // DEBUG Print out car id's sorted by lane
             std::cout << "Cars sorted by lane:" << std::endl;
-            for (std::map<int, std::vector<int>>::iterator it = car_ids_by_lane.begin();
+            for (auto it = car_ids_by_lane.begin();
                  it != car_ids_by_lane.end(); ++it) {
               std::cout << "lane #" << it->first << " - ";
               for (int i=0; i < it->second.size(); ++i) {
@@ -303,24 +316,6 @@ int main() {
               std::cout << std::endl;
             }
             std::cout << std::endl;
-            */
-            
-            // Sort detected cars vector to start from farthest ahead of ego car
-            /*
-            std::sort(cars_detected.begin(), cars_detected.end(),
-                      [ ](const DetectedVehicle &lhs, const DetectedVehicle &rhs)
-                         { return lhs.s_rel_ > rhs.s_rel_; } ); // lambda sort
-            */
-            
-            /*
-            // DEBUG print detected car stats
-            for (int i = 0; i < cars_detected.size(); ++i) {
-              std::cout << "ID: " << cars_detected[i].veh_id
-                        << ", Lane: " << cars_detected[i].lane
-                        << ", s_rel: " << cars_detected[i].s_rel
-                        << ", s_dot: " << mps2mph(cars_detected[i].s_dot)
-                        << std::endl;
-            }
             */
             
             /**
@@ -332,6 +327,7 @@ int main() {
              */
             
             PredictBehavior(detected_cars, car_ids_by_lane);
+            
             PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
             
             /**
@@ -371,14 +367,15 @@ int main() {
             // the end of the current one
             int min_num_pts = kPathBufferTime / kSimCycleTime;
             if (previous_path_x.size() < min_num_pts) {
-              VehTrajectory new_traj = GetFinalTrajectory(ego_car, map_interp_s, map_interp_x, map_interp_y);
+              VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
+                                                        map_interp_x, map_interp_y);
               for (int i=0; i < new_traj.states.size(); ++i) {
                 ego_car.traj_.states.push_back(new_traj.states[i]);
               }
-              std::cout << "New trajectory appended!" << std::endl;
+              //std::cout << "New trajectory appended!" << std::endl;
             }
             
-            
+            /*
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
             << ", num_prev_path: " << previous_path_x.size()
@@ -423,7 +420,7 @@ int main() {
             }
             
             std::cout << std::endl;
-            
+            */
             
             /**
              * Control
@@ -448,8 +445,8 @@ int main() {
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
             
             // DEBUG print out diagram of sensed cars for debugging
-            //DebugPrintRoad(detected_cars, ego_car);
-
+            DebugPrintRoad(detected_cars, ego_car);
+            
             // Slow down path planning process loop
             //std::this_thread::sleep_for(std::chrono::milliseconds(500));
           }

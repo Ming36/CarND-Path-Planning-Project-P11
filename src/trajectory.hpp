@@ -14,7 +14,7 @@
 #include "path_common.hpp"
 #include "vehicle.hpp"
 
-VehTrajectory GetFinalTrajectory(EgoVehicle &ego_car,
+VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
                                  const std::vector<double> &map_interp_s,
                                  const std::vector<double> &map_interp_x,
                                  const std::vector<double> &map_interp_y);

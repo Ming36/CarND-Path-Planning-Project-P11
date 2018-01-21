@@ -18,7 +18,7 @@
 void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
                      const std::map<int, std::vector<int>> &car_ids_by_lane);
 
-void PredictTrajectory(std::map<int, DetectedVehicle> &detected_cars,
+void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
                        const std::map<int, std::vector<int>> &car_ids_by_lane,
                        double predict_time);
 

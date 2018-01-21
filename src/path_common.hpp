@@ -19,18 +19,25 @@
 /**
  * Constant parameters
  */
-constexpr int kPathCycleTimeMS = 200; // ms
+constexpr double kSimCycleTime = 0.02; // sec
 constexpr double kSensorRange = 100.; // m
-constexpr double kPredictTime = 2.0; // sec
-constexpr double kPathBufferTime = 1.0; // sec
-constexpr double kLaneWidth = 4.0; // m
+
+constexpr double kMaxS = 6945.554; // max before track wraps back to 0
+constexpr double kMapInterpInc = 0.5; // m increment in s
+
+constexpr double kLaneWidth = 3.9; // m
+
+constexpr int kPathCycleTimeMS = 200; // ms, cycle time to update path
+constexpr double kPredictTime = 3.0; // sec
+constexpr double kNewPathTime = 2.0; // sec
+constexpr double kPathBufferTime = 1.0; // sec, append traj after path is this short
+
 constexpr double kLatVelLaneChange = 5.0; // mph (2.2352 m/s)
 constexpr double kTargetSpeedMPH = 49.; // mph
 constexpr double kSpdAdjOffsetMPH = 3.; // mph
 //constexpr double kTargetSpeed = 44.7387; // mph (20 m/s)
-constexpr double kSimCycleTime = 0.02; // sec
+
 constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
-constexpr double kMaxS = 6945.554; // max before track wraps back to 0
 
 /**
  * Basic parameter helpers
@@ -48,7 +55,8 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
                                                 std::vector<double> &map_x,
                                                 std::vector<double> &map_y,
                                                 std::vector<double> &map_dx,
-                                                std::vector<double> &map_dy);
+                                                std::vector<double> &map_dy,
+                                                double s_dist_inc);
 
 int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
                     const std::vector<double> &maps_y);
