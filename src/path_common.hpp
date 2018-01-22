@@ -23,7 +23,7 @@ constexpr double kSimCycleTime = 0.02; // sec
 constexpr double kSensorRange = 100.; // m
 
 constexpr double kMaxS = 6945.554; // max before track wraps back to 0
-constexpr double kMapInterpInc = 0.5; // m increment in s
+constexpr double kMapInterpInc = 1.0; // m increment in s
 
 constexpr double kLaneWidth = 3.9; // m
 

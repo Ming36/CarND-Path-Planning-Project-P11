@@ -87,19 +87,18 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
   }
   
   /*
-  // Check (x,y)-(s,d) conversion accuracy
-  std::vector<double> car_sd = GetHiresFrenet(ego_car.x_, ego_car.y_,
-                                              map_hires_s,
-                                              map_hires_x,
-                                              map_hires_y);
+  // DEBUG Check (x,y)-(s,d) conversion accuracy
+  std::vector<double> car_sd = GetHiresFrenet(ego_car.state_.x, ego_car.state_.y,
+                                              map_interp_s,
+                                              map_interp_x,
+                                              map_interp_y);
   
-  std::vector<double> car_xy = GetHiresXY(car_sd[0], car_sd[1], map_hires_s,
-                                          map_hires_x, map_hires_y);
+  std::vector<double> car_xy = GetHiresXY(car_sd[0], car_sd[1], map_interp_s,
+                                          map_interp_x, map_interp_y);
   
-  std::cout << "x: " << ego_car.x_ << ", y: " << ego_car.y_
-            << ", xy->s: " << ego_car.s_ << ", xy->d: " << ego_car.d_
-            << ", sd->x: " << raw_x_vals[0] << ", sd->y: " << raw_y_vals[1];
-  
+  std::cout << "x: " << ego_car.state_.x << ", y: " << ego_car.state_.y
+            << ", xy->s: " << car_sd[0] << ", xy->d: " << car_sd[1]
+            << ", sd->x: " << car_xy[0] << ", sd->y: " << car_xy[1];
   std::cout << "" << std::endl;
   */
   

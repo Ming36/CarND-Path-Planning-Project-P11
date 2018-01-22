@@ -64,9 +64,9 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
 int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
                     const std::vector<double> &maps_y) {
   
-  // TODO Make this a more efficient search
+  // TODO Make this a more efficient nearest neighbor search
   
-  double closestLen = 100000; //large number
+  double closestLen = std::numeric_limits<double>::max(); //large number
   int closestWaypoint = 0;
   
   for (int i = 0; i < maps_x.size(); i++) {
@@ -78,6 +78,7 @@ int ClosestWaypoint(double x, double y, const std::vector<double> &maps_x,
       closestWaypoint = i;
     }
   }
+  
   return closestWaypoint;
 }
 
@@ -89,13 +90,19 @@ std::vector<double> GetHiresXY(double s, double d,
                                const std::vector<double> &map_hires_x,
                                const std::vector<double> &map_hires_y) {
   
+  /*
   int wp1 = -1;
   while ((s > map_hires_s[wp1+1]) &&
          (wp1 < (int)(map_hires_s.size()-1))) {
     wp1++;
   }
-  
-  int wp2 = (wp1+1) % map_hires_x.size();
+  */
+  auto wp1_bst = std::lower_bound(map_hires_s.begin(), map_hires_s.end(), s);
+
+  //std::cout << wp1 << " = " << (wp1_bst-map_hires_s.begin()-1) << std::endl;
+
+  int wp1 = (wp1_bst - map_hires_s.begin() - 1);
+  int wp2 = (wp1 + 1) % map_hires_x.size();
   
   double theta_wp = atan2((map_hires_y[wp2] - map_hires_y[wp1]),
                           (map_hires_x[wp2] - map_hires_x[wp1]));
@@ -120,9 +127,11 @@ std::vector<double> GetHiresFrenet(double x, double y,
                                    const std::vector<double> &map_hires_x,
                                    const std::vector<double> &map_hires_y) {
   
+  // TODO Fix wraparound
+  
   int close_wp = ClosestWaypoint(x, y, map_hires_x, map_hires_y);
-  int next_wp = close_wp + 1;
-  if (next_wp > map_hires_x.size() - 1) { next_wp  = 0; }
+  int next_wp = (close_wp + 1) % map_hires_x.size();
+  //if (next_wp > map_hires_x.size() - 1) { next_wp  = 0; }
   int prev_wp = close_wp - 1;
   if (prev_wp < 0) { prev_wp = map_hires_x.size() - 1; }
   
@@ -139,6 +148,10 @@ std::vector<double> GetHiresFrenet(double x, double y,
     wp1 = prev_wp;
     wp2 = close_wp;
   }
+  
+  // DEBUG
+  //std::cout << "prev_wp: " << prev_wp << ", close_wp: " << close_wp << ", next_wp: " << next_wp << std::endl;
+  //std::cout << "wp1: " << wp1 << ", wp2: " << wp2 << std::endl;
   
   // Waypoint vector x and y components from prev waypoint to next waypoint
   double vx_wp = map_hires_x[wp2] - map_hires_x[wp1];

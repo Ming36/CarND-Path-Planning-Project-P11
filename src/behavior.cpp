@@ -21,7 +21,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   constexpr double kTgtSpeedDec = 3.; // m/s
   
   double target_speed = mph2mps(kTargetSpeedMPH);
-  double min_rel_s = 99999.;
+  double min_rel_s = std::numeric_limits<double>::max();
   int car_id_ahead = -1;
   
   // Check for closest car ahead in current lane
@@ -45,7 +45,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       else if (car_ahead->s_rel_ < kTgtFollowDist) {
         target_speed = car_ahead->state_.s_dot;
       }
-      std::cout << "rel_s ahead = " << min_rel_s << std::endl;
+      //std::cout << "rel_s ahead = " << min_rel_s << std::endl;
     }
   }
   
@@ -60,10 +60,10 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   ego_car.tgt_behavior_.tgt_speed = target_speed;
   
   // DEBUG
-  std::cout << "tgt_speed (mph) = " << mps2mph(ego_car.tgt_behavior_.tgt_speed) << std::endl;
+  //std::cout << "tgt_speed (mph) = " << mps2mph(ego_car.tgt_behavior_.tgt_speed) << std::endl;
   
   // DUMMY lane change behavior
-  if ((ego_car.state_.s_dot < mph2mps(kTargetSpeedMPH - 10))
+  if ((ego_car.state_.s_dot < mph2mps(kTargetSpeedMPH - mph2mps(10)))
       && (min_rel_s < kTgtFollowDist)) {
     if (ego_car.lane_ > 1) {
       ego_car.tgt_behavior_.tgt_lane--; // DUMMY

@@ -121,6 +121,18 @@ int main() {
   // Reinterpolate map waypoints
   std::vector<std::vector<double>> waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw, kMapInterpInc);
   
+  /*
+  // DEBUG
+  std::cout << "** Map interpolation for s, x, y, dx, dy **" << std::endl;
+  for (int i = 0; i < waypts_interp.size(); ++i) {
+    std::cout << "Map " << i << ":" << std::endl;
+    for (int j = 0; j < waypts_interp[i].size(); ++j) {
+      std::cout << waypts_interp[i][j] << std::endl;
+    }
+    std::cout << std::endl;
+  }
+  */
+  
   // Instantiate ego car object and map of detected cars to hold their data
   EgoVehicle ego_car = EgoVehicle(-1);
   std::map<int, DetectedVehicle> detected_cars;
@@ -297,21 +309,49 @@ int main() {
               }
             }
             
-            // Sort detected vehicle id's by lane
+            // Group detected vehicle id's in a map by lane #
             std::map<int, std::vector<int>> car_ids_by_lane;
             for (auto it = detected_cars.begin();
                  it != detected_cars.end(); ++it) {
               car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
             }
             
+            // Use lambda sort to make each lane's id vector sorted as:
+            //  {closest ahead->farthest ahead->farthest behind->closest behind}
+            // This makes it so that:
+            // car_ids_by_lane.at(lane#).front() = closest car id ahead in lane#
+            // car_ids_by_lane.at(lane#).back() = closest car id behind in lane#
+            for (auto it = car_ids_by_lane.begin();
+                 it != car_ids_by_lane.end(); ++it) {
+              // it->second is a vector of int for the car id's in that lane;
+              std::sort(it->second.begin(), it->second.end(),
+                        [&detected_cars](int &lhs, int &rhs) -> bool
+                        {
+                          auto lhs_s_rel = detected_cars.at(lhs).s_rel_;
+                          auto rhs_s_rel = detected_cars.at(rhs).s_rel_;
+                          if ((lhs_s_rel > 0) && (rhs_s_rel > 0)) {
+                            // Both ahead
+                            return lhs_s_rel < rhs_s_rel;
+                          }
+                          else if ((lhs_s_rel < 0) && (rhs_s_rel < 0)) {
+                            // Both behind
+                            return lhs_s_rel < rhs_s_rel;
+                          }
+                          else {
+                            // ((lhs_s_rel < 0) && (lhs_s_rel > 0))
+                            // ((lhs_s_rel > 0) && (rhs_s_rel < 0))
+                            return lhs_s_rel > rhs_s_rel;
+                          }
+                        });
+            }
+            
             /*
             // DEBUG Print out car id's sorted by lane
             std::cout << "Cars sorted by lane:" << std::endl;
-            for (auto it = car_ids_by_lane.begin();
-                 it != car_ids_by_lane.end(); ++it) {
+            for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
               std::cout << "lane #" << it->first << " - ";
               for (int i=0; i < it->second.size(); ++i) {
-                std::cout << it->second[i] << ", ";
+                std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
               }
               std::cout << std::endl;
             }

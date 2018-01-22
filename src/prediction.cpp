@@ -24,13 +24,13 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
         cur_car->intent_ = kLaneChangeRight;
         
         // DEBUG Print detected lane change
-        std::cout << "** Lane change right detected by car #" << cur_car->veh_id_ << std::endl;
+        //std::cout << "** Lane change right detected by car #" << cur_car->veh_id_ << std::endl;
       }
       else if ((cur_car->intent_ == kKeepLane) && (cur_car->state_.d_dot < mph2mps(-kLatVelLaneChange))) {
         cur_car->intent_ = kLaneChangeLeft;
         
         // DEBUG Print detected lane change
-        std::cout << "** Lane change left detected by car #" << cur_car->veh_id_ << std::endl;
+        //std::cout << "** Lane change left detected by car #" << cur_car->veh_id_ << std::endl;
       }
       else if (((cur_car->intent_ == kLaneChangeRight)
                  && (cur_car->state_.d_dot < mph2mps(kLatVelLaneChange)))
@@ -39,7 +39,7 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
         cur_car->intent_ = kKeepLane;
         
         // DEBUG Print detected lane change ended
-        std::cout << "** End of lane change by car #" << cur_car->veh_id_ << std::endl;
+        //std::cout << "** End of lane change by car #" << cur_car->veh_id_ << std::endl;
       }
       else if (cur_car->intent_ == kUnknown) {
         cur_car->intent_ = kKeepLane;
