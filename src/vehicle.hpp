@@ -49,6 +49,15 @@ struct VehState {
 
 struct VehTrajectory {
   std::deque<VehState> states;
+  
+  std::vector<double> coeffs_JMT_s_; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_s_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_s_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  
+  std::vector<double> coeffs_JMT_d_; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_d_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_d_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  
   double probability;
 };
 
@@ -84,14 +93,6 @@ public:
   
   //int idx_prev_path_;
   VehBehavior tgt_behavior_;
-  
-  std::vector<double> coeffs_JMT_s_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_s_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_s_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
-  
-  std::vector<double> coeffs_JMT_d_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_d_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_d_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
   
   /**
    * Constructor

@@ -7,21 +7,16 @@
 
 #include "trajectory.hpp"
 
-VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
+VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             double v_tgt, double d_tgt,
                             const std::vector<double> &map_interp_s,
                             const std::vector<double> &map_interp_x,
                             const std::vector<double> &map_interp_y) {
  
+  VehTrajectory new_traj;
+  
   // Generate S trajectory
-  VehState start_state;
-  if (ego_car.traj_.states.size() > 0) {
-    start_state = ego_car.traj_.states.back();
-  }
-  else {
-    start_state = ego_car.state_;
-  }
-
+  
   double s_est;
   double s_dot_est;
   double s_dot_dot_est;
@@ -40,14 +35,14 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
     s_dot_dot_est = (s_dot_est - start_state.s_dot) / t_tgt;
   }
   
-  s_est = start_state.s + start_state.s_dot*t_tgt + 0.5*s_dot_dot_est*t_tgt*t_tgt;
+  s_est = start_state.s + start_state.s_dot*t_tgt + 0.5*s_dot_dot_est*sq(t_tgt);
   
   std::vector<double> start_state_s = {start_state.s, start_state.s_dot, start_state.s_dotdot};
   std::vector<double> end_state_s = {s_est, s_dot_est, s_dot_dot_est};
 
-  ego_car.coeffs_JMT_s_ = JMT(start_state_s, end_state_s, t_tgt);
-  ego_car.coeffs_JMT_s_dot_ = DiffPoly(ego_car.coeffs_JMT_s_);
-  ego_car.coeffs_JMT_s_dotdot_ = DiffPoly(ego_car.coeffs_JMT_s_dot_);
+  new_traj.coeffs_JMT_s_ = JMT(start_state_s, end_state_s, t_tgt);
+  new_traj.coeffs_JMT_s_dot_ = DiffPoly(new_traj.coeffs_JMT_s_);
+  new_traj.coeffs_JMT_s_dotdot_ = DiffPoly(new_traj.coeffs_JMT_s_dot_);
   
   // Generate D trajectory
   
@@ -55,30 +50,30 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
   double d_dot_est = 0;
   double d_dot_dot_est = 0;
   
-  std::vector<double> start_state_d = {start_state.d, start_state.d_dot, start_state.d_dotdot};
+  std::vector<double> start_state_d = {start_state.d, start_state.d_dot,
+                                       start_state.d_dotdot};
   std::vector<double> end_state_d = {d_est, d_dot_est, d_dot_dot_est};
   
-  ego_car.coeffs_JMT_d_ = JMT(start_state_d, end_state_d, t_tgt);
-  ego_car.coeffs_JMT_d_dot_ = DiffPoly(ego_car.coeffs_JMT_d_);
-  ego_car.coeffs_JMT_d_dotdot_ = DiffPoly(ego_car.coeffs_JMT_d_dot_);
+  new_traj.coeffs_JMT_d_ = JMT(start_state_d, end_state_d, t_tgt);
+  new_traj.coeffs_JMT_d_dot_ = DiffPoly(new_traj.coeffs_JMT_d_);
+  new_traj.coeffs_JMT_d_dotdot_ = DiffPoly(new_traj.coeffs_JMT_d_dot_);
   
   // Look up (s,d) vals for each sim cycle time step and convert to raw (x,y)
-  VehTrajectory new_traj;
   const int num_pts = t_tgt / kSimCycleTime;
 
   for (int i = 1; i < num_pts; ++i) {
     double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
     
     VehState state;
-    state.s = EvalPoly(t, ego_car.coeffs_JMT_s_);
-    state.s_dot = EvalPoly(t, ego_car.coeffs_JMT_s_dot_);
-    state.s_dotdot = EvalPoly(t, ego_car.coeffs_JMT_s_dotdot_);
-    state.d = EvalPoly(t, ego_car.coeffs_JMT_d_);
-    state.d_dot = EvalPoly(t, ego_car.coeffs_JMT_d_dot_);
-    state.d_dotdot = EvalPoly(t, ego_car.coeffs_JMT_d_dotdot_);
+    state.s = EvalPoly(t, new_traj.coeffs_JMT_s_);
+    state.s_dot = EvalPoly(t, new_traj.coeffs_JMT_s_dot_);
+    state.s_dotdot = EvalPoly(t, new_traj.coeffs_JMT_s_dotdot_);
+    state.d = EvalPoly(t, new_traj.coeffs_JMT_d_);
+    state.d_dot = EvalPoly(t, new_traj.coeffs_JMT_d_dot_);
+    state.d_dotdot = EvalPoly(t, new_traj.coeffs_JMT_d_dotdot_);
 
-    std::vector<double> state_xy = GetHiresXY(state.s, state.d, map_interp_s,
-                                            map_interp_x, map_interp_y);
+    std::vector<double> state_xy = GetHiResXY(state.s, state.d, map_interp_s,
+                                              map_interp_x, map_interp_y);
     
     state.x = state_xy[0];
     state.y = state_xy[1];
@@ -88,7 +83,8 @@ VehTrajectory GetTrajectory(EgoVehicle &ego_car, double t_tgt,
   
   /*
   // DEBUG Check (x,y)-(s,d) conversion accuracy
-  std::vector<double> car_sd = GetHiresFrenet(ego_car.state_.x, ego_car.state_.y,
+  std::vector<double> car_sd = GetHiresFrenet(ego_car.state_.x,
+                                              ego_car.state_.y,
                                               map_interp_s,
                                               map_interp_x,
                                               map_interp_y);
@@ -110,6 +106,15 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
                                  const std::vector<double> &map_interp_x,
                                  const std::vector<double> &map_interp_y) {
   
+  // Set start state
+  VehState start_state;
+  if (ego_car.traj_.states.size() > 0) {
+    start_state = ego_car.traj_.states.back();
+  }
+  else {
+    start_state = ego_car.state_;
+  }
+  
   // Set target time and speed
   const double t_tgt = ego_car.tgt_behavior_.tgt_time;
   const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
@@ -118,17 +123,19 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   double d_tgt = (kLaneWidth/2) + (ego_car.tgt_behavior_.tgt_lane-1)*kLaneWidth;
 
   // Calculate initial trajectory
-  VehTrajectory traj = GetTrajectory(ego_car, t_tgt, v_tgt, d_tgt,
+  VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt,
                                      map_interp_s, map_interp_x, map_interp_y);
 
-  // TODO also check for over accel
-  
   // Check for (x,y) overspeed and recalculate trajectory to compensate
   double v_peak = 0;
   double xy_speed = 0;
-  for (int i=0; i < traj.states.size()-1; ++i) {
-    xy_speed = (Distance(traj.states[i].x, traj.states[i].y,
-                         traj.states[i+1].x, traj.states[i+1].y) / kSimCycleTime);
+  for (int i = 0; i < traj.states.size()-1; ++i) {
+    const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
+                                    traj.states[i+1].x, traj.states[i+1].y);
+    xy_speed = xy_dist / kSimCycleTime;
+    
+    // TODO also check for over accel
+    
     if (xy_speed > v_peak) { v_peak = xy_speed; }
   }
   
@@ -138,16 +145,17 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
     double speed_adj_ratio = mph2mps(kTargetSpeedMPH) / v_peak;
     //std::cout << "Adj: " << speed_adj_ratio << std::endl;
     
-    traj = GetTrajectory(ego_car, t_tgt,
+    traj = GetTrajectory(start_state, t_tgt,
                          (v_tgt * speed_adj_ratio - mph2mps(kSpdAdjOffsetMPH)),
                          d_tgt, map_interp_s, map_interp_x, map_interp_y);
   }
   
   /*
   v_peak = 0;
-  for (int i=0; i < traj.x.size()-1; ++i) {
-    xy_speed = (Distance(traj.x[i], traj.y[i], traj.x[i+1], traj.y[i+1])
-                / kSimCycleTime);
+  for (int i = 0; i < traj.x.size()-1; ++i) {
+    const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
+                                    traj.states[i+1].x, traj.states[i+1].y);
+    xy_speed = xy_dist / kSimCycleTime;
     if (xy_speed > v_peak) { v_peak = xy_speed; }
   }
   std::cout << "After: " << mps2mph(v_peak) << std::endl << std::endl;

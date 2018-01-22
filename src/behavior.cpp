@@ -27,7 +27,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   // Check for closest car ahead in current lane
   if (car_ids_by_lane.count(ego_car.lane_) > 0) {
     std::vector<int> car_ids_in_lane = car_ids_by_lane.at(ego_car.lane_);
-    for (int i=0; i < car_ids_in_lane.size(); ++i) {
+    for (int i = 0; i < car_ids_in_lane.size(); ++i) {
       const DetectedVehicle* cur_car = &detected_cars.at(car_ids_in_lane[i]);
       if ((cur_car->s_rel_ > 0.) && (cur_car->s_rel_ < min_rel_s)) {
         min_rel_s = cur_car->s_rel_;

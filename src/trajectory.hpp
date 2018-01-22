@@ -14,14 +14,15 @@
 #include "path_common.hpp"
 #include "vehicle.hpp"
 
+VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
+                            double v_tgt, double d_tgt,
+                            const std::vector<double> &map_interp_s,
+                            const std::vector<double> &map_interp_x,
+                            const std::vector<double> &map_interp_y);
+
 VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
                                  const std::vector<double> &map_interp_s,
                                  const std::vector<double> &map_interp_x,
                                  const std::vector<double> &map_interp_y);
-
-VehTrajectory GetTrajectory(EgoVehicle &ego_car, double target_speed,
-                             const std::vector<double> &map_interp_s,
-                             const std::vector<double> &map_interp_x,
-                             const std::vector<double> &map_interp_y);
 
 #endif /* trajectory_hpp */

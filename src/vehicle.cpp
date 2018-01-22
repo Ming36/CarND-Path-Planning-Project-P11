@@ -17,6 +17,12 @@ Vehicle::Vehicle() {
 Vehicle::Vehicle(int veh_id) {
   veh_id_ = veh_id;
   intent_ = kUnknown;
+  traj_.coeffs_JMT_s_ = {0, 0, 0};
+  traj_.coeffs_JMT_s_dot_ = {0, 0, 0};
+  traj_.coeffs_JMT_s_dotdot_ = {0, 0, 0};
+  traj_.coeffs_JMT_d_ = {0, 0, 0};
+  traj_.coeffs_JMT_d_dot_ = {0, 0, 0};
+  traj_.coeffs_JMT_d_dotdot_ = {0, 0, 0};
 }
 
 /**
@@ -56,24 +62,10 @@ void Vehicle::UpdateState(double x, double y, double s, double d,
  * Constructor
  */
 EgoVehicle::EgoVehicle() : Vehicle() {
-  coeffs_JMT_s_ = {0, 0, 0};
-  coeffs_JMT_s_dot_ = {0, 0, 0};
-  coeffs_JMT_s_dotdot_ = {0, 0, 0};
-  coeffs_JMT_d_ = {0, 0, 0};
-  coeffs_JMT_d_dot_ = {0, 0, 0};
-  coeffs_JMT_d_dotdot_ = {0, 0, 0};
-  
-  tgt_behavior_.tgt_speed = mph2mps(kTargetSpeedMPH);
+  //tgt_behavior_.tgt_speed = mph2mps(kTargetSpeedMPH);
 }
 
-EgoVehicle::EgoVehicle(int id) : Vehicle(id) {
-  coeffs_JMT_s_ = {0, 0, 0};
-  coeffs_JMT_s_dot_ = {0, 0, 0};
-  coeffs_JMT_s_dotdot_ = {0, 0, 0};
-  coeffs_JMT_d_ = {0, 0, 0};
-  coeffs_JMT_d_dot_ = {0, 0, 0};
-  coeffs_JMT_d_dotdot_ = {0, 0, 0};
-}
+EgoVehicle::EgoVehicle(int id) : Vehicle(id) { }
 
 /**
 * Destructor

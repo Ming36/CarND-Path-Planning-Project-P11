@@ -211,7 +211,7 @@ int main() {
              */
             
             // Get (s,d) from interpolated waypoints
-            std::vector<double> car_sd = GetHiresFrenet(car_x, car_y,
+            std::vector<double> car_sd = GetHiResFrenet(car_x, car_y,
                                                         map_interp_s,
                                                         map_interp_x,
                                                         map_interp_y);
@@ -230,16 +230,16 @@ int main() {
             double t_current_pt = kSimCycleTime * idx_current_pt;
             
             double car_s_dot = EvalPoly(t_current_pt,
-                                        ego_car.coeffs_JMT_s_dot_);
+                                        ego_car.traj_.coeffs_JMT_s_dot_);
 
             double car_d_dot = EvalPoly(t_current_pt,
-                                        ego_car.coeffs_JMT_d_dot_);
+                                        ego_car.traj_.coeffs_JMT_d_dot_);
 
             double car_s_dotdot = EvalPoly(t_current_pt,
-                                            ego_car.coeffs_JMT_s_dotdot_);
+                                            ego_car.traj_.coeffs_JMT_s_dotdot_);
             
             double car_d_dotdot = EvalPoly(t_current_pt,
-                                            ego_car.coeffs_JMT_d_dotdot_);
+                                            ego_car.traj_.coeffs_JMT_d_dotdot_);
             
             // Update ego car's state values
             ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot, car_s_dotdot, car_d_dotdot);
@@ -350,7 +350,7 @@ int main() {
             std::cout << "Cars sorted by lane:" << std::endl;
             for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
               std::cout << "lane #" << it->first << " - ";
-              for (int i=0; i < it->second.size(); ++i) {
+              for (int i = 0; i < it->second.size(); ++i) {
                 std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
               }
               std::cout << std::endl;
@@ -400,7 +400,7 @@ int main() {
             VehTrajectory traj_prev_buffer;
             int buffer_pts = kPathBufferTime / kSimCycleTime;
             if (idx_current_pt > 0) {
-              for (int i=idx_current_pt; i <= buffer_pts; ++i) {
+              for (int i = idx_current_pt; i <= buffer_pts; ++i) {
                 traj_prev_buffer.states.push_back(ego_car.traj_.states[i]);
               }
             }
@@ -409,7 +409,7 @@ int main() {
             
             VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
                                                       map_interp_x, map_interp_y);
-            for (int i=0; i < new_traj.states.size(); ++i) {
+            for (int i = 0; i < new_traj.states.size(); ++i) {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }
             
@@ -428,32 +428,32 @@ int main() {
             << ", d_dotdot: " << ego_car.state_.d_dotdot;
             
             std::cout << ", traj_x: ";
-            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
               std::cout << ego_car.traj_.states[i].x << ";";
             }
             
             std::cout << ", traj_y: ";
-            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
               std::cout << ego_car.traj_.states[i].y << ";";
             }
             
             std::cout << ", prev_path_x: ";
-            for (int i=0; i < previous_path_x.size(); ++i) {
+            for (int i = 0; i < previous_path_x.size(); ++i) {
               std::cout << previous_path_x[i] << ";";
             }
             
             std::cout << ", prev_path_y: ";
-            for (int i=0; i < previous_path_y.size(); ++i) {
+            for (int i = 0; i < previous_path_y.size(); ++i) {
               std::cout << previous_path_y[i] << ";";
             }
             
             std::cout << ", traj_s: ";
-            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
               std::cout << ego_car.traj_.states[i].s << ";";
             }
             
             std::cout << ", traj_d: ";
-            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
               std::cout << ego_car.traj_.states[i].d << ";";
             }
             
@@ -467,7 +467,7 @@ int main() {
             
             std::vector<double> next_x_vals;
             std::vector<double> next_y_vals;
-            for (int i=0; i < ego_car.traj_.states.size(); ++i) {
+            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
               next_x_vals.push_back(ego_car.traj_.states[i].x);
               next_y_vals.push_back(ego_car.traj_.states[i].y);
             }

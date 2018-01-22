@@ -14,7 +14,7 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
        it != car_ids_by_lane.end(); ++it) {
     
     // Loop through each lane's vector of car id's
-    for (int i=0; i < it->second.size(); ++i) {
+    for (int i = 0; i < it->second.size(); ++i) {
       int cur_car_id = it->second.at(i);
       DetectedVehicle* cur_car = &detected_cars.at(cur_car_id);
       
@@ -54,7 +54,7 @@ void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
   
   for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
     // Loop through each lane's vector of car id's
-    for (int i=0; i < it->second.size(); ++i) {
+    for (int i = 0; i < it->second.size(); ++i) {
       auto cur_car_id = it->second.at(i);
       DetectedVehicle cur_car = detected_cars.at(cur_car_id);
       
