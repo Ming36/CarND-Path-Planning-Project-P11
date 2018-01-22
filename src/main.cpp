@@ -396,23 +396,21 @@ int main() {
              *   next_xy_vals [trajectory_x, trajectory_y]
              */
             
-            // Remove trajectory points that were already consumed
+            // Keep prev path buffer states and append new trajectory after that
+            VehTrajectory traj_prev_buffer;
+            int buffer_pts = kPathBufferTime / kSimCycleTime;
             if (idx_current_pt > 0) {
-              for (int i=0; i <= idx_current_pt; ++i) {
-                ego_car.traj_.states.pop_front();
+              for (int i=idx_current_pt; i <= buffer_pts; ++i) {
+                traj_prev_buffer.states.push_back(ego_car.traj_.states[i]);
               }
             }
+            ego_car.traj_.states.clear();
+            ego_car.traj_ = traj_prev_buffer;
             
-            // If near end of previous path, append new trajectory points to
-            // the end of the current one
-            int min_num_pts = kPathBufferTime / kSimCycleTime;
-            if (previous_path_x.size() < min_num_pts) {
-              VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
-                                                        map_interp_x, map_interp_y);
-              for (int i=0; i < new_traj.states.size(); ++i) {
-                ego_car.traj_.states.push_back(new_traj.states[i]);
-              }
-              //std::cout << "New trajectory appended!" << std::endl;
+            VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
+                                                      map_interp_x, map_interp_y);
+            for (int i=0; i < new_traj.states.size(); ++i) {
+              ego_car.traj_.states.push_back(new_traj.states[i]);
             }
             
             /*

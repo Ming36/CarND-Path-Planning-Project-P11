@@ -30,7 +30,7 @@ constexpr double kLaneWidth = 3.9; // m
 constexpr int kPathCycleTimeMS = 200; // ms, cycle time to update path
 constexpr double kPredictTime = 3.0; // sec
 constexpr double kNewPathTime = 2.0; // sec
-constexpr double kPathBufferTime = 1.0; // sec, append traj after path is this short
+constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this short
 
 constexpr double kLatVelLaneChange = 5.0; // mph (2.2352 m/s)
 constexpr double kTargetSpeedMPH = 49.; // mph
