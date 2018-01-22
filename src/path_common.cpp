@@ -266,4 +266,3 @@ std::vector<double> DiffPoly(std::vector<double> coeffs) {
   }
   return diff_coeffs;
 }
-

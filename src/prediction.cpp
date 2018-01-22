@@ -8,11 +8,15 @@
 #include "prediction.hpp"
 
 void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
-                     const std::map<int, std::vector<int>> &car_ids_by_lane_ahead,
-                     const std::map<int, std::vector<int>> &car_ids_by_lane_behind) {
+                     const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
-  for (auto it = car_ids_by_lane_ahead.begin();
-            it != car_ids_by_lane_ahead.end(); ++it) {
+  /*
+   1. For each detected car, set possible intents.
+   2. For each intent, make a predicted trajectory and set a probability
+  */
+  
+  for (auto it = car_ids_by_lane.begin();
+            it != car_ids_by_lane.end(); ++it) {
     
     // Loop through each lane's vector of car id's
     for (int i = 0; i < it->second.size(); ++i) {
@@ -20,7 +24,7 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       DetectedVehicle* cur_car = &detected_cars.at(cur_car_id);
       
       // Predict behavior for this detected car
-      
+      /*
       if ((cur_car->intent_ == kKeepLane) && (cur_car->state_.d_dot > kLatVelLaneChange)) {
         cur_car->intent_ = kLaneChangeRight;
         
@@ -45,16 +49,16 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       else if (cur_car->intent_ == kUnknown) {
         cur_car->intent_ = kKeepLane;
       }
+       */
     }
   }
 }
 
 void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
-                       const std::map<int, std::vector<int>> &car_ids_by_lane_ahead,
-                       const std::map<int, std::vector<int>> &car_ids_by_lane_behind,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane,
                        double predict_time) {
   
-  for (auto it = car_ids_by_lane_ahead.begin(); it != car_ids_by_lane_ahead.end(); ++it) {
+  for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
     // Loop through each lane's vector of car id's
     for (int i = 0; i < it->second.size(); ++i) {
       auto cur_car_id = it->second.at(i);

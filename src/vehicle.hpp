@@ -50,14 +50,15 @@ struct VehState {
 struct VehTrajectory {
   std::deque<VehState> states;
   
-  std::vector<double> coeffs_JMT_s_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_s_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_s_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
+  std::vector<double> coeffs_JMT_s; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_s_dot; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_s_dotdot; // [2*a2, 6*a3, 12*a4, 20*a5]
   
-  std::vector<double> coeffs_JMT_d_; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_d_dot_; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_d_dotdot_; // [2*a2, 6*a3, 12*a4, 20*a5]
-  
+  std::vector<double> coeffs_JMT_d; // [a0, a1, a2, a3, a4, a5]
+  std::vector<double> coeffs_JMT_d_dot; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
+  std::vector<double> coeffs_JMT_d_dotdot; // [2*a2, 6*a3, 12*a4, 20*a5]
+
+  //VehIntents intent;
   double probability;
 };
 
@@ -68,7 +69,6 @@ public:
   int lane_;
   VehState state_;
   VehTrajectory traj_;
-  VehIntents intent_;
   
   /**
    * Constructor
@@ -111,6 +111,7 @@ public:
   
   double s_rel_;
   double d_rel_;
+  
   std::map<VehIntents, VehTrajectory> pred_trajs_;
   
   /**
@@ -126,5 +127,13 @@ public:
   
   void UpdateRelDist(double s_ego, double d_ego);
 };
+
+std::tuple<int, double> GetCarAheadInLane(const int check_lane, const double s_rel_ref,
+                                          const std::map<int, DetectedVehicle> &detected_cars,
+                                          const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+std::tuple<int, double> GetCarBehindInLane(const int check_lane, const double s_rel_ref,
+                                           const std::map<int, DetectedVehicle> &detected_cars,
+                                           const std::map<int, std::vector<int>> &car_ids_by_lane);
 
 #endif /* vehicle_hpp */

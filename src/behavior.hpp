@@ -17,7 +17,6 @@
 
 void VehBehaviorFSM(EgoVehicle &ego_car,
                     const std::map<int, DetectedVehicle> &detected_cars,
-                    const std::map<int, std::vector<int>> &car_ids_by_lane_ahead,
-                    const std::map<int, std::vector<int>> &car_ids_by_lane_behind);
+                    const std::map<int, std::vector<int>> &car_ids_by_lane);
 
 #endif /* behavior_hpp */

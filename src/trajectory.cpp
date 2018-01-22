@@ -40,9 +40,9 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
   std::vector<double> start_state_s = {start_state.s, start_state.s_dot, start_state.s_dotdot};
   std::vector<double> end_state_s = {s_est, s_dot_est, s_dot_dot_est};
 
-  new_traj.coeffs_JMT_s_ = JMT(start_state_s, end_state_s, t_tgt);
-  new_traj.coeffs_JMT_s_dot_ = DiffPoly(new_traj.coeffs_JMT_s_);
-  new_traj.coeffs_JMT_s_dotdot_ = DiffPoly(new_traj.coeffs_JMT_s_dot_);
+  new_traj.coeffs_JMT_s = JMT(start_state_s, end_state_s, t_tgt);
+  new_traj.coeffs_JMT_s_dot = DiffPoly(new_traj.coeffs_JMT_s);
+  new_traj.coeffs_JMT_s_dotdot = DiffPoly(new_traj.coeffs_JMT_s_dot);
   
   // Generate D trajectory
   
@@ -54,9 +54,9 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                                        start_state.d_dotdot};
   std::vector<double> end_state_d = {d_est, d_dot_est, d_dot_dot_est};
   
-  new_traj.coeffs_JMT_d_ = JMT(start_state_d, end_state_d, t_tgt);
-  new_traj.coeffs_JMT_d_dot_ = DiffPoly(new_traj.coeffs_JMT_d_);
-  new_traj.coeffs_JMT_d_dotdot_ = DiffPoly(new_traj.coeffs_JMT_d_dot_);
+  new_traj.coeffs_JMT_d = JMT(start_state_d, end_state_d, t_tgt);
+  new_traj.coeffs_JMT_d_dot = DiffPoly(new_traj.coeffs_JMT_d);
+  new_traj.coeffs_JMT_d_dotdot = DiffPoly(new_traj.coeffs_JMT_d_dot);
   
   // Look up (s,d) vals for each sim cycle time step and convert to raw (x,y)
   const int num_pts = t_tgt / kSimCycleTime;
@@ -65,12 +65,12 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
     double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
     
     VehState state;
-    state.s = EvalPoly(t, new_traj.coeffs_JMT_s_);
-    state.s_dot = EvalPoly(t, new_traj.coeffs_JMT_s_dot_);
-    state.s_dotdot = EvalPoly(t, new_traj.coeffs_JMT_s_dotdot_);
-    state.d = EvalPoly(t, new_traj.coeffs_JMT_d_);
-    state.d_dot = EvalPoly(t, new_traj.coeffs_JMT_d_dot_);
-    state.d_dotdot = EvalPoly(t, new_traj.coeffs_JMT_d_dotdot_);
+    state.s = EvalPoly(t, new_traj.coeffs_JMT_s);
+    state.s_dot = EvalPoly(t, new_traj.coeffs_JMT_s_dot);
+    state.s_dotdot = EvalPoly(t, new_traj.coeffs_JMT_s_dotdot);
+    state.d = EvalPoly(t, new_traj.coeffs_JMT_d);
+    state.d_dot = EvalPoly(t, new_traj.coeffs_JMT_d_dot);
+    state.d_dotdot = EvalPoly(t, new_traj.coeffs_JMT_d_dotdot);
 
     std::vector<double> state_xy = GetHiResXY(state.s, state.d, map_interp_s,
                                               map_interp_x, map_interp_y);

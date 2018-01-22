@@ -230,19 +230,20 @@ int main() {
             double t_current_pt = kSimCycleTime * idx_current_pt;
             
             double car_s_dot = EvalPoly(t_current_pt,
-                                        ego_car.traj_.coeffs_JMT_s_dot_);
+                                        ego_car.traj_.coeffs_JMT_s_dot);
 
             double car_d_dot = EvalPoly(t_current_pt,
-                                        ego_car.traj_.coeffs_JMT_d_dot_);
+                                        ego_car.traj_.coeffs_JMT_d_dot);
 
             double car_s_dotdot = EvalPoly(t_current_pt,
-                                            ego_car.traj_.coeffs_JMT_s_dotdot_);
+                                            ego_car.traj_.coeffs_JMT_s_dotdot);
             
             double car_d_dotdot = EvalPoly(t_current_pt,
-                                            ego_car.traj_.coeffs_JMT_d_dotdot_);
+                                            ego_car.traj_.coeffs_JMT_d_dotdot);
             
             // Update ego car's state values
-            ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot, car_d_dot, car_s_dotdot, car_d_dotdot);
+            ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot,
+                                car_d_dot, car_s_dotdot, car_d_dotdot);
             
             // Check all sensor fusion vehicles for distance from ego car
             for (int i = 0; i < sensor_fusion.size(); ++i) {
@@ -292,7 +293,8 @@ int main() {
                                                        sensed_s, sensed_d,
                                                        calc_s_dot, calc_d_dot, 0, 0);
                   
-                  detected_cars.at(sensed_id).UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
+                  detected_cars.at(sensed_id).UpdateRelDist(ego_car.state_.s,
+                                                            ego_car.state_.d);
 
                   // DEBUG
                   //std::cout << "Updated ID: " << detected_cars.at(sensed_id).veh_id_ << std::endl;
@@ -309,6 +311,26 @@ int main() {
               }
             }
             
+            // Group detected car id's in a map by lane #
+            std::map<int, std::vector<int>> car_ids_by_lane;
+            for (auto it = detected_cars.begin();
+                      it != detected_cars.end(); ++it) {
+              car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
+            }
+            
+            // Lambda sort car id's in each lane by s relative to ego car
+            for (auto it = car_ids_by_lane.begin();
+                      it != car_ids_by_lane.end(); ++it) {
+              // it->second is a vector of int for the car id's in that lane;
+              std::sort(it->second.begin(), it->second.end(),
+                        [&detected_cars](int &lhs, int &rhs) -> bool {
+                          auto lhs_s_rel = detected_cars.at(lhs).s_rel_;
+                          auto rhs_s_rel = detected_cars.at(rhs).s_rel_;
+                          return lhs_s_rel > rhs_s_rel; // higher s_rel first
+                        });
+            }
+            
+            /*
             // Group detected car id's ahead/behind in maps by lane #
             std::map<int, std::vector<int>> car_ids_by_lane_ahead;
             std::map<int, std::vector<int>> car_ids_by_lane_behind;
@@ -347,26 +369,18 @@ int main() {
                           return lhs_s_rel > rhs_s_rel; // less neg dist first
                         });
             }
+            */
             
-            /*
+            
             // DEBUG Print out car id's sorted by lane
             std::cout << "Cars sorted by lane:" << std::endl;
-            for (auto it = car_ids_by_lane_ahead.begin(); it != car_ids_by_lane_ahead.end(); ++it) {
-              std::cout << "ahead lane #" << it->first << " - ";
+            for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
+              std::cout << "lane #" << it->first << " - ";
               for (int i = 0; i < it->second.size(); ++i) {
                 std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
               }
               std::cout << std::endl;
             }
-            for (auto it = car_ids_by_lane_behind.begin(); it != car_ids_by_lane_behind.end(); ++it) {
-              std::cout << "behind lane #" << it->first << " - ";
-              for (int i = 0; i < it->second.size(); ++i) {
-                std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
-              }
-              std::cout << std::endl;
-            }
-            std::cout << std::endl;
-            */
             
             /**
              * Prediction
@@ -376,9 +390,9 @@ int main() {
              *   detected_cars, car_ids_by_lane
              */
             
-            PredictBehavior(detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind);
+            PredictBehavior(detected_cars, car_ids_by_lane);
             
-            PredictTrajectory(detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind, kPredictTime);
+            PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
             
             /**
              * Behavior Planning
@@ -391,7 +405,7 @@ int main() {
              *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
              */
             
-            VehBehaviorFSM(ego_car, detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind);
+            VehBehaviorFSM(ego_car, detected_cars, car_ids_by_lane);
             
             /**
              * Trajectory Generation

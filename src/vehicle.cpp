@@ -12,17 +12,17 @@
  */
 Vehicle::Vehicle() {
   
-  intent_ = kUnknown;
+  //intent_ = kUnknown;
 }
 Vehicle::Vehicle(int veh_id) {
   veh_id_ = veh_id;
-  intent_ = kUnknown;
-  traj_.coeffs_JMT_s_ = {0, 0, 0};
-  traj_.coeffs_JMT_s_dot_ = {0, 0, 0};
-  traj_.coeffs_JMT_s_dotdot_ = {0, 0, 0};
-  traj_.coeffs_JMT_d_ = {0, 0, 0};
-  traj_.coeffs_JMT_d_dot_ = {0, 0, 0};
-  traj_.coeffs_JMT_d_dotdot_ = {0, 0, 0};
+  //intent_ = kUnknown;
+  traj_.coeffs_JMT_s = {0, 0, 0, 0, 0, 0};
+  traj_.coeffs_JMT_s_dot = {0, 0, 0, 0, 0, 0};
+  traj_.coeffs_JMT_s_dotdot = {0, 0, 0, 0, 0, 0};
+  traj_.coeffs_JMT_d = {0, 0, 0, 0, 0, 0};
+  traj_.coeffs_JMT_d_dot = {0, 0, 0, 0, 0, 0};
+  traj_.coeffs_JMT_d_dotdot = {0, 0, 0, 0, 0, 0};
 }
 
 /**
@@ -85,6 +85,57 @@ DetectedVehicle::~DetectedVehicle() { }
  * Calculate relative (s,d) from ego car
  */
 void DetectedVehicle::UpdateRelDist(double s_ego, double d_ego) {
-  s_rel_ = state_.s - s_ego;
+  double s_rel = state_.s - s_ego;
+  // Normalize for track wrap-around
+  while (s_rel > kSensorRange) { s_rel -= kMaxS; }
+  while (s_rel < -kSensorRange) { s_rel += kMaxS; }
+  s_rel_ = s_rel;
+  
   d_rel_ = state_.d - d_ego;
+}
+
+std::tuple<int, double> GetCarAheadInLane(const int check_lane, const double s_rel_ref,
+                                          const std::map<int, DetectedVehicle> &detected_cars,
+                                          const std::map<int, std::vector<int>> &car_ids_by_lane) {
+  
+  int car_id_ahead = -1;
+  double s_rel_ahead = std::numeric_limits<double>::max();
+  
+  if (car_ids_by_lane.count(check_lane) > 0) {
+    auto car_ids_in_lane = car_ids_by_lane.at(check_lane);
+    for (int i = 0; i < car_ids_in_lane.size(); ++i) {
+      int cur_car_id = car_ids_in_lane[i];
+      double cur_s_rel = detected_cars.at(cur_car_id).s_rel_;
+      if (cur_s_rel < s_rel_ref) {
+        break;
+      }
+      car_id_ahead = cur_car_id;
+      s_rel_ahead = cur_s_rel;
+    }
+  }
+  
+  return std::make_tuple(car_id_ahead, s_rel_ahead);
+}
+
+std::tuple<int, double> GetCarBehindInLane(const int check_lane, const double s_rel_ref,
+                                           const std::map<int, DetectedVehicle> &detected_cars,
+                                           const std::map<int, std::vector<int>> &car_ids_by_lane) {
+  
+  int car_id_behind = -1;
+  double s_rel_behind = std::numeric_limits<double>::min();
+  
+  if (car_ids_by_lane.count(check_lane) > 0) {
+    auto car_ids_in_lane = car_ids_by_lane.at(check_lane);
+    for (int i = car_ids_in_lane.size()-1; i >= 0; --i) {
+      int cur_car_id = car_ids_in_lane[i];
+      double cur_s_rel = detected_cars.at(cur_car_id).s_rel_;
+      if (cur_s_rel > s_rel_ref) {
+        break;
+      }
+      car_id_behind = cur_car_id;
+      s_rel_behind = cur_s_rel;
+    }
+  }
+  
+  return std::make_tuple(car_id_behind, s_rel_behind);
 }
