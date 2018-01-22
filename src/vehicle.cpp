@@ -61,10 +61,7 @@ void Vehicle::UpdateState(double x, double y, double s, double d,
 /**
  * Constructor
  */
-EgoVehicle::EgoVehicle() : Vehicle() {
-  //tgt_behavior_.tgt_speed = mph2mps(kTargetSpeedMPH);
-}
-
+EgoVehicle::EgoVehicle() : Vehicle() { }
 EgoVehicle::EgoVehicle(int id) : Vehicle(id) { }
 
 /**

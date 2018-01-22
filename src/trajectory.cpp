@@ -141,12 +141,12 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   
   //std::cout << "Before: " << mps2mph(v_peak) << std::endl;
   
-  if (v_peak > mph2mps(kTargetSpeedMPH)) {
-    double speed_adj_ratio = mph2mps(kTargetSpeedMPH) / v_peak;
+  if (v_peak > kTargetSpeed) {
+    double speed_adj_ratio = kTargetSpeed / v_peak;
     //std::cout << "Adj: " << speed_adj_ratio << std::endl;
     
     traj = GetTrajectory(start_state, t_tgt,
-                         (v_tgt * speed_adj_ratio - mph2mps(kSpdAdjOffsetMPH)),
+                         (v_tgt * speed_adj_ratio - kSpdAdjOffset),
                          d_tgt, map_interp_s, map_interp_x, map_interp_y);
   }
   

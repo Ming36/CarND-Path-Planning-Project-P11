@@ -16,10 +16,12 @@
 #include "vehicle.hpp"
 
 void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
-                     const std::map<int, std::vector<int>> &car_ids_by_lane);
+                     const std::map<int, std::vector<int>> &car_ids_by_lane_ahead,
+                     const std::map<int, std::vector<int>> &car_ids_by_lane_behind);
 
 void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
-                       const std::map<int, std::vector<int>> &car_ids_by_lane,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane_ahead,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane_behind,
                        double predict_time);
 
 #endif /* prediction_hpp */

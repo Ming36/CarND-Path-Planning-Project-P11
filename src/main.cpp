@@ -309,47 +309,57 @@ int main() {
               }
             }
             
-            // Group detected vehicle id's in a map by lane #
-            std::map<int, std::vector<int>> car_ids_by_lane;
+            // Group detected car id's ahead/behind in maps by lane #
+            std::map<int, std::vector<int>> car_ids_by_lane_ahead;
+            std::map<int, std::vector<int>> car_ids_by_lane_behind;
             for (auto it = detected_cars.begin();
-                 it != detected_cars.end(); ++it) {
-              car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
+                      it != detected_cars.end(); ++it) {
+              const int lane = it->second.lane_;
+              const int veh_id = it->second.veh_id_;
+              if (it->second.s_rel_ >= 0) {
+                car_ids_by_lane_ahead[lane].push_back(veh_id);
+              }
+              else {
+                car_ids_by_lane_behind[lane].push_back(veh_id);
+              }
             }
             
-            // Use lambda sort to make each lane's id vector sorted as:
-            //  {closest ahead->farthest ahead->farthest behind->closest behind}
-            // This makes it so that:
-            // car_ids_by_lane.at(lane#).front() = closest car id ahead in lane#
-            // car_ids_by_lane.at(lane#).back() = closest car id behind in lane#
-            for (auto it = car_ids_by_lane.begin();
-                 it != car_ids_by_lane.end(); ++it) {
+            // Lambda sort car id's ahead in each lane by closest first
+            for (auto it = car_ids_by_lane_ahead.begin();
+                      it != car_ids_by_lane_ahead.end(); ++it) {
               // it->second is a vector of int for the car id's in that lane;
               std::sort(it->second.begin(), it->second.end(),
-                        [&detected_cars](int &lhs, int &rhs) -> bool
-                        {
+                        [&detected_cars](int &lhs, int &rhs) -> bool {
                           auto lhs_s_rel = detected_cars.at(lhs).s_rel_;
                           auto rhs_s_rel = detected_cars.at(rhs).s_rel_;
-                          if ((lhs_s_rel > 0) && (rhs_s_rel > 0)) {
-                            // Both ahead
-                            return lhs_s_rel < rhs_s_rel;
-                          }
-                          else if ((lhs_s_rel < 0) && (rhs_s_rel < 0)) {
-                            // Both behind
-                            return lhs_s_rel < rhs_s_rel;
-                          }
-                          else {
-                            // ((lhs_s_rel < 0) && (lhs_s_rel > 0))
-                            // ((lhs_s_rel > 0) && (rhs_s_rel < 0))
-                            return lhs_s_rel > rhs_s_rel;
-                          }
+                          return lhs_s_rel < rhs_s_rel; // less pos dist first
+                        });
+            }
+            
+            // Lambda sort car id's behind in each lane by closest first
+            for (auto it = car_ids_by_lane_behind.begin();
+                      it != car_ids_by_lane_behind.end(); ++it) {
+              // it->second is a vector of int for the car id's in that lane;
+              std::sort(it->second.begin(), it->second.end(),
+                        [&detected_cars](int &lhs, int &rhs) -> bool {
+                          auto lhs_s_rel = detected_cars.at(lhs).s_rel_;
+                          auto rhs_s_rel = detected_cars.at(rhs).s_rel_;
+                          return lhs_s_rel > rhs_s_rel; // less neg dist first
                         });
             }
             
             /*
             // DEBUG Print out car id's sorted by lane
             std::cout << "Cars sorted by lane:" << std::endl;
-            for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
-              std::cout << "lane #" << it->first << " - ";
+            for (auto it = car_ids_by_lane_ahead.begin(); it != car_ids_by_lane_ahead.end(); ++it) {
+              std::cout << "ahead lane #" << it->first << " - ";
+              for (int i = 0; i < it->second.size(); ++i) {
+                std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
+              }
+              std::cout << std::endl;
+            }
+            for (auto it = car_ids_by_lane_behind.begin(); it != car_ids_by_lane_behind.end(); ++it) {
+              std::cout << "behind lane #" << it->first << " - ";
               for (int i = 0; i < it->second.size(); ++i) {
                 std::cout << it->second[i] << "= " << detected_cars.at(it->second[i]).s_rel_ << ", ";
               }
@@ -366,9 +376,9 @@ int main() {
              *   detected_cars, car_ids_by_lane
              */
             
-            PredictBehavior(detected_cars, car_ids_by_lane);
+            PredictBehavior(detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind);
             
-            PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
+            PredictTrajectory(detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind, kPredictTime);
             
             /**
              * Behavior Planning
@@ -381,7 +391,7 @@ int main() {
              *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
              */
             
-            VehBehaviorFSM(ego_car, detected_cars, car_ids_by_lane);
+            VehBehaviorFSM(ego_car, detected_cars, car_ids_by_lane_ahead, car_ids_by_lane_behind);
             
             /**
              * Trajectory Generation
