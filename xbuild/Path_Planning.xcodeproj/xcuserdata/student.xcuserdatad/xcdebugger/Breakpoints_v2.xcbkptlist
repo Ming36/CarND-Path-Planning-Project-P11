@@ -10,44 +10,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/main.cpp"
-            timestampString = "538439138.8664891"
+            timestampString = "538442602.76364"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "71"
             endingLineNumber = "71"
             landmarkName = "DebugPrintRoad(const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const EgoVehicle &amp;ego_car)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/vehicle.cpp"
-            timestampString = "538439138.866684"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "108"
-            endingLineNumber = "108"
-            landmarkName = "GetCarAheadInLane(const int check_lane, const int check_id, const EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const std::map&lt;int, std::vector&lt;int&gt;&gt; &amp;car_ids_by_lane)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/vehicle.cpp"
-            timestampString = "538439138.866825"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "152"
-            endingLineNumber = "152"
-            landmarkName = "GetCarAheadInLane(const int check_lane, const int check_id, const EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const std::map&lt;int, std::vector&lt;int&gt;&gt; &amp;car_ids_by_lane)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

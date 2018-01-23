@@ -382,6 +382,7 @@ int main() {
               std::cout << std::endl;
             }
             
+            
             /**
              * Prediction
              *   1. Predict detected car behaviors and sort by lane
@@ -390,10 +391,8 @@ int main() {
              *   detected_cars, car_ids_by_lane
              */
             
-            PredictBehavior(ego_car, detected_cars, car_ids_by_lane,
+            PredictBehavior(detected_cars, ego_car, car_ids_by_lane,
                             map_interp_s, map_interp_x, map_interp_y);
-            
-            //PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
             
             
             // DEBUG Print out all detected cars' predicted intents

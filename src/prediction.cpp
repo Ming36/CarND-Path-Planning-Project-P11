@@ -7,8 +7,8 @@
 
 #include "prediction.hpp"
 
-void PredictBehavior(const EgoVehicle &ego_car,
-                     std::map<int, DetectedVehicle> &detected_cars,
+void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
+                     const EgoVehicle &ego_car,
                      const std::map<int, std::vector<int>> &car_ids_by_lane,
                      const std::vector<double> &map_interp_s,
                      const std::vector<double> &map_interp_x,
@@ -37,7 +37,8 @@ void PredictBehavior(const EgoVehicle &ego_car,
       int car_id_ahead = std::get<0>(car_ahead);
       double s_rel_ahead = std::get<1>(car_ahead);
       
-      // KeepLane - Add for all cars with base probability 1.0
+      // KeepLane:
+      //   Add for all cars with base probability 1.0
       if (s_rel_ahead < kTgtFollowDist) {
         double v_car_ahead;
         if (car_id_ahead != ego_car.veh_id_) {
@@ -57,8 +58,8 @@ void PredictBehavior(const EgoVehicle &ego_car,
       traj_KL.probability = 1.0;
       cur_car->pred_trajs_[kKeepLane] = traj_KL;
       
-      // LaneChangeLeft - Add if lane is open to left and set high probability
-      //                  if car ahead is close
+      // LaneChangeLeft:
+      //   Add if lane is open to left and set high prob if car ahead is close
       if (cur_car->lane_ > 1) {
         v_tgt = cur_car->state_.s_dot;
         d_tgt = tgt_lane2tgt_d(cur_car->lane_ - 1);
@@ -66,15 +67,16 @@ void PredictBehavior(const EgoVehicle &ego_car,
                                                map_interp_s, map_interp_x, map_interp_y);
         
         double prob_LCL = 0.1;
-        if (s_rel_ahead < kTgtFollowDist) { prob_LCL = 0.4; }
+        if (s_rel_ahead < kTgtFollowDist) { prob_LCL = 0.3; }
+        if (cur_car->state_.d_dot < -kLatVelLaneChange) { prob_LCL = 0.8; }
         traj_LCL.probability = prob_LCL;
         
         cur_car->pred_trajs_[kLaneChangeLeft] = traj_LCL;
         cur_car->pred_trajs_.at(kKeepLane).probability -= prob_LCL;
       }
       
-      // LaneChangeRight - Add if lane is open to right and set high probability
-      //                   if car ahead is close
+      // LaneChangeRight:
+      //   Add if lane is open to right and set high prob if car ahead is close
       if (cur_car->lane_ < 3) {
         v_tgt = cur_car->state_.s_dot;
         d_tgt = tgt_lane2tgt_d(cur_car->lane_ + 1);
@@ -82,7 +84,8 @@ void PredictBehavior(const EgoVehicle &ego_car,
                                                map_interp_s, map_interp_x, map_interp_y);
         
         double prob_LCR = 0.1;
-        if (s_rel_ahead < kTgtFollowDist) { prob_LCR = 0.4; }
+        if (s_rel_ahead < kTgtFollowDist) { prob_LCR = 0.3; }
+        if (cur_car->state_.d_dot > kLatVelLaneChange) { prob_LCR = 0.8; }
         traj_LCR.probability = prob_LCR;
         
         cur_car->pred_trajs_[kLaneChangeRight] = traj_LCR;
@@ -91,21 +94,3 @@ void PredictBehavior(const EgoVehicle &ego_car,
     }
   }
 }
-
-/*
-void PredictTrajectory(const std::map<int, DetectedVehicle> &detected_cars,
-                       const std::map<int, std::vector<int>> &car_ids_by_lane,
-                       double predict_time) {
-  
-  for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
-    // Loop through each lane's vector of car id's
-    for (int i = 0; i < it->second.size(); ++i) {
-      auto cur_car_id = it->second.at(i);
-      DetectedVehicle cur_car = detected_cars.at(cur_car_id);
-      
-      // TODO Generate trajectories for each detected car
-      
-    }
-  }
-}
-*/
