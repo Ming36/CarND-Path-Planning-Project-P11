@@ -128,11 +128,13 @@ public:
   void UpdateRelDist(double s_ego, double d_ego);
 };
 
-std::tuple<int, double> GetCarAheadInLane(const int check_lane, const double s_rel_ref,
+std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int ref_id,
+                                          const double ref_s_rel,
                                           const std::map<int, DetectedVehicle> &detected_cars,
                                           const std::map<int, std::vector<int>> &car_ids_by_lane);
 
-std::tuple<int, double> GetCarBehindInLane(const int check_lane, const double s_rel_ref,
+std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int ref_id,
+                                           const double ref_s_rel,
                                            const std::map<int, DetectedVehicle> &detected_cars,
                                            const std::map<int, std::vector<int>> &car_ids_by_lane);
 

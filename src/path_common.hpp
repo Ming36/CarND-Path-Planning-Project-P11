@@ -39,6 +39,10 @@ constexpr double kSpdAdjOffset = (3.) / 2.23694; // m/s
 
 constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
 
+constexpr double kTgtFollowDist = 30.; // m
+constexpr double kTgtMinFollowDist = 10.; // m
+constexpr double kTgtSpeedDec = 3.; // m/s
+
 /**
  * Basic parameter helpers
  */
@@ -49,6 +53,10 @@ inline double mps2mph(double x) { return x * 2.23694; }
 inline double mph2mps(double x) { return x / 2.23694; }
 inline double mps2pointdist(double x) { return x * 0.020; }
 inline double sq(double x) {return x * x;}
+
+inline double tgt_lane2tgt_d(int tgt_lane) {
+  return (kLaneWidth/2) + (tgt_lane-1)*kLaneWidth;
+}
 
 double Distance(double x1, double y1, double x2, double y2);
 

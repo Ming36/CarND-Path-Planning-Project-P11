@@ -120,8 +120,9 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
   
   // Set target D based on target lane
-  double d_tgt = (kLaneWidth/2) + (ego_car.tgt_behavior_.tgt_lane-1)*kLaneWidth;
-
+  //double d_tgt = (kLaneWidth/2) + (ego_car.tgt_behavior_.tgt_lane-1)*kLaneWidth;
+  double d_tgt = tgt_lane2tgt_d(ego_car.tgt_behavior_.tgt_lane);
+  
   // Calculate initial trajectory
   VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt,
                                      map_interp_s, map_interp_x, map_interp_y);
