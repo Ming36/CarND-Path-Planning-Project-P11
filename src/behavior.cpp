@@ -19,7 +19,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   double target_speed = kTargetSpeed;
   
   // Check for closest car ahead in current lane
-  auto car_ahead = GetCarAheadInLane(ego_car.lane_, ego_car.veh_id_, 0.,
+  auto car_ahead = GetCarAheadInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
                                      detected_cars, car_ids_by_lane);
   int car_id_ahead = std::get<0>(car_ahead);
   double min_rel_s = std::get<1>(car_ahead);

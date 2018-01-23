@@ -7,7 +7,8 @@
 
 #include "prediction.hpp"
 
-void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
+void PredictBehavior(const EgoVehicle &ego_car,
+                     std::map<int, DetectedVehicle> &detected_cars,
                      const std::map<int, std::vector<int>> &car_ids_by_lane,
                      const std::vector<double> &map_interp_s,
                      const std::vector<double> &map_interp_x,
@@ -31,16 +32,21 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       double t_tgt = kPredictTime;
       double v_tgt;
       double d_tgt;
-      auto car_ahead = GetCarAheadInLane(cur_car->lane_, cur_car->veh_id_,
-                                         cur_car->s_rel_,
+      auto car_ahead = GetCarAheadInLane(cur_car->lane_, cur_car->veh_id_, ego_car,
                                          detected_cars, car_ids_by_lane);
       int car_id_ahead = std::get<0>(car_ahead);
       double s_rel_ahead = std::get<1>(car_ahead);
       
       // KeepLane - Add for all cars with base probability 1.0
       if (s_rel_ahead < kTgtFollowDist) {
-        v_tgt = std::min(cur_car->state_.s_dot,
-                         detected_cars.at(car_id_ahead).state_.s_dot);
+        double v_car_ahead;
+        if (car_id_ahead != ego_car.veh_id_) {
+          v_car_ahead = detected_cars.at(car_id_ahead).state_.s_dot;
+        }
+        else {
+          v_car_ahead = ego_car.state_.s_dot;
+        }
+        v_tgt = std::min(cur_car->state_.s_dot, v_car_ahead);
       }
       else {
         v_tgt = cur_car->state_.s_dot;

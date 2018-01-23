@@ -94,27 +94,60 @@ void DetectedVehicle::UpdateRelDist(double s_ego, double d_ego) {
   d_rel_ = state_.d - d_ego;
 }
 
-std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int ref_id,
-                                          const double ref_s_rel,
+std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int check_id,
+                                          const EgoVehicle &ego_car,
                                           const std::map<int, DetectedVehicle> &detected_cars,
                                           const std::map<int, std::vector<int>> &car_ids_by_lane) {
 
-  
-  int car_id_ahead = -1;
+  int car_id_ahead = check_id;
   double s_rel_ahead = std::numeric_limits<double>::max();
+  double ref_s_rel;
+  std::vector<int> cars_in_check_lane;
   
+  if (check_id == ego_car.veh_id_) {
+    int dummy = 1;
+  }
+  
+  // Copy car id's to check lane vector
   if (car_ids_by_lane.count(check_lane) > 0) {
-    auto car_ids_in_lane = car_ids_by_lane.at(check_lane);
-    for (int i = 0; i < car_ids_in_lane.size(); ++i) {
-      int cur_car_id = car_ids_in_lane[i];
-      double cur_s_rel = detected_cars.at(cur_car_id).s_rel_;
-      if ((cur_car_id != ref_id) && (cur_s_rel < ref_s_rel)) {
-        break;
-      }
-      car_id_ahead = cur_car_id;
-      s_rel_ahead = cur_s_rel - ref_s_rel;
+    for (int i = 0; i < car_ids_by_lane.at(check_lane).size(); ++i) {
+      cars_in_check_lane.push_back(car_ids_by_lane.at(check_lane)[i]);
     }
   }
+  
+  // Add ego car id to the check lane for other cars to find
+  if ((check_id != ego_car.veh_id_) && (check_lane == ego_car.lane_)) {
+    cars_in_check_lane.push_back(ego_car.veh_id_);
+  }
+  
+  // If more than one car in the check lane, look for car ahead
+  //if (cars_in_check_lane.size() > 1) {
+    for (int i = 0; i < cars_in_check_lane.size(); ++i) {
+      int cur_car_id = cars_in_check_lane[i];
+      double cur_s_rel;
+      if (cur_car_id != check_id) {
+        if (cur_car_id != ego_car.veh_id_) {
+          cur_s_rel = detected_cars.at(cur_car_id).s_rel_;
+        }
+        else {
+          cur_s_rel = 0.; // ego car
+        }
+        if (check_id != ego_car.veh_id_) {
+          ref_s_rel = detected_cars.at(check_id).s_rel_;
+        }
+        else {
+          ref_s_rel = 0.; // ego car
+        }
+        
+        //s_rel_ahead = cur_s_rel - ref_s_rel;
+        double cur_dist_ahead = cur_s_rel - ref_s_rel;
+        if ((cur_dist_ahead > 0) && (cur_dist_ahead < s_rel_ahead)) {
+          s_rel_ahead = cur_dist_ahead;
+          car_id_ahead = cur_car_id;
+        }
+      }
+    }
+  //}
   
   return std::make_tuple(car_id_ahead, s_rel_ahead);
 }

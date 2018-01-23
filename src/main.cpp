@@ -390,12 +390,12 @@ int main() {
              *   detected_cars, car_ids_by_lane
              */
             
-            PredictBehavior(detected_cars, car_ids_by_lane, map_interp_s,
-                            map_interp_x, map_interp_y);
+            PredictBehavior(ego_car, detected_cars, car_ids_by_lane,
+                            map_interp_s, map_interp_x, map_interp_y);
             
             //PredictTrajectory(detected_cars, car_ids_by_lane, kPredictTime);
             
-            /*
+            
             // DEBUG Print out all detected cars' predicted intents
             std::cout << "Predicted intents:" << std::endl;
             for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
@@ -406,7 +406,7 @@ int main() {
               }
               std::cout << std::endl;
             }
-            */
+            
             
             /**
              * Behavior Planning
