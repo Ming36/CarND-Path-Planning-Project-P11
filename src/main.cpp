@@ -43,7 +43,6 @@ std::string hasData(std::string s) {
 void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
                     const EgoVehicle &ego_car) {
   
-  std::cout << "Detected cars:" << std::endl;
   std::cout << std::endl;
   std::string lane_mark;
   
@@ -119,7 +118,8 @@ int main() {
   }
   
   // Reinterpolate map waypoints
-  std::vector<std::vector<double>> waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw, map_dx_raw, map_dy_raw, kMapInterpInc);
+  auto waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw,
+                                      map_dx_raw, map_dy_raw, kMapInterpInc);
   
   /*
   // DEBUG
@@ -371,7 +371,7 @@ int main() {
             }
             */
             
-            
+            /*
             // DEBUG Print out car id's sorted by lane
             std::cout << "Cars sorted by lane:" << std::endl;
             for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
@@ -381,7 +381,7 @@ int main() {
               }
               std::cout << std::endl;
             }
-            
+            */
             
             /**
              * Prediction
@@ -394,7 +394,7 @@ int main() {
             PredictBehavior(detected_cars, ego_car, car_ids_by_lane,
                             map_interp_s, map_interp_x, map_interp_y);
             
-            
+            /*
             // DEBUG Print out all detected cars' predicted intents
             std::cout << "Predicted intents:" << std::endl;
             for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
@@ -405,7 +405,7 @@ int main() {
               }
               std::cout << std::endl;
             }
-            
+            */
             
             /**
              * Behavior Planning
@@ -437,7 +437,8 @@ int main() {
             VehTrajectory traj_prev_buffer;
             int buffer_pts = kPathBufferTime / kSimCycleTime;
             if (idx_current_pt > 0) {
-              for (int i = idx_current_pt; i <= buffer_pts; ++i) {
+              int end_pt = std::min(idx_current_pt+buffer_pts, int(ego_car.traj_.states.size()));
+              for (int i = idx_current_pt; i < end_pt; ++i) {
                 traj_prev_buffer.states.push_back(ego_car.traj_.states[i]);
               }
             }
@@ -446,6 +447,7 @@ int main() {
             
             VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
                                                       map_interp_x, map_interp_y);
+            
             for (int i = 0; i < new_traj.states.size(); ++i) {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }

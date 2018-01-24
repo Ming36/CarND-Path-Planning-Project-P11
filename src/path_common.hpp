@@ -44,6 +44,13 @@ constexpr double kTgtFollowDist = 30.; // m
 constexpr double kTgtMinFollowDist = 10.; // m
 constexpr double kTgtSpeedDec = 3.; // m/s
 
+constexpr double kCostDistAhead = 5.0;
+constexpr double kCostSpeedAhead = 4.0;
+constexpr double kCostSpeedBehind = 1.0;
+constexpr double kCostChangeLanes = 1.0;
+constexpr double kCostFreqLaneChange = 1.0;
+constexpr int kCounterFreqLaneChange = 15; // path cycles
+
 /**
  * Basic parameter helpers
  */
@@ -91,5 +98,7 @@ std::vector<double> JMT(std::vector< double> start, std::vector <double> end,
 double EvalPoly(double x, std::vector<double> coeffs);
 
 std::vector<double> DiffPoly(std::vector<double> coeffs);
+
+double LogCost(double x, double x_saturate);
 
 #endif /* path_helper_hpp */

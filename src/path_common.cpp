@@ -266,3 +266,22 @@ std::vector<double> DiffPoly(std::vector<double> coeffs) {
   }
   return diff_coeffs;
 }
+
+/*
+def logistic(x):
+"""
+A function that returns a value between 0 and 1 for x in the
+range [0, infinity] and -1 to 1 for x in the range [-infinity, infinity].
+
+Useful for cost functions.
+"""
+return 2.0 / (1 + exp(-x)) - 1.0
+*/
+double LogCost(double x, double x_saturate) {
+  if (abs(x_saturate) >= 1.0) {
+    return 2.0 / (1 + exp(-5 * x / x_saturate)) - 1.0;
+  }
+  else {
+    return 2.0 / (1 + exp(-5 * x)) - 1.0;
+  }
+}

@@ -100,7 +100,8 @@ std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int check_
                                           const std::map<int, std::vector<int>> &car_ids_by_lane) {
 
   int car_id_ahead = check_id;
-  double s_rel_ahead = std::numeric_limits<double>::max();
+  //double s_rel_ahead = std::numeric_limits<double>::max();
+  double s_rel_ahead = kSensorRange;
   double ref_s_rel;
   std::vector<int> cars_in_check_lane;
   
@@ -154,8 +155,9 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
                                            const std::map<int, DetectedVehicle> &detected_cars,
                                            const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
-  int car_id_ahead = check_id;
-  double s_rel_ahead = -std::numeric_limits<double>::max();
+  int car_id_behind = check_id;
+  //double s_rel_ahead = -std::numeric_limits<double>::max();
+  double s_rel_behind = -kSensorRange;
   double ref_s_rel;
   std::vector<int> cars_in_check_lane;
   
@@ -192,14 +194,14 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
         ref_s_rel = 0.; // ego car
       }
       
-      // Found closer car ahead if dist is positive and less than prev found
+      // Found closer car behind if dist is positive and less than prev found
       double cur_dist_behind = cur_s_rel - ref_s_rel;
-      if ((cur_dist_behind < 0) && (cur_dist_behind > s_rel_ahead)) {
-        s_rel_ahead = cur_dist_behind;
-        car_id_ahead = cur_car_id;
+      if ((cur_dist_behind < 0) && (cur_dist_behind > s_rel_behind)) {
+        s_rel_behind = cur_dist_behind;
+        car_id_behind = cur_car_id;
       }
     }
   }
   
-  return std::make_tuple(car_id_ahead, s_rel_ahead);
+  return std::make_tuple(car_id_behind, s_rel_behind);
 }

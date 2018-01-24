@@ -91,7 +91,7 @@ public:
 class EgoVehicle : public Vehicle {
 public:
   
-  //int idx_prev_path_;
+  int counter_lane_change;
   VehBehavior tgt_behavior_;
   
   /**
