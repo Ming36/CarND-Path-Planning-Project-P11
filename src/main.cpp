@@ -47,8 +47,8 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
   std::cout << std::endl;
   std::string lane_mark;
   
-  for (double i = 100; i > -100; i = i - 10) {
-    for (int j_lane = 1; j_lane <= 3; ++j_lane) {
+  for (double i = kSensorRange; i > -kSensorRange; i = i - 10) {
+    for (int j_lane = 1; j_lane <= kNumLanes; ++j_lane) {
       std::cout << "|";
       lane_mark = "  ";
       

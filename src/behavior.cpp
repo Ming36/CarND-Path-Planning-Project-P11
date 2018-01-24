@@ -67,7 +67,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     if (ego_car.lane_ > 1) {
       ego_car.tgt_behavior_.tgt_lane--; // DUMMY
     }
-    else if (ego_car.lane_ < 3) {
+    else if (ego_car.lane_ < kNumLanes) {
       ego_car.tgt_behavior_.tgt_lane++; // DUMMY
     }
     

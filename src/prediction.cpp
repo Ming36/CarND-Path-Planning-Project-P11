@@ -77,7 +77,7 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       
       // LaneChangeRight:
       //   Add if lane is open to right and set high prob if car ahead is close
-      if (cur_car->lane_ < 3) {
+      if (cur_car->lane_ < kNumLanes) {
         v_tgt = cur_car->state_.s_dot;
         d_tgt = tgt_lane2tgt_d(cur_car->lane_ + 1);
         VehTrajectory traj_LCR = GetTrajectory(cur_car->state_, t_tgt, v_tgt, d_tgt,

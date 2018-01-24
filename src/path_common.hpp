@@ -26,6 +26,7 @@ constexpr double kMaxS = 6945.554; // max before track wraps back to 0
 constexpr double kMapInterpInc = 1.0; // m increment in s
 
 constexpr double kLaneWidth = 3.9; // m
+constexpr int kNumLanes = 3; // # of lanes in the road
 
 constexpr int kPathCycleTimeMS = 200; // ms, cycle time to update path
 constexpr double kPredictTime = 3.0; // sec
