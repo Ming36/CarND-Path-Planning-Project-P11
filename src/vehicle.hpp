@@ -19,6 +19,11 @@
 
 #include "path_common.hpp"
 
+enum VehSides {
+  kLeft = -1,
+  kRight = 1,
+};
+
 enum VehIntents {
   kUnknown = -1,
   kKeepLane = 0,
@@ -137,5 +142,10 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
                                            const EgoVehicle &ego_car,
                                            const std::map<int, DetectedVehicle> &detected_cars,
                                            const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+double EgoCheckSideGap(const VehSides check_side,
+                       const EgoVehicle &ego_car,
+                       const std::map<int, DetectedVehicle> &detected_cars,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane);
 
 #endif /* vehicle_hpp */

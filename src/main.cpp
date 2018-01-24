@@ -437,22 +437,22 @@ int main() {
             VehTrajectory traj_prev_buffer;
             int buffer_pts = kPathBufferTime / kSimCycleTime;
             if (idx_current_pt > 0) {
-              int end_pt = std::min(idx_current_pt+buffer_pts, int(ego_car.traj_.states.size()));
-              for (int i = idx_current_pt; i < end_pt; ++i) {
+              int end_pt = std::min(idx_current_pt+1 + buffer_pts, int(ego_car.traj_.states.size()));
+              for (int i = idx_current_pt+1; i < end_pt; ++i) {
                 traj_prev_buffer.states.push_back(ego_car.traj_.states[i]);
               }
             }
             ego_car.traj_.states.clear();
             ego_car.traj_ = traj_prev_buffer;
             
-            VehTrajectory new_traj = GetEgoTrajectory(ego_car, map_interp_s,
-                                                      map_interp_x, map_interp_y);
+            VehTrajectory new_traj = GetEgoTrajectory(ego_car, detected_cars, car_ids_by_lane,
+                                                      map_interp_s, map_interp_x, map_interp_y);
             
             for (int i = 0; i < new_traj.states.size(); ++i) {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }
             
-            /*
+            
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
             << ", num_prev_path: " << previous_path_x.size()
@@ -497,7 +497,7 @@ int main() {
             }
             
             std::cout << std::endl;
-            */
+            
             
             /**
              * Control

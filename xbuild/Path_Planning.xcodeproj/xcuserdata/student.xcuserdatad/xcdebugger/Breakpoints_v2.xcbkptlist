@@ -10,12 +10,28 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/main.cpp"
-            timestampString = "538478554.416803"
+            timestampString = "538530001.616878"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "70"
             endingLineNumber = "70"
             landmarkName = "DebugPrintRoad(const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const EgoVehicle &amp;ego_car)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/trajectory.cpp"
+            timestampString = "538530001.61733"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "75"
+            endingLineNumber = "75"
+            landmarkName = "GetTrajectory(VehState start_state, double t_tgt, double v_tgt, double d_tgt, const std::vector&lt;double&gt; &amp;map_interp_s, const std::vector&lt;double&gt; &amp;map_interp_x, const std::vector&lt;double&gt; &amp;map_interp_y)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

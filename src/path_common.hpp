@@ -50,6 +50,7 @@ constexpr double kCostSpeedBehind = 1.0;
 constexpr double kCostChangeLanes = 1.0;
 constexpr double kCostFreqLaneChange = 1.0;
 constexpr int kCounterFreqLaneChange = 15; // path cycles
+constexpr double kLaneChangeMinGap = 10.; // m
 
 /**
  * Basic parameter helpers

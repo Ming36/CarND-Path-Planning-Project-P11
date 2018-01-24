@@ -205,3 +205,46 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
   
   return std::make_tuple(car_id_behind, s_rel_behind);
 }
+
+double EgoCheckSideGap(const VehSides check_side,
+                       const EgoVehicle &ego_car,
+                       const std::map<int, DetectedVehicle> &detected_cars,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane) {
+  double gap_on_side;
+  std::vector<int> cars_in_check_lane;
+  int car_id_ahead = ego_car.veh_id_;
+  int car_id_behind = ego_car.veh_id_;
+  //double rel_s_ahead;
+  //double rel_s_behind;
+  
+  if ((check_side == kRight) && (ego_car.lane_ == kNumLanes)) {
+    gap_on_side = 0.;
+  }
+  else if ((check_side == kLeft) && (ego_car.lane_ == 1)) {
+    gap_on_side = 0.;
+  }
+  else {
+    const int check_lane = ego_car.lane_ + int(check_side);
+    // Copy car id's to check lane vector
+    if (car_ids_by_lane.count(check_lane) > 0) {
+      auto car_ahead = GetCarAheadInLane(check_lane, ego_car.veh_id_, ego_car, detected_cars, car_ids_by_lane);
+      car_id_ahead = std::get<0>(car_ahead);
+      double rel_s_ahead = std::get<1>(car_ahead);
+      
+      auto car_behind = GetCarBehindInLane(check_lane, ego_car.veh_id_, ego_car, detected_cars, car_ids_by_lane);
+      car_id_behind = std::get<0>(car_behind);
+      double rel_s_behind = std::get<1>(car_behind);
+      
+      gap_on_side = rel_s_ahead - rel_s_behind;
+    }
+    else {
+      // No other cars in right lane
+      gap_on_side = kSensorRange;
+    }
+  }
+  
+  // DEBUG
+  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << ", between car's " << car_id_ahead << " - " << car_id_behind << std::endl;
+  
+  return gap_on_side;
+}

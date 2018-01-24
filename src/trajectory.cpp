@@ -102,9 +102,11 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
 }
 
 VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
-                                 const std::vector<double> &map_interp_s,
-                                 const std::vector<double> &map_interp_x,
-                                 const std::vector<double> &map_interp_y) {
+                               const std::map<int, DetectedVehicle> &detected_cars,
+                               const std::map<int, std::vector<int>> &car_ids_by_lane,
+                               const std::vector<double> &map_interp_s,
+                               const std::vector<double> &map_interp_x,
+                               const std::vector<double> &map_interp_y) {
   
   // Set start state
   VehState start_state;
@@ -116,16 +118,77 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   }
   
   // Set target time and speed
-  const double t_tgt = ego_car.tgt_behavior_.tgt_time;
-  const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
+  double t_tgt = ego_car.tgt_behavior_.tgt_time;
+  double v_tgt;
+  if (ego_car.tgt_behavior_.intent == kPlanLaneChangeLeft) {
+    // Set target speed a little slower than car behind on left
+    auto car_behind = GetCarBehindInLane(kLeft, ego_car.veh_id_, ego_car,
+                                         detected_cars, car_ids_by_lane);
+    int car_id_behind = std::get<0>(car_behind);
+    //double rel_s_behind = std::get<1>(car_behind);
+    if (detected_cars.count(car_id_behind) > 0) {
+      v_tgt = detected_cars.at(car_id_behind).state_.s_dot - kTgtSpeedDec;
+    }
+    else {
+      v_tgt = ego_car.tgt_behavior_.tgt_speed;
+    }
+  }
+  else if (ego_car.tgt_behavior_.intent == kPlanLaneChangeRight) {
+    // Set target speed a little slower than car behind on right
+    auto car_behind = GetCarBehindInLane(kRight, ego_car.veh_id_, ego_car,
+                                         detected_cars, car_ids_by_lane);
+    int car_id_behind = std::get<0>(car_behind);
+    //double rel_s_behind = std::get<1>(car_behind);
+    if (detected_cars.count(car_id_behind) > 0) {
+      v_tgt = detected_cars.at(car_id_behind).state_.s_dot - kTgtSpeedDec;
+    }
+    else {
+      v_tgt = ego_car.tgt_behavior_.tgt_speed;
+    }
+  }
+  else {
+    v_tgt = ego_car.tgt_behavior_.tgt_speed;
+  }
   
   // Set target D based on target lane
-  double d_tgt = tgt_lane2tgt_d(ego_car.tgt_behavior_.tgt_lane);
+  double d_tgt;
+  if ((ego_car.tgt_behavior_.tgt_lane > ego_car.lane_)
+      && (ego_car.tgt_behavior_.intent == kLaneChangeRight)) {
+    // Lane Change Right
+    d_tgt = tgt_lane2tgt_d(ego_car.lane_ + 1);
+  }
+  else if ((ego_car.tgt_behavior_.tgt_lane < ego_car.lane_)
+           && (ego_car.tgt_behavior_.intent == kLaneChangeLeft)) {
+    // Lane Change Left
+    d_tgt = tgt_lane2tgt_d(ego_car.lane_ - 1);
+  }
+  else {
+    // Keep Lane and Plan Lane Change Left/Right
+    d_tgt = tgt_lane2tgt_d(ego_car.lane_);
+  }
   
   // Calculate initial trajectory
   VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt,
                                      map_interp_s, map_interp_x, map_interp_y);
 
+  
+  // DEBUG Check (x,y)-(s,d) conversion accuracy
+  std::vector<double> car_sd = GetHiResFrenet(start_state.x,
+                                              start_state.y,
+                                              map_interp_s,
+                                              map_interp_x,
+                                              map_interp_y);
+  
+  std::vector<double> car_xy = GetHiResXY(car_sd[0], car_sd[1], map_interp_s,
+                                          map_interp_x, map_interp_y);
+  
+  std::cout << "car x: " << ego_car.state_.x << ", car y: " << ego_car.state_.y
+  << "start x: " << start_state.x << ", start y: " << start_state.y
+  << ", xy->s: " << car_sd[0] << ", xy->d: " << car_sd[1]
+  << ", sd->x: " << car_xy[0] << ", sd->y: " << car_xy[1];
+  std::cout << "" << std::endl;
+  
+  
   // Check for (x,y) overspeed and recalculate trajectory to compensate
   double v_peak = 0;
   double xy_speed = 0;

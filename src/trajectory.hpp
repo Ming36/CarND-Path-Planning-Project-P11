@@ -21,8 +21,10 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             const std::vector<double> &map_interp_y);
 
 VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
-                                 const std::vector<double> &map_interp_s,
-                                 const std::vector<double> &map_interp_x,
-                                 const std::vector<double> &map_interp_y);
+                               const std::map<int, DetectedVehicle> &detected_cars,
+                               const std::map<int, std::vector<int>> &car_ids_by_lane,
+                               const std::vector<double> &map_interp_s,
+                               const std::vector<double> &map_interp_x,
+                               const std::vector<double> &map_interp_y);
 
 #endif /* trajectory_hpp */
