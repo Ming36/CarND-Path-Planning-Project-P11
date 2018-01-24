@@ -155,7 +155,7 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
                                            const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
   int car_id_ahead = check_id;
-  double s_rel_ahead = std::numeric_limits<double>::min();
+  double s_rel_ahead = -std::numeric_limits<double>::max();
   double ref_s_rel;
   std::vector<int> cars_in_check_lane;
   
@@ -171,7 +171,7 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
     cars_in_check_lane.push_back(ego_car.veh_id_);
   }
   
-  // Look for car ahead
+  // Look for car behind
   for (int i = 0; i < cars_in_check_lane.size(); ++i) {
     int cur_car_id = cars_in_check_lane[i];
     double cur_s_rel;

@@ -22,7 +22,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   auto car_ahead = GetCarAheadInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
                                      detected_cars, car_ids_by_lane);
   int car_id_ahead = std::get<0>(car_ahead);
-  double min_rel_s = std::get<1>(car_ahead);
+  double rel_s_ahead = std::get<1>(car_ahead);
   
   // Set target speed based on car ahead
   if (car_id_ahead >= 0) {
@@ -34,9 +34,8 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     else if (car_ahead->s_rel_ < kTgtFollowDist) {
       target_speed = car_ahead->state_.s_dot;
     }
-    std::cout << "id# " << car_id_ahead << " rel_s ahead = " << min_rel_s << std::endl;
+    std::cout << "Car ahead id# " << car_id_ahead << " rel_s = " << rel_s_ahead << std::endl;
   }
-  
   
   // Min/max guard
   if (target_speed > kTargetSpeed) { target_speed = kTargetSpeed; }
@@ -48,8 +47,23 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   std::cout << "tgt_speed (mph) = " << mps2mph(ego_car.tgt_behavior_.tgt_speed) << std::endl;
   
   // DUMMY lane change behavior
-  if ((ego_car.state_.s_dot < kTargetSpeed - mph2mps(10))
-      && (min_rel_s < kTgtFollowDist)) {
+  auto car_behind = GetCarBehindInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
+                                       detected_cars, car_ids_by_lane);
+  int car_id_behind = std::get<0>(car_behind);
+  double rel_s_behind = std::get<1>(car_behind);
+  bool ReqLC = false;
+  if (car_id_behind >= 0) {
+    std::cout << "Car behind id# " << car_id_behind << " rel_s = " << rel_s_behind << std::endl;
+    if ((abs(rel_s_behind) < kTgtMinFollowDist)
+        && (detected_cars.at(car_id_behind).state_.s_dot > ego_car.state_.s_dot)) {
+      ReqLC = true;
+    }
+  }
+  
+  // Change lanes if car ahead is too slow or car behind is coming up too fast
+  if (((ego_car.state_.s_dot < kTargetSpeed - mph2mps(10))
+       && (rel_s_ahead < kTgtFollowDist))
+      || ReqLC) {
     if (ego_car.lane_ > 1) {
       ego_car.tgt_behavior_.tgt_lane--; // DUMMY
     }
