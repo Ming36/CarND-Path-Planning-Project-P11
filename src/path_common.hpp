@@ -33,10 +33,9 @@ constexpr double kPredictTime = 3.0; // sec
 constexpr double kNewPathTime = 2.0; // sec
 constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this short
 
-constexpr double kLatVelLaneChange = (5.0) / 2.23694; // m/s
-constexpr double kTargetSpeed = (49.) / 2.23694; // m/s
-constexpr double kSpdAdjOffset = (3.) / 2.23694; // m/s
-//constexpr double kTargetSpeed = 44.7387; // mph (20 m/s)
+constexpr double kLatVelLaneChange = (5.0) / 2.23694; // mph -> m/s
+constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
+constexpr double kSpdAdjOffset = (3.) / 2.23694; // mph -> m/s
 
 constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
 

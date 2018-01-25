@@ -97,6 +97,10 @@ std::vector<double> GetHiResXY(double s, double d,
     wp1++;
   }
   */
+  
+  // Wrap around S
+  s = std::fmod(s, kMaxS);
+  
   auto wp1_bst = std::lower_bound(map_s.begin(), map_s.end(), s);
 
   //std::cout << wp1 << " = " << (wp1_bst-map_s.begin()-1) << std::endl;

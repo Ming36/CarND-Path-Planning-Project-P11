@@ -452,7 +452,7 @@ int main() {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }
             
-            
+            /*
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
             << ", num_prev_path: " << previous_path_x.size()
@@ -497,7 +497,7 @@ int main() {
             }
             
             std::cout << std::endl;
-            
+            */
             
             /**
              * Control

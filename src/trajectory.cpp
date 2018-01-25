@@ -65,7 +65,7 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
     double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
     
     VehState state;
-    state.s = EvalPoly(t, new_traj.coeffs_JMT_s);
+    state.s = std::fmod(EvalPoly(t, new_traj.coeffs_JMT_s), kMaxS);
     state.s_dot = EvalPoly(t, new_traj.coeffs_JMT_s_dot);
     state.s_dotdot = EvalPoly(t, new_traj.coeffs_JMT_s_dotdot);
     state.d = EvalPoly(t, new_traj.coeffs_JMT_d);
@@ -182,12 +182,13 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   std::vector<double> car_xy = GetHiResXY(car_sd[0], car_sd[1], map_interp_s,
                                           map_interp_x, map_interp_y);
   
+  /*
   std::cout << "car x: " << ego_car.state_.x << ", car y: " << ego_car.state_.y
-  << "start x: " << start_state.x << ", start y: " << start_state.y
+  << ", start x: " << start_state.x << ", start y: " << start_state.y
   << ", xy->s: " << car_sd[0] << ", xy->d: " << car_sd[1]
   << ", sd->x: " << car_xy[0] << ", sd->y: " << car_xy[1];
   std::cout << "" << std::endl;
-  
+  */
   
   // Check for (x,y) overspeed and recalculate trajectory to compensate
   double v_peak = 0;
