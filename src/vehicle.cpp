@@ -214,8 +214,8 @@ double EgoCheckSideGap(const VehSides check_side,
   std::vector<int> cars_in_check_lane;
   int car_id_ahead = ego_car.veh_id_;
   int car_id_behind = ego_car.veh_id_;
-  //double rel_s_ahead;
-  //double rel_s_behind;
+  double rel_s_ahead;
+  double rel_s_behind;
   
   if ((check_side == kRight) && (ego_car.lane_ == kNumLanes)) {
     gap_on_side = 0.;
@@ -229,13 +229,19 @@ double EgoCheckSideGap(const VehSides check_side,
     if (car_ids_by_lane.count(check_lane) > 0) {
       auto car_ahead = GetCarAheadInLane(check_lane, ego_car.veh_id_, ego_car, detected_cars, car_ids_by_lane);
       car_id_ahead = std::get<0>(car_ahead);
-      double rel_s_ahead = std::get<1>(car_ahead);
+      rel_s_ahead = std::get<1>(car_ahead);
       
       auto car_behind = GetCarBehindInLane(check_lane, ego_car.veh_id_, ego_car, detected_cars, car_ids_by_lane);
       car_id_behind = std::get<0>(car_behind);
-      double rel_s_behind = std::get<1>(car_behind);
+      rel_s_behind = std::get<1>(car_behind);
       
-      gap_on_side = rel_s_ahead - rel_s_behind;
+      if ((abs(rel_s_ahead) < kLaneChangeMinGap)
+          || (abs(rel_s_behind) < kLaneChangeMinGap)) {
+        gap_on_side = 0.0;
+      }
+      else {
+        gap_on_side = rel_s_ahead - rel_s_behind;
+      }
     }
     else {
       // No other cars in right lane

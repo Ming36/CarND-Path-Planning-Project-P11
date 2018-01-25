@@ -171,7 +171,7 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt,
                                      map_interp_s, map_interp_x, map_interp_y);
 
-  
+  /*
   // DEBUG Check (x,y)-(s,d) conversion accuracy
   std::vector<double> car_sd = GetHiResFrenet(start_state.x,
                                               start_state.y,
@@ -182,7 +182,6 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   std::vector<double> car_xy = GetHiResXY(car_sd[0], car_sd[1], map_interp_s,
                                           map_interp_x, map_interp_y);
   
-  /*
   std::cout << "car x: " << ego_car.state_.x << ", car y: " << ego_car.state_.y
   << ", start x: " << start_state.x << ", start y: " << start_state.y
   << ", xy->s: " << car_sd[0] << ", xy->d: " << car_sd[1]
@@ -193,37 +192,72 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   // Check for (x,y) overspeed and recalculate trajectory to compensate
   double v_peak = 0;
   double xy_speed = 0;
-  for (int i = 0; i < traj.states.size()-1; ++i) {
+  //double a_speed = 0;
+  //double a_speed_prev = 0;
+  //double a_peak = 0;
+  //double xy_accel = 0;
+  for (int i = 1; i < traj.states.size(); ++i) {
     const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
-                                    traj.states[i+1].x, traj.states[i+1].y);
+                                    traj.states[i-1].x, traj.states[i-1].y);
     xy_speed = xy_dist / kSimCycleTime;
-    
+
     // TODO also check for over accel
+    /*
+    if ((i > 1) && ((i % 5) == 0)) {
+      a_speed = Distance(traj.states[i].x, traj.states[i].y,
+                                traj.states[i-5].x, traj.states[i-5].y) / (kSimCycleTime*5);
+      xy_accel = (a_speed - a_speed_prev) / (kSimCycleTime*5);
+    }
+     */
     
     if (xy_speed > v_peak) { v_peak = xy_speed; }
+    //if (xy_accel > a_peak) { a_peak = xy_accel; }
+    
+    //a_speed_prev = a_speed;
   }
   
-  //std::cout << "Before: " << mps2mph(v_peak) << std::endl;
+  //std::cout << "Before: v_peak = " << mps2mph(v_peak) << ", a_peak = " << a_peak << std::endl;
+  std::cout << "Before: v_peak = " << mps2mph(v_peak) << std::endl;
   
   if (v_peak > kTargetSpeed) {
-    double speed_adj_ratio = kTargetSpeed / v_peak;
-    //std::cout << "Adj: " << speed_adj_ratio << std::endl;
+  //if ((v_peak > kTargetSpeed) || (a_peak > kMaxA)) {
+    //double spd_adj_ratio = std::min((kTargetSpeed / v_peak), (kMaxA / a_peak));
+    double spd_adj_ratio = (kTargetSpeed / v_peak);
+    std::cout << "Adj: " << spd_adj_ratio << std::endl;
     
     traj = GetTrajectory(start_state, t_tgt,
-                         (v_tgt * speed_adj_ratio - kSpdAdjOffset),
+                         (v_tgt * spd_adj_ratio - kSpdAdjOffset),
                          d_tgt, map_interp_s, map_interp_x, map_interp_y);
   }
   
-  /*
+ 
   v_peak = 0;
-  for (int i = 0; i < traj.x.size()-1; ++i) {
+  xy_speed = 0;
+  //a_speed = 0;
+  //a_speed_prev = 0;
+  //a_peak = 0;
+  //xy_accel = 0;
+  for (int i = 1; i < traj.states.size(); ++i) {
     const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
-                                    traj.states[i+1].x, traj.states[i+1].y);
+                                    traj.states[i-1].x, traj.states[i-1].y);
     xy_speed = xy_dist / kSimCycleTime;
+    
+    /*
+    // TODO also check for over accel
+    if ((i > 1) && ((i % 5) == 0)) {
+      a_speed = Distance(traj.states[i].x, traj.states[i].y,
+                         traj.states[i-5].x, traj.states[i-5].y) / (kSimCycleTime*5);
+      xy_accel = (a_speed - a_speed_prev) / (kSimCycleTime*5);
+    }
+    */
     if (xy_speed > v_peak) { v_peak = xy_speed; }
+    //if (xy_accel > a_peak) { a_peak = xy_accel; }
+    
+    //a_speed_prev = a_speed;
   }
-  std::cout << "After: " << mps2mph(v_peak) << std::endl << std::endl;
-  */
+
+  //std::cout << "After: v_peak = " << mps2mph(v_peak) << ", a_peak = " << a_peak << std::endl;
+  std::cout << "After: v_peak = " << mps2mph(v_peak) << std::endl;
   
   return traj;
 }

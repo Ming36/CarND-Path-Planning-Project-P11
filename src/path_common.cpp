@@ -106,17 +106,31 @@ std::vector<double> GetHiResXY(double s, double d,
   //std::cout << wp1 << " = " << (wp1_bst-map_s.begin()-1) << std::endl;
 
   int wp1 = (wp1_bst - map_s.begin() - 1);
-  int wp2 = (wp1 + 1) % map_x.size();
+  int wp2 = (wp1 + 1) % map_s.size();
+  int wp3 = (wp2 + 1) % map_s.size();
+  int wp0 = wp1 - 1;
+  if (wp0 < 0) { wp0 = map_s.size() - 1; }
   
   double theta_wp = atan2((map_y[wp2] - map_y[wp1]),
                           (map_x[wp2] - map_x[wp1]));
+
+  double theta_wp1ave = atan2((map_y[wp2] - map_y[wp0]),
+                              (map_x[wp2] - map_x[wp0]));
+  
+  double theta_wp2ave = atan2((map_y[wp3] - map_y[wp1]),
+                              (map_x[wp3] - map_x[wp1]));
+  
+  double s_interp = (s - map_s[wp1]) / (map_s[wp2] - map_s[wp1]);
+  double cos_interp = (1-s_interp)*cos(theta_wp1ave) + s_interp*cos(theta_wp2ave);
+  double sin_interp = (1-s_interp)*sin(theta_wp1ave) + s_interp*sin(theta_wp2ave);
+  double theta_interp = atan2(sin_interp, cos_interp);
   
   // The x,y,s along the segment between waypoints
   double seg_s = s - map_s[wp1];
   double seg_x = map_x[wp1] + seg_s * cos(theta_wp);
   double seg_y = map_y[wp1] + seg_s * sin(theta_wp);
   
-  double theta_perp = theta_wp - pi()/2;
+  double theta_perp = theta_interp - pi()/2;
   double x = seg_x + d * cos(theta_perp);
   double y = seg_y + d * sin(theta_perp);
   

@@ -39,7 +39,7 @@ constexpr double kSpdAdjOffset = (3.) / 2.23694; // mph -> m/s
 
 constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
 
-constexpr double kTgtFollowDist = 30.; // m
+constexpr double kTgtFollowDist = 15.; // m
 constexpr double kTgtMinFollowDist = 10.; // m
 constexpr double kTgtSpeedDec = 3.; // m/s
 
@@ -49,7 +49,7 @@ constexpr double kCostSpeedBehind = 1.0;
 constexpr double kCostChangeLanes = 1.0;
 constexpr double kCostFreqLaneChange = 1.0;
 constexpr int kCounterFreqLaneChange = 15; // path cycles
-constexpr double kLaneChangeMinGap = 10.; // m
+constexpr double kLaneChangeMinGap = 5.; // m
 
 /**
  * Basic parameter helpers
