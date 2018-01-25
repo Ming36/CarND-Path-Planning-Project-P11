@@ -250,7 +250,7 @@ double EgoCheckSideGap(const VehSides check_side,
   }
   
   // DEBUG
-  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << ", between car's " << car_id_ahead << " - " << car_id_behind << std::endl;
+  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << ", between car's " << car_id_ahead << " and " << car_id_behind << std::endl;
   
   return gap_on_side;
 }

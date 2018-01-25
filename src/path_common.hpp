@@ -35,21 +35,22 @@ constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this s
 
 constexpr double kLatVelLaneChange = (5.0) / 2.23694; // mph -> m/s
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
-constexpr double kSpdAdjOffset = (3.) / 2.23694; // mph -> m/s
+constexpr double kSpdAdjOffset = (1.) / 2.23694; // mph -> m/s
 
-constexpr double kMaxA = 5.0; // max a for constant accel approximation to keep peak <10m/s2
+constexpr double kMaxA = 8.0; // max a for constant accel approximation to keep peak <10m/s2
 
-constexpr double kTgtFollowDist = 15.; // m
-constexpr double kTgtMinFollowDist = 10.; // m
-constexpr double kTgtSpeedDec = 3.; // m/s
+constexpr double kTgtFollowDist = 16.; // m
+constexpr double kTgtMinFollowDist = 14.; // m
+constexpr double kTgtSpeedDec = (5.) / 2.23694; // mph -> m/s
 
 constexpr double kCostDistAhead = 5.0;
 constexpr double kCostSpeedAhead = 4.0;
 constexpr double kCostSpeedBehind = 1.0;
-constexpr double kCostChangeLanes = 1.0;
+constexpr double kCostChangeLanes = 0.5;
 constexpr double kCostFreqLaneChange = 1.0;
+
 constexpr int kCounterFreqLaneChange = 15; // path cycles
-constexpr double kLaneChangeMinGap = 5.; // m
+constexpr double kLaneChangeMinGap = 8.; // m
 
 /**
  * Basic parameter helpers

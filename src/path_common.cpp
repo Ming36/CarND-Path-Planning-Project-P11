@@ -145,17 +145,14 @@ std::vector<double> GetHiResFrenet(double x, double y,
                                    const std::vector<double> &map_x,
                                    const std::vector<double> &map_y) {
   
-  // TODO Fix wraparound
-  
+  // Get closest pair of waypoints to (x,y)
   int close_wp = ClosestWaypoint(x, y, map_x, map_y);
-  int next_wp = (close_wp + 1) % map_x.size();
-  //if (next_wp > map_x.size() - 1) { next_wp  = 0; }
+  int next_wp = (close_wp + 1) % map_x.size(); // wrap around end
   int prev_wp = close_wp - 1;
-  if (prev_wp < 0) { prev_wp = map_x.size() - 1; }
-  
+  if (prev_wp < 0) { prev_wp = map_x.size() - 1; } // wrap around beginning
+
   double dist_nextwp = Distance(x, y, map_x[next_wp], map_y[next_wp]);
   double dist_prevwp = Distance(x, y, map_x[prev_wp], map_y[prev_wp]);
-
   int wp1;
   int wp2;
   if (dist_nextwp < dist_prevwp) {
@@ -167,10 +164,6 @@ std::vector<double> GetHiResFrenet(double x, double y,
     wp2 = close_wp;
   }
   
-  // DEBUG
-  //std::cout << "prev_wp: " << prev_wp << ", close_wp: " << close_wp << ", next_wp: " << next_wp << std::endl;
-  //std::cout << "wp1: " << wp1 << ", wp2: " << wp2 << std::endl;
-  
   // Waypoint vector x and y components from prev waypoint to next waypoint
   double vx_wp = map_x[wp2] - map_x[wp1];
   double vy_wp = map_y[wp2] - map_y[wp1];
@@ -179,12 +172,28 @@ std::vector<double> GetHiResFrenet(double x, double y,
   double vx_pos = x - map_x[wp1];
   double vy_pos = y - map_y[wp1];
   
-  // Find the projection of position vector onto waypoint vector
-  double proj_length = ((vx_pos * vx_wp + vy_pos * vy_wp) /
-                        (sq(vx_wp) + sq(vy_wp)));
-  double frenet_s = map_s[wp1] + proj_length;
-  double dist_wp1_pos = Distance(map_x[wp1], map_y[wp1], x, y);
-  double frenet_d = sqrt(sq(dist_wp1_pos) - sq(proj_length));
+  // Find the scalar projection of position vector onto waypoint vector
+  double norm_wp = sqrt(sq(vx_wp) + sq(vy_wp));
+  double scalar_proj = ((vx_pos * vx_wp + vy_pos * vy_wp) / norm_wp);
+  
+  double frenet_s;
+  double frenet_d;
+  // Limit scalar projection length to limits of waypoint vector length
+  if (scalar_proj < 0.) {
+    scalar_proj = 0.;
+    frenet_d = Distance(map_x[wp1], map_y[wp1], x, y);
+  }
+  else if (scalar_proj > norm_wp) {
+    scalar_proj = norm_wp;
+    frenet_d = Distance(map_x[wp2], map_y[wp2], x, y);
+  }
+  else {
+    double dist_wp1_pos = Distance(map_x[wp1], map_y[wp1], x, y);
+    frenet_d = sqrt(sq(dist_wp1_pos) - sq(scalar_proj));
+  }
+  
+  // Calculate s using scalar_proj limited between waypoint pair (0, norm_wp)
+  frenet_s = map_s[wp1] + scalar_proj;
   
   return {frenet_s, frenet_d};
 }

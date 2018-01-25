@@ -103,8 +103,10 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   ego_car.tgt_behavior_.tgt_time = kNewPathTime;
   
   // Finite State Machine to decide between intents
+  double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
+  double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
   if (best_lane < ego_car.lane_) {
-    double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
+    //gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
     if (gap_on_left < kLaneChangeMinGap) {
       ego_car.tgt_behavior_.intent = kPlanLaneChangeLeft;
     }
@@ -113,7 +115,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     }
   }
   else if (best_lane > ego_car.lane_) {
-    double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
+    //gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
     if (gap_on_right < kLaneChangeMinGap) {
       ego_car.tgt_behavior_.intent = kPlanLaneChangeRight;
     }
@@ -124,7 +126,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   else {
     ego_car.tgt_behavior_.intent = kKeepLane;
   }
-
+  
   double target_speed = kTargetSpeed;
   
   // Check for closest car ahead in current lane
