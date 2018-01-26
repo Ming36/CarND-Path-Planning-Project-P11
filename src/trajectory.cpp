@@ -22,12 +22,13 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
   double s_dot_dot_est;
   
   // Set estimated s, s_dot, s_dot_dot to keep a reasonable JMT with basic kinematics
-  const double t_maxa = (v_tgt - start_state.s_dot) / kMaxA;
+  const double t_maxa = abs(v_tgt - start_state.s_dot) / kMaxA;
   
   if (t_maxa > t_tgt) {
     // Cut off target v and a to limit t
     s_dot_est = start_state.s_dot + kMaxA * t_tgt;
     s_dot_dot_est = kMaxA;
+    if ((v_tgt - start_state.s_dot) < 0) { s_dot_dot_est *= -1.; }
   }
   else {
     // Can achieve target speed in time
@@ -78,6 +79,18 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
     state.x = state_xy[0];
     state.y = state_xy[1];
     
+    // Check for min (x,y) dist from prev point, re-push prev point if too small
+    if (i > 1) {
+      int prev_idx = new_traj.states.size()-1;
+      const double dist_pnt = Distance(state.x, state.y,
+                                      new_traj.states[prev_idx].x,
+                                      new_traj.states[prev_idx].y);
+      
+      if (dist_pnt < kMinTrajPntDist) {
+        state = new_traj.states[prev_idx];
+      }
+    }
+    
     new_traj.states.push_back(state);
   }
   
@@ -119,6 +132,7 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   
   // Set target time and speed
   double t_tgt = ego_car.tgt_behavior_.tgt_time;
+  
   double v_tgt;
   if (ego_car.tgt_behavior_.intent == kPlanLaneChangeLeft) {
     // Set target speed a little slower than car behind on left

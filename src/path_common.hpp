@@ -19,29 +19,38 @@
 /**
  * Constant parameters
  */
+
+// Simulation
 constexpr double kSimCycleTime = 0.02; // sec
 constexpr double kSensorRange = 100.; // m
 
+// Track
 constexpr double kMaxS = 6945.554; // max before track wraps back to 0
 constexpr double kMapInterpInc = 1.0; // m increment in s
-
 constexpr double kLaneWidth = 3.9; // m
 constexpr int kNumLanes = 3; // # of lanes in the road
 
+// Trajectory
 constexpr int kPathCycleTimeMS = 200; // ms, cycle time to update path
 constexpr double kPredictTime = 3.0; // sec
 constexpr double kNewPathTime = 2.0; // sec
 constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this short
+constexpr double kMinTrajPntDist = (3.) / 2.23694 * kSimCycleTime; // mph -> m
+constexpr double kMaxA = 7.0; // max a for constant accel approximation to keep peak <10m/s2
 
+// Prediction
 constexpr double kLatVelLaneChange = (5.0) / 2.23694; // mph -> m/s
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
 constexpr double kSpdAdjOffset = (1.) / 2.23694; // mph -> m/s
 
-constexpr double kMaxA = 8.0; // max a for constant accel approximation to keep peak <10m/s2
-
-constexpr double kTgtFollowDist = 16.; // m
-constexpr double kTgtMinFollowDist = 14.; // m
-constexpr double kTgtSpeedDec = (5.) / 2.23694; // mph -> m/s
+// Behavior
+constexpr double kTgtStartFollowDist = 40.; // m
+constexpr double kTgtFollowDist = 15.; // m
+constexpr double kTgtMinFollowDist = 10.; // m
+constexpr double kTgtMinFollowGain = 2.; // speed slope gain multiplier
+constexpr double kTgtMinSpeed = (5.) / 2.23694; // mph -> m/s, min target speed
+constexpr double kTgtMinFollowTime = 1.0; // shortened trajectory time
+constexpr double kTgtSpeedDec = (5.) / 2.23694; // mph -> m/s, for Plan LC
 
 constexpr double kCostDistAhead = 5.0;
 constexpr double kCostSpeedAhead = 4.0;

@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/main.cpp"
-            timestampString = "538609009.384024"
+            timestampString = "538624663.502957"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "70"
@@ -42,11 +42,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/trajectory.cpp"
-            timestampString = "538563680.591284"
+            timestampString = "538624861.3380491"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "262"
-            endingLineNumber = "262"
+            startingLineNumber = "276"
+            endingLineNumber = "276"
             landmarkName = "GetEgoTrajectory(EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const std::map&lt;int, std::vector&lt;int&gt;&gt; &amp;car_ids_by_lane, const std::vector&lt;double&gt; &amp;map_interp_s, const std::vector&lt;double&gt; &amp;map_interp_x, const std::vector&lt;double&gt; &amp;map_interp_y)"
             landmarkType = "9">
          </BreakpointContent>
