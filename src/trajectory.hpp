@@ -15,7 +15,7 @@
 #include "vehicle.hpp"
 
 VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
-                            double v_tgt, double d_tgt,
+                            double v_tgt, double d_tgt, double a_tgt,
                             const std::vector<double> &map_interp_s,
                             const std::vector<double> &map_interp_x,
                             const std::vector<double> &map_interp_y);

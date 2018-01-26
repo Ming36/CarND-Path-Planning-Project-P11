@@ -20,6 +20,9 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
         #5) Cost of frequent lane changes
    2. Set tgt_behavior intent, tgt_lane, tgt_time, and tgt_speed to get to that lane
    */
+  
+  double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
+  double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
 
   // Set cost for each lane
   std::vector<double> cost_by_lane;
@@ -70,6 +73,15 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       lane_cost += kCostFreqLaneChange * ego_car.counter_lane_change;
     }
     
+    // #6) Cost by side gap
+    if ((tgt_lane == ego_car.lane_ - 1) && (gap_on_left == 0)) {
+      lane_cost += kCostSideGap;
+    }
+    else if ((tgt_lane == ego_car.lane_ + 1) && (gap_on_right == 0))  {
+      lane_cost += kCostSideGap;
+    }
+    
+    
     cost_by_lane.push_back(lane_cost);
     
     // DEBUG
@@ -93,10 +105,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   ego_car.tgt_behavior_.tgt_lane = best_lane;
   
   // Finite State Machine to decide between intents
-  double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
-  double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
   if (best_lane < ego_car.lane_) {
-    //gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars, car_ids_by_lane);
     if (gap_on_left < kLaneChangeMinGap) {
       ego_car.tgt_behavior_.intent = kPlanLaneChangeLeft;
     }
@@ -105,7 +114,6 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     }
   }
   else if (best_lane > ego_car.lane_) {
-    //gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars, car_ids_by_lane);
     if (gap_on_right < kLaneChangeMinGap) {
       ego_car.tgt_behavior_.intent = kPlanLaneChangeRight;
     }
@@ -149,6 +157,15 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   
   ego_car.tgt_behavior_.tgt_speed = target_speed;
   ego_car.tgt_behavior_.tgt_time = target_time;
+  
+  /*
+  // DUMMY for testing hard decel
+  ego_car.tgt_behavior_.intent = kKeepLane;
+  if (ego_car.state_.s > 350) {
+    ego_car.tgt_behavior_.tgt_speed = kTgtMinSpeed;
+    ego_car.tgt_behavior_.tgt_time = kTgtMinFollowTime;
+  }
+  */
   
   // DEBUG
   std::cout << "Behavior: " << std::endl;

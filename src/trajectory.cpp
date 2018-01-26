@@ -8,11 +8,17 @@
 #include "trajectory.hpp"
 
 VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
-                            double v_tgt, double d_tgt,
+                            double v_tgt, double d_tgt, double a_tgt,
                             const std::vector<double> &map_interp_s,
                             const std::vector<double> &map_interp_x,
                             const std::vector<double> &map_interp_y) {
  
+  /*
+  if (t_tgt < kNewPathTime) {
+    std::cout << "decel" << std::endl;
+  }
+  */
+  
   VehTrajectory new_traj;
   
   // Generate S trajectory
@@ -22,13 +28,12 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
   double s_dot_dot_est;
   
   // Set estimated s, s_dot, s_dot_dot to keep a reasonable JMT with basic kinematics
-  const double t_maxa = abs(v_tgt - start_state.s_dot) / kMaxA;
-  
+  const double t_maxa = abs(v_tgt - start_state.s_dot) / a_tgt;
+  double a_signed = (v_tgt > start_state.s_dot) ? a_tgt: -a_tgt;
   if (t_maxa > t_tgt) {
     // Cut off target v and a to limit t
-    s_dot_est = start_state.s_dot + kMaxA * t_tgt;
-    s_dot_dot_est = kMaxA;
-    if ((v_tgt - start_state.s_dot) < 0) { s_dot_dot_est *= -1.; }
+    s_dot_est = start_state.s_dot + a_signed * t_tgt;
+    s_dot_dot_est = a_signed;
   }
   else {
     // Can achieve target speed in time
@@ -182,7 +187,7 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   }
   
   // Calculate initial trajectory
-  VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt,
+  VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt, kMaxA,
                                      map_interp_s, map_interp_x, map_interp_y);
 
   /*
@@ -203,75 +208,91 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   std::cout << "" << std::endl;
   */
   
-  // Check for (x,y) overspeed and recalculate trajectory to compensate
+  // Check for (x,y) over-speed/accel and recalculate trajectory to compensate
   double v_peak = 0;
   double xy_speed = 0;
-  //double a_speed = 0;
-  //double a_speed_prev = 0;
-  //double a_peak = 0;
-  //double xy_accel = 0;
+  double ave_speed = 0;
+  double ave_speed_prev = 0;
+  double a_peak = 0;
+  double xy_accel = 0;
   for (int i = 1; i < traj.states.size(); ++i) {
+    // Check for over-speed
     const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
                                     traj.states[i-1].x, traj.states[i-1].y);
     xy_speed = xy_dist / kSimCycleTime;
 
-    // TODO also check for over accel
-    /*
-    if ((i > 1) && ((i % 5) == 0)) {
-      a_speed = Distance(traj.states[i].x, traj.states[i].y,
-                                traj.states[i-5].x, traj.states[i-5].y) / (kSimCycleTime*5);
-      xy_accel = (a_speed - a_speed_prev) / (kSimCycleTime*5);
+    // Check for over-accel
+    constexpr int kAveSamples = 10;
+    if ((i > 1) && ((i % kAveSamples) == 0)) {
+      ave_speed = 0.;
+      for (int j = 0; j < kAveSamples; ++j) {
+        ave_speed += (Distance(traj.states[i - j].x, traj.states[i - j].y,
+                               traj.states[i-1 - j].x, traj.states[i-1 - j].y)
+                      / kSimCycleTime);
+      }
+      ave_speed = ave_speed / kAveSamples;
+      if (i == kAveSamples) { ave_speed_prev = ave_speed; }
+      xy_accel = (ave_speed - ave_speed_prev) / (10*kSimCycleTime);
     }
-     */
     
+    // Update peak values
     if (xy_speed > v_peak) { v_peak = xy_speed; }
-    //if (xy_accel > a_peak) { a_peak = xy_accel; }
-    
-    //a_speed_prev = a_speed;
+    if (abs(xy_accel) > a_peak) { a_peak = abs(xy_accel); }
+    ave_speed_prev = ave_speed;
   }
   
-  //std::cout << "Before: v_peak = " << mps2mph(v_peak) << ", a_peak = " << a_peak << std::endl;
-  std::cout << "Before: v_peak = " << mps2mph(v_peak) << std::endl;
+  //std::cout << "Before: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
   
-  if (v_peak > kTargetSpeed) {
-  //if ((v_peak > kTargetSpeed) || (a_peak > kMaxA)) {
-    //double spd_adj_ratio = std::min((kTargetSpeed / v_peak), (kMaxA / a_peak));
-    double spd_adj_ratio = (kTargetSpeed / v_peak);
-    std::cout << "Adj: " << spd_adj_ratio << std::endl;
+  // Recalculate trajectory if needed to prevent over-speed/accel
+  if ((v_peak > kTargetSpeed) || (a_peak > kMaxA)) {
+    double spd_adj_ratio = 1.0;
+    double a_adj_ratio = 1.0;
+    if (v_peak > kTargetSpeed) { spd_adj_ratio = (kTargetSpeed / v_peak); }
+    if (a_peak > kMaxA) { a_adj_ratio = (kMaxA / a_peak); }
     
     traj = GetTrajectory(start_state, t_tgt,
                          (v_tgt * spd_adj_ratio - kSpdAdjOffset),
-                         d_tgt, map_interp_s, map_interp_x, map_interp_y);
+                         d_tgt, (kMaxA * a_adj_ratio), map_interp_s,
+                         map_interp_x, map_interp_y);
+
+    //std::cout << "Spd adj: " << spd_adj_ratio << ", A adj: " << a_adj_ratio << std::endl;
   }
   
- 
+  /*
+  // DEBUG Recheck for over-speed/accel
   v_peak = 0;
   xy_speed = 0;
-  //a_speed = 0;
-  //a_speed_prev = 0;
-  //a_peak = 0;
-  //xy_accel = 0;
+  ave_speed = 0;
+  ave_speed_prev = 0;
+  a_peak = 0;
+  xy_accel = 0;
   for (int i = 1; i < traj.states.size(); ++i) {
+    // Check for over-speed
     const double xy_dist = Distance(traj.states[i].x, traj.states[i].y,
                                     traj.states[i-1].x, traj.states[i-1].y);
     xy_speed = xy_dist / kSimCycleTime;
     
-    /*
-    // TODO also check for over accel
-    if ((i > 1) && ((i % 5) == 0)) {
-      a_speed = Distance(traj.states[i].x, traj.states[i].y,
-                         traj.states[i-5].x, traj.states[i-5].y) / (kSimCycleTime*5);
-      xy_accel = (a_speed - a_speed_prev) / (kSimCycleTime*5);
+    // Check for over-accel
+    constexpr int kAveSamples = 10;
+    if ((i > 1) && ((i % kAveSamples) == 0)) {
+      ave_speed = 0.;
+      for (int j = 0; j < kAveSamples; ++j) {
+        ave_speed += (Distance(traj.states[i - j].x, traj.states[i - j].y,
+                               traj.states[i-1 - j].x, traj.states[i-1 - j].y)
+                      / kSimCycleTime);
+      }
+      ave_speed = ave_speed / kAveSamples;
+      if (i == kAveSamples) { ave_speed_prev = ave_speed; }
+      xy_accel = (ave_speed - ave_speed_prev) / (10*kSimCycleTime);
     }
-    */
-    if (xy_speed > v_peak) { v_peak = xy_speed; }
-    //if (xy_accel > a_peak) { a_peak = xy_accel; }
     
-    //a_speed_prev = a_speed;
+    // Update peak values
+    if (xy_speed > v_peak) { v_peak = xy_speed; }
+    if (abs(xy_accel) > a_peak) { a_peak = abs(xy_accel); }
+    ave_speed_prev = ave_speed;
   }
-
-  //std::cout << "After: v_peak = " << mps2mph(v_peak) << ", a_peak = " << a_peak << std::endl;
-  std::cout << "After: v_peak = " << mps2mph(v_peak) << std::endl;
+  //std::cout << "After: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
+  */
   
   return traj;
 }
