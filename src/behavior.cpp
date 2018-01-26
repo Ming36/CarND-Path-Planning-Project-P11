@@ -159,11 +159,13 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   ego_car.tgt_behavior_.tgt_time = target_time;
   
   /*
-  // DUMMY for testing hard decel
+  // DUMMY for testing hard decel with lane change
   ego_car.tgt_behavior_.intent = kKeepLane;
   if (ego_car.state_.s > 350) {
+    ego_car.tgt_behavior_.intent = kLaneChangeRight;
     ego_car.tgt_behavior_.tgt_speed = kTgtMinSpeed;
     ego_car.tgt_behavior_.tgt_time = kTgtMinFollowTime;
+    ego_car.tgt_behavior_.tgt_lane = 3;
   }
   */
   

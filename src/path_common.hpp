@@ -37,24 +37,26 @@ constexpr double kNewPathTime = 2.0; // sec
 constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this short
 constexpr double kMinTrajPntDist = (3.) / 2.23694 * kSimCycleTime; // mph -> m
 constexpr double kMaxA = 9.0; // max a for constant accel approximation to keep peak <10m/s2
+constexpr double kSpdAdjOffset = (1.) / 2.23694; // mph -> m/s
+constexpr double kAccAdjOffset = 0.5; // m/s^2
 
 // Prediction
 constexpr double kLatVelLaneChange = (5.0) / 2.23694; // mph -> m/s
 
 // Behavior
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
-constexpr double kSpdAdjOffset = (1.) / 2.23694; // mph -> m/s
+
 constexpr double kTgtStartFollowDist = 40.; // m
 constexpr double kTgtFollowDist = 13.; // m
 constexpr double kTgtMinFollowDist = 10.; // m
 constexpr double kTgtMinFollowGain = 2.; // speed slope gain multiplier
 constexpr double kTgtMinSpeed = (5.) / 2.23694; // mph -> m/s, min target speed
-constexpr double kTgtMinFollowTime = 1.0; // shortened trajectory time
+constexpr double kTgtMinFollowTime = kNewPathTime; // shortened trajectory time
 constexpr double kTgtSpeedDec = (5.) / 2.23694; // mph -> m/s, for Plan LC
 
 constexpr double kCostDistAhead = 5.0;
 constexpr double kCostSpeedAhead = 4.0;
-constexpr double kCostSpeedBehind = 1.0;
+constexpr double kCostSpeedBehind = 0.0;
 constexpr double kCostChangeLanes = 0.5;
 constexpr double kCostFreqLaneChange = 1.0;
 constexpr double kCostSideGap = 10.0;

@@ -27,4 +27,6 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
                                const std::vector<double> &map_interp_x,
                                const std::vector<double> &map_interp_y);
 
+std::vector<double> CheckTrajFeasibility(VehTrajectory traj);
+
 #endif /* trajectory_hpp */
