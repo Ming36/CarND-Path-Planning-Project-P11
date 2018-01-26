@@ -29,4 +29,7 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
 
 std::vector<double> CheckTrajFeasibility(VehTrajectory traj);
 
+double EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &ego_car,
+                    const std::map<int, DetectedVehicle> &detected_cars);
+
 #endif /* trajectory_hpp */

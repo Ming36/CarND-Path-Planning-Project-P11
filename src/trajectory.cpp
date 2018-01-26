@@ -187,34 +187,65 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
   }
   
   // Generate multiple potential trajectories
-  constexpr int kTrajGenNum = 2;
+  constexpr int kTrajGenNum = 1;
+  std::vector<VehTrajectory> possible_trajs;
   for (int i = 0; i < kTrajGenNum; ++i) {
-    
+    // Calculate initial trajectory
+    VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt, kMaxA,
+                                       map_interp_s, map_interp_x, map_interp_y);
+
+    // Evaluate traj risk using other vehicle predicted paths
+    traj.risk = EvalTrajRisk(traj, ego_car, detected_cars);
+    std::cout << "Traj risk = " << traj.risk << std::endl;
+    possible_trajs.push_back(traj);
+  }
+
+  // Get traj with lowest risk
+  VehTrajectory best_traj;
+  double lowest_risk = 1.0;
+  for (int i = 0; i < possible_trajs.size(); ++i) {
+    if (possible_trajs[i].risk < lowest_risk) {
+      lowest_risk = possible_trajs[i].risk;
+      best_traj = possible_trajs[i];
+    }
   }
   
-  // Calculate initial trajectory
-  VehTrajectory traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt, kMaxA,
-                                     map_interp_s, map_interp_x, map_interp_y);
+  // If lowest risk is too high, check if a backup traj has lower risk
+  constexpr double kTrajRiskLimit = 0.8;
+  if (lowest_risk > kTrajRiskLimit) {
+    std::cout << "\n *** Target traj TOO RISKY! ***" << std::endl;
+    
+    // Check a backup traj of keeping current lane
+    d_tgt = tgt_lane2tgt_d(ego_car.lane_);
+    VehTrajectory backup_traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt, kMaxA,
+                                      map_interp_s, map_interp_x, map_interp_y);
+    double backup_risk = EvalTrajRisk(backup_traj, ego_car, detected_cars);
+    
+    if (backup_risk < lowest_risk) {
+      std::cout << " *** Keeping current lane has lower risk ***" << std::endl;
+      best_traj = backup_traj;
+    }
+  }
 
   // Check traj feasibility and get adj ratios
-  auto adj_ratios = CheckTrajFeasibility(traj);
+  auto adj_ratios = CheckTrajFeasibility(best_traj);
   double spd_adj_ratio = adj_ratios[0];
   double a_adj_ratio = adj_ratios[1];
 
-  std::cout << "              Spd adj: " << spd_adj_ratio << ", A adj: " << a_adj_ratio << std::endl;
+  //std::cout << "              Spd adj: " << spd_adj_ratio << ", A adj: " << a_adj_ratio << std::endl;
 
   // Recalculate trajectory if needed to prevent over-speed/accel
   if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
-    traj = GetTrajectory(start_state, t_tgt,
-                         (v_tgt * spd_adj_ratio - kSpdAdjOffset),
-                         d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
-                         map_interp_s, map_interp_x, map_interp_y);
+    best_traj = GetTrajectory(start_state, t_tgt,
+                              (v_tgt * spd_adj_ratio - kSpdAdjOffset),
+                              d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
+                              map_interp_s, map_interp_x, map_interp_y);
   }
   
   // DEBUG Recheck for over-speed/accel
-  adj_ratios = CheckTrajFeasibility(traj);
+  adj_ratios = CheckTrajFeasibility(best_traj);
   
-  return traj;
+  return best_traj;
 }
 
 std::vector<double> CheckTrajFeasibility(VehTrajectory traj) {
@@ -257,7 +288,49 @@ std::vector<double> CheckTrajFeasibility(VehTrajectory traj) {
   if (v_peak > kTargetSpeed) { spd_adj_ratio = kTargetSpeed / v_peak; }
   if (a_peak > kMaxA) { a_adj_ratio = kMaxA / a_peak; }
   
-  std::cout << "Traj check: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
+  //std::cout << "Traj check: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
 
   return {spd_adj_ratio, a_adj_ratio};
+}
+
+double EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &ego_car,
+                    const std::map<int, DetectedVehicle> &detected_cars) {
+  
+  constexpr double kCollisionSThresh = 6.0;
+  constexpr double kCollisionDThresh = 3.0;
+  constexpr int kEvalRiskStep = 5; // time step interval to check risk
+  
+  double traj_risk = 0.0;
+  const int idx_start_traj = ego_car.traj_.states.size();
+  
+  // Check each time step of the traj to find overlap with other car pred paths
+  for (int i = 0; i < traj.states.size(); i += kEvalRiskStep) {
+    const double ego_s = traj.states[i].s;
+    const double ego_d = traj.states[i].d;
+    for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
+      
+      // Check each predicted path of this detected vehicle at this time step
+      DetectedVehicle car = it->second;
+      double car_risk_sum = 0.0;
+      for (auto it2 = car.pred_trajs_.begin(); it2 != car.pred_trajs_.end(); ++it2) {
+        VehTrajectory car_traj = it2->second;
+        double car_s = car_traj.states[idx_start_traj+i].s;
+        double car_d = car_traj.states[idx_start_traj+i].d;
+        double car_traj_prob = car_traj.probability;
+        
+        // Check if ego car and other car would be too close at this time step
+        if ((abs(ego_s - car_s) < kCollisionSThresh)
+            && (abs(ego_d - car_d) < kCollisionDThresh)) {
+          car_risk_sum += car_traj_prob;
+        }
+      }
+      
+      // Store the highest risk at this time step and go to next time step
+      if (car_risk_sum > traj_risk) {
+        traj_risk = car_risk_sum;
+      }
+    }
+  }
+  
+  return traj_risk;
 }

@@ -63,8 +63,8 @@ struct VehTrajectory {
   std::vector<double> coeffs_JMT_d_dot; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
   std::vector<double> coeffs_JMT_d_dotdot; // [2*a2, 6*a3, 12*a4, 20*a5]
 
-  //VehIntents intent;
   double probability;
+  double risk;
 };
 
 class Vehicle {
