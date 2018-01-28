@@ -135,54 +135,24 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
     start_state = ego_car.state_;
   }
   
-  // Set target time and speed
+  // Set target time and speed from behavior target
   double t_tgt = ego_car.tgt_behavior_.tgt_time;
-  
-  double v_tgt;
-  if (ego_car.tgt_behavior_.intent == kPlanLaneChangeLeft) {
-    // Set target speed a little slower than car behind on left
-    auto car_behind = GetCarBehindInLane(kLeft, ego_car.veh_id_, ego_car,
-                                         detected_cars, car_ids_by_lane);
-    int car_id_behind = std::get<0>(car_behind);
-    //double rel_s_behind = std::get<1>(car_behind);
-    if (detected_cars.count(car_id_behind) > 0) {
-      v_tgt = detected_cars.at(car_id_behind).state_.s_dot - kTgtSpeedDec;
-    }
-    else {
-      v_tgt = ego_car.tgt_behavior_.tgt_speed;
-    }
-  }
-  else if (ego_car.tgt_behavior_.intent == kPlanLaneChangeRight) {
-    // Set target speed a little slower than car behind on right
-    auto car_behind = GetCarBehindInLane(kRight, ego_car.veh_id_, ego_car,
-                                         detected_cars, car_ids_by_lane);
-    int car_id_behind = std::get<0>(car_behind);
-    //double rel_s_behind = std::get<1>(car_behind);
-    if (detected_cars.count(car_id_behind) > 0) {
-      v_tgt = detected_cars.at(car_id_behind).state_.s_dot - kTgtSpeedDec;
-    }
-    else {
-      v_tgt = ego_car.tgt_behavior_.tgt_speed;
-    }
-  }
-  else {
-    v_tgt = ego_car.tgt_behavior_.tgt_speed;
-  }
-  
-  // Set target D based on target lane
+  double v_tgt = ego_car.tgt_behavior_.tgt_speed;
+
+  // Set target D based on behavior target lane
   double d_tgt;
   if ((ego_car.tgt_behavior_.tgt_lane > ego_car.lane_)
       && (ego_car.tgt_behavior_.intent == kLaneChangeRight)) {
-    // Lane Change Right
+    // "Lane Change Right"
     d_tgt = tgt_lane2tgt_d(ego_car.lane_ + 1);
   }
   else if ((ego_car.tgt_behavior_.tgt_lane < ego_car.lane_)
            && (ego_car.tgt_behavior_.intent == kLaneChangeLeft)) {
-    // Lane Change Left
+    // "Lane Change Left"
     d_tgt = tgt_lane2tgt_d(ego_car.lane_ - 1);
   }
   else {
-    // Keep Lane and Plan Lane Change Left/Right
+    // "Keep Lane" and "Plan Lane Change Left/Right"
     d_tgt = tgt_lane2tgt_d(ego_car.lane_);
   }
   
@@ -216,13 +186,14 @@ VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
     std::cout << "\n *** Target traj TOO RISKY! ***" << std::endl;
     
     // Check a backup traj of keeping current lane
-    d_tgt = tgt_lane2tgt_d(ego_car.lane_);
-    VehTrajectory backup_traj = GetTrajectory(start_state, t_tgt, v_tgt, d_tgt, kMaxA,
+    double backup_d_tgt = tgt_lane2tgt_d(ego_car.lane_);
+    VehTrajectory backup_traj = GetTrajectory(start_state, t_tgt, v_tgt, backup_d_tgt, kMaxA,
                                       map_interp_s, map_interp_x, map_interp_y);
     double backup_risk = EvalTrajRisk(backup_traj, ego_car, detected_cars);
     
     if (backup_risk < lowest_risk) {
       std::cout << " *** Keeping current lane has lower risk ***" << std::endl;
+      d_tgt = backup_d_tgt;
       best_traj = backup_traj;
     }
   }
@@ -295,11 +266,7 @@ std::vector<double> CheckTrajFeasibility(VehTrajectory traj) {
 
 double EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &ego_car,
                     const std::map<int, DetectedVehicle> &detected_cars) {
-  
-  constexpr double kCollisionSThresh = 6.0;
-  constexpr double kCollisionDThresh = 3.0;
-  constexpr int kEvalRiskStep = 5; // time step interval to check risk
-  
+    
   double traj_risk = 0.0;
   const int idx_start_traj = ego_car.traj_.states.size();
   

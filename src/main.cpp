@@ -257,8 +257,15 @@ int main() {
                 // Vehicle within sensor range
                 const double sensed_vx = sensor_fusion[i][3];
                 const double sensed_vy = sensor_fusion[i][4];
-                const double sensed_s = sensor_fusion[i][5];
-                const double sensed_d = sensor_fusion[i][6];
+
+                auto det_car_sd = GetHiResFrenet(sensed_x, sensed_y,
+                                                 map_interp_s, map_interp_x,
+                                                 map_interp_y);
+                const double sensed_s = det_car_sd[0];
+                const double sensed_d = det_car_sd[1];
+                
+                //const double sensed_s = sensor_fusion[i][5];
+                //const double sensed_d = sensor_fusion[i][6];
                 
                 // Calculate s_dot and d_dot
                 const int sensed_closest_wp = ClosestWaypoint(sensed_x, sensed_y,
@@ -394,7 +401,7 @@ int main() {
             PredictBehavior(detected_cars, ego_car, car_ids_by_lane,
                             map_interp_s, map_interp_x, map_interp_y);
             
-            /*
+            
             // DEBUG Print out all detected cars' predicted intents
             std::cout << "Predicted intents:" << std::endl;
             for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
@@ -405,7 +412,7 @@ int main() {
               }
               std::cout << std::endl;
             }
-            */
+            
             
             /**
              * Behavior Planning

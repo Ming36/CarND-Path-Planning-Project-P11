@@ -134,7 +134,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   int car_id_ahead = std::get<0>(car_ahead);
   double rel_s_ahead = std::get<1>(car_ahead);
   
-  // Set target speed based on car ahead
+  // Set base target speed limited by car ahead
   if (car_id_ahead >= 0) {
     if (detected_cars.at(car_id_ahead).s_rel_ < kTgtStartFollowDist) {
       // Decrease target speed proportionally to distance of car ahead
@@ -147,10 +147,104 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
         target_time = kTgtMinFollowTime;
       }
       target_speed = spd_slope * (dist_ahead - kTgtStartFollowDist) + kTargetSpeed;
+      
+      // DEBUG
+      std::cout << " Raw target speed = " << target_speed << std::endl;
+      
       target_speed = std::max(target_speed, kTgtMinSpeed);
     }
   }
+
+  // Over-ride base target speed if planning to change lanes with cars in the way
+  if (ego_car.tgt_behavior_.intent == kPlanLaneChangeLeft) {
+
+    // Look for car ahead in left lane
+    auto car_onleft_ahead = GetCarAheadInLane(kLeft, ego_car.veh_id_, ego_car,
+                                              detected_cars, car_ids_by_lane);
+    int car_id_onleft_ahead = std::get<0>(car_onleft_ahead);
+    double rel_s_onleft_ahead = std::get<1>(car_onleft_ahead);
+    
+    // Look for car behind in left lane
+    auto car_onleft_behind = GetCarBehindInLane(kLeft, ego_car.veh_id_, ego_car,
+                                                detected_cars, car_ids_by_lane);
+    int car_id_onleft_behind = std::get<0>(car_onleft_behind);
+    double rel_s_onleft_behind = std::get<1>(car_onleft_behind);
+    
+    // Check which cars are close
+    bool close_ahead = false;
+    bool close_onleft_ahead = false;
+    bool close_onleft_behind = false;
+    if ((detected_cars.count(car_id_ahead) > 0)
+        && (rel_s_ahead < kTgtFollowDist)) {
+      close_ahead = true;
+    }
+    if ((detected_cars.count(car_id_onleft_ahead) > 0)
+        && (rel_s_onleft_ahead < kLaneChangeMinGap)) {
+      close_onleft_ahead = true;
+    }
+    if ((detected_cars.count(car_id_onleft_behind) > 0)
+        && (rel_s_onleft_behind < kLaneChangeMinGap)) {
+      close_onleft_behind = true;
+    }
+    
+    // Slow down to find a gap if car ahead is close
+    if (close_ahead == true) {
+      if ((close_onleft_ahead == true) && (close_onleft_behind == true)) {
+        // Set target speed slower than close car behind (close car ahead and behind)
+        target_speed = detected_cars.at(car_id_onleft_behind).state_.s_dot - kTgtSpeedDec;
+      }
+      else if (close_onleft_ahead) {
+        // Set target speed slower than close car ahead (no close car behind)
+        target_speed = detected_cars.at(car_id_onleft_ahead).state_.s_dot - kTgtSpeedDec;
+      }
+    }
+    // Otherwise, just keep going ahead at original target speed to pass
+  }
+  else if (ego_car.tgt_behavior_.intent == kPlanLaneChangeRight) {
   
+    // Look for car ahead in left lane
+    auto car_onright_ahead = GetCarAheadInLane(kRight, ego_car.veh_id_, ego_car,
+                                               detected_cars, car_ids_by_lane);
+    int car_id_onright_ahead = std::get<0>(car_onright_ahead);
+    double rel_s_onright_ahead = std::get<1>(car_onright_ahead);
+    
+    // Look for car behind in left lane
+    auto car_onright_behind = GetCarBehindInLane(kRight, ego_car.veh_id_, ego_car,
+                                                 detected_cars, car_ids_by_lane);
+    int car_id_onright_behind = std::get<0>(car_onright_behind);
+    double rel_s_onright_behind = std::get<1>(car_onright_behind);
+    
+    // Check which cars are close
+    bool close_ahead = false;
+    bool close_onright_ahead = false;
+    bool close_onright_behind = false;
+    if ((detected_cars.count(car_id_ahead) > 0)
+        && (rel_s_ahead < kTgtFollowDist)) {
+      close_ahead = true;
+    }
+    if ((detected_cars.count(car_id_onright_ahead) > 0)
+        && (rel_s_onright_ahead < kLaneChangeMinGap)) {
+      close_onright_ahead = true;
+    }
+    if ((detected_cars.count(car_id_onright_behind) > 0)
+        && (rel_s_onright_behind < kLaneChangeMinGap)) {
+      close_onright_behind = true;
+    }
+    
+    // Slow down to find a gap if car ahead is close
+    if (close_ahead == true) {
+      if ((close_onright_ahead == true) && (close_onright_behind == true)) {
+        // Set target speed slower than close car behind (close car ahead and behind)
+        target_speed = detected_cars.at(car_id_onright_behind).state_.s_dot - kTgtSpeedDec;
+      }
+      else if (close_onright_ahead) {
+        // Set target speed slower than close car ahead (no close car behind)
+        target_speed = detected_cars.at(car_id_onright_ahead).state_.s_dot - kTgtSpeedDec;
+      }
+    }
+    // Otherwise, just keep going ahead at original target speed to pass
+  }
+ 
   // Final min/max guard
   target_speed = std::max(target_speed, 0.0);
   target_speed = std::min(target_speed, kTargetSpeed);
