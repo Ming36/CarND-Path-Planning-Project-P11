@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include <vector>
+#include <random>
 #include "path_common.hpp"
 #include "vehicle.hpp"
 
@@ -20,16 +21,16 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             const std::vector<double> &map_interp_x,
                             const std::vector<double> &map_interp_y);
 
-VehTrajectory GetEgoTrajectory(EgoVehicle &ego_car,
+VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                const std::map<int, DetectedVehicle> &detected_cars,
                                const std::map<int, std::vector<int>> &car_ids_by_lane,
                                const std::vector<double> &map_interp_s,
                                const std::vector<double> &map_interp_x,
                                const std::vector<double> &map_interp_y);
 
-std::vector<double> CheckTrajFeasibility(VehTrajectory traj);
+std::vector<double> CheckTrajFeasibility(const VehTrajectory traj);
 
-double EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &ego_car,
+double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
                     const std::map<int, DetectedVehicle> &detected_cars);
 
 #endif /* trajectory_hpp */

@@ -61,8 +61,12 @@ void Vehicle::UpdateState(double x, double y, double s, double d,
 /**
  * Constructor
  */
-EgoVehicle::EgoVehicle() : Vehicle() { }
-EgoVehicle::EgoVehicle(int id) : Vehicle(id) { }
+EgoVehicle::EgoVehicle() : Vehicle() {
+  counter_lane_change = 0;
+}
+EgoVehicle::EgoVehicle(int id) : Vehicle(id) {
+  counter_lane_change = 0;
+}
 
 /**
 * Destructor

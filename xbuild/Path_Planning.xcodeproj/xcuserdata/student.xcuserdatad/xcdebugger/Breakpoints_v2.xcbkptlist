@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/main.cpp"
-            timestampString = "538791311.775406"
+            timestampString = "538952823.444239"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "70"
@@ -22,48 +22,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "src/trajectory.cpp"
-            timestampString = "538791311.775488"
+            filePath = "src/main.cpp"
+            timestampString = "538952823.4446321"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "291"
-            endingLineNumber = "291"
-            landmarkName = "EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/trajectory.cpp"
-            timestampString = "538791311.775901"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "189"
-            endingLineNumber = "189"
-            landmarkName = "GetEgoTrajectory(EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars, const std::map&lt;int, std::vector&lt;int&gt;&gt; &amp;car_ids_by_lane, const std::vector&lt;double&gt; &amp;map_interp_s, const std::vector&lt;double&gt; &amp;map_interp_x, const std::vector&lt;double&gt; &amp;map_interp_y)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "src/trajectory.cpp"
-            timestampString = "538791311.776221"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "281"
-            endingLineNumber = "281"
-            landmarkName = "EvalTrajRisk(const VehTrajectory traj, const EgoVehicle &amp;ego_car, const std::map&lt;int, DetectedVehicle&gt; &amp;detected_cars)"
+            startingLineNumber = "269"
+            endingLineNumber = "269"
+            landmarkName = "main()"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

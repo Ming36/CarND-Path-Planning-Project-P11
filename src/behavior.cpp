@@ -38,15 +38,17 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     if (car_id_ahead != ego_car.veh_id_) {
       rel_s_ahead = detected_cars.at(car_id_ahead).s_rel_;
     }
-    lane_cost += kCostDistAhead * (1-LogCost(rel_s_ahead, kSensorRange));
+    const double cost_ahead_dist = (1-LogCost(rel_s_ahead, kSensorRange));
+    lane_cost += kCostDistAhead * cost_ahead_dist;
     
     // #2) Cost by speed of car ahead
     double s_dot_ahead = kTargetSpeed;
     if (car_id_ahead != ego_car.veh_id_) {
       s_dot_ahead = detected_cars.at(car_id_ahead).state_.s_dot;
     }
-    lane_cost += kCostSpeedAhead * (1-LogCost(s_dot_ahead, kTargetSpeed));
- 
+    const double cost_ahead_spd = (1-LogCost(s_dot_ahead, kTargetSpeed));
+    lane_cost += kCostSpeedAhead * cost_ahead_spd;
+    
     // #3) Cost by high speed of close car behind ego car
     if (tgt_lane == ego_car.lane_) {
       auto car_behind = GetCarBehindInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
@@ -65,7 +67,8 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     
     // #4) Cost of changing lanes
     if (tgt_lane != ego_car.lane_) {
-      lane_cost += kCostChangeLanes * (abs(ego_car.lane_ - tgt_lane));
+      const double cost_lane_change = (abs(ego_car.lane_ - tgt_lane));
+      lane_cost += kCostChangeLanes * cost_lane_change;
     }
     
     // #5) Cost of frequent lane changes
@@ -80,7 +83,6 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     else if ((tgt_lane == ego_car.lane_ + 1) && (gap_on_right == 0))  {
       lane_cost += kCostSideGap;
     }
-    
     
     cost_by_lane.push_back(lane_cost);
     
@@ -142,14 +144,19 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       const double spd_ahead = detected_cars.at(car_id_ahead).state_.s_dot;
       double spd_slope = ((spd_ahead - kTargetSpeed)
                           / (kTgtFollowDist - kTgtStartFollowDist));
-      if (detected_cars.at(car_id_ahead).s_rel_ < kTgtMinFollowDist) {
-        spd_slope *= kTgtMinFollowGain;
-        target_time = kTgtMinFollowTime;
-      }
+      
       target_speed = spd_slope * (dist_ahead - kTgtStartFollowDist) + kTargetSpeed;
       
+      if (detected_cars.at(car_id_ahead).s_rel_ < kTgtMinFollowDist) {
+        target_speed = spd_ahead - kTgtSpeedDec;
+        /*
+        spd_slope *= kTgtMinFollowGain;
+        target_time = kTgtMinFollowTime;
+        */
+      }
+      
       // DEBUG
-      std::cout << " Raw target speed = " << target_speed << std::endl;
+      std::cout << "\nBase target speed = " << mps2mph(target_speed) << std::endl;
       
       target_speed = std::max(target_speed, kTgtMinSpeed);
     }
@@ -192,10 +199,14 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       if ((close_onleft_ahead == true) && (close_onleft_behind == true)) {
         // Set target speed slower than close car behind (close car ahead and behind)
         target_speed = detected_cars.at(car_id_onleft_behind).state_.s_dot - kTgtSpeedDec;
+        
+        std::cout << " Over-ride target speed to car on left behind #" << car_id_onleft_behind << " = " << mps2mph(target_speed) << std::endl;
       }
       else if (close_onleft_ahead) {
         // Set target speed slower than close car ahead (no close car behind)
         target_speed = detected_cars.at(car_id_onleft_ahead).state_.s_dot - kTgtSpeedDec;
+        
+        std::cout << " Over-ride target speed to car on left ahead #" << car_id_onleft_ahead << " = " << mps2mph(target_speed) << std::endl;
       }
     }
     // Otherwise, just keep going ahead at original target speed to pass
@@ -236,10 +247,14 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       if ((close_onright_ahead == true) && (close_onright_behind == true)) {
         // Set target speed slower than close car behind (close car ahead and behind)
         target_speed = detected_cars.at(car_id_onright_behind).state_.s_dot - kTgtSpeedDec;
+        
+        std::cout << " Over-ride target speed to car on right behind #" << car_id_onright_behind << " = " << mps2mph(target_speed) << std::endl;
       }
       else if (close_onright_ahead) {
         // Set target speed slower than close car ahead (no close car behind)
         target_speed = detected_cars.at(car_id_onright_ahead).state_.s_dot - kTgtSpeedDec;
+        
+        std::cout << " Over-ride target speed to car on right ahead #" << car_id_onright_ahead << " = " << mps2mph(target_speed) << std::endl;
       }
     }
     // Otherwise, just keep going ahead at original target speed to pass
@@ -264,7 +279,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   */
   
   // DEBUG
-  std::cout << "Behavior: " << std::endl;
+  std::cout << "\nFinal Target Behavior: " << std::endl;
   std::cout << " intent: " << ego_car.tgt_behavior_.intent << ", target lane: " << best_lane << ", cost: " << *it_best_cost << std::endl;
   std::cout << " tgt_speed (mph) = " << mps2mph(ego_car.tgt_behavior_.tgt_speed) << " car ahead id# " << car_id_ahead << " rel_s = " << rel_s_ahead << std::endl;
   std::cout << " freq lane change counter: " << ego_car.counter_lane_change << std::endl;

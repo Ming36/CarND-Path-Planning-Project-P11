@@ -196,8 +196,8 @@ int main() {
           // Run path planning algorithm at slower cycle time
           if ((t_msg - t_last) > kPathCycleTimeMS) {
             
-            //std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-            //std::cout << "Loop #" << count << std::endl;
+            std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+            std::cout << "Loop #" << count << std::endl;
             t_last = t_msg;
             count++;
             
@@ -264,6 +264,10 @@ int main() {
                 const double sensed_s = det_car_sd[0];
                 const double sensed_d = det_car_sd[1];
                 
+                // DEBUG
+                if (sensed_d == 0) {
+                  std::cout << "D error:\n" << sensor_fusion << std::endl;
+                }
                 //const double sensed_s = sensor_fusion[i][5];
                 //const double sensed_d = sensor_fusion[i][6];
                 
@@ -401,7 +405,7 @@ int main() {
             PredictBehavior(detected_cars, ego_car, car_ids_by_lane,
                             map_interp_s, map_interp_x, map_interp_y);
             
-            
+            /*
             // DEBUG Print out all detected cars' predicted intents
             std::cout << "Predicted intents:" << std::endl;
             for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
@@ -412,7 +416,7 @@ int main() {
               }
               std::cout << std::endl;
             }
-            
+            */
             
             /**
              * Behavior Planning
@@ -505,6 +509,8 @@ int main() {
             
             std::cout << std::endl;
             */
+            
+            std::cout << "\n" << sensor_fusion << "\n" << std::endl;
             
             /**
              * Control
