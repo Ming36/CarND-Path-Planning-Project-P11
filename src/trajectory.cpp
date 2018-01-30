@@ -192,7 +192,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
                                map_interp_s, map_interp_x, map_interp_y);
     }
-    
+
+    std::cout << "Possible traj# " << i << " t=" << t_tgt_var << " v=" << mps2mph(v_tgt_var) << std::endl;
+
     // Evaluate traj cost using other vehicle predicted paths
     traj_var.cost = EvalTrajCost(traj_var, ego_car, detected_cars);
     
@@ -201,14 +203,35 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
       traj_var.cost += kCostRandDev; // add slight penalty to deviated target trajs
     }
      */
-    
-    possible_trajs.push_back(traj_var);
-
-    std::cout << "Possible traj# " << i << " t=" << t_tgt_var << " v=" << v_tgt_var << " cost = " << traj_var.cost << std::endl;
+    if (traj_var.cost < kTrajCostThresh) {
+      possible_trajs.push_back(traj_var);
+    }
   }
   
-  // Add backup traj for keeping current lane?
-
+  // Add backup traj to keep current D if all possible traj's were too risky
+  if (possible_trajs.size() == 0) {
+    const double d_backup = tgt_lane2tgt_d(ego_car.state_.d);
+    const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
+    VehTrajectory traj_backup = GetTrajectory(start_state, t_tgt, v_backup,
+                                              d_backup, kMaxA, map_interp_s,
+                                              map_interp_x, map_interp_y);
+    
+    // Limit traj for max speed and accel
+    auto adj_ratios = CheckTrajFeasibility(traj_backup);
+    double spd_adj_ratio = adj_ratios[0];
+    double a_adj_ratio = adj_ratios[1];
+    if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
+      traj_backup = GetTrajectory(start_state, t_tgt,
+                                  (v_tgt * spd_adj_ratio - kSpdAdjOffset),
+                                  d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
+                                  map_interp_s, map_interp_x, map_interp_y);
+    }
+    traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
+    possible_trajs.push_back(traj_backup);
+    
+    std::cout << "All traj's are too risky!  Use backup traj to keep D." << std::endl;
+  }
+  
   // Get traj with lowest cost
   VehTrajectory best_traj;
   int best_traj_idx = -1;
@@ -303,7 +326,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   */
   
   // DEBUG Recheck final traj for over-speed/accel
-  auto debug_junk = CheckTrajFeasibility(best_traj);
+  //auto debug_junk = CheckTrajFeasibility(best_traj);
   
   return best_traj;
 }
@@ -325,7 +348,7 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
   double xy_accel = 0;
   double ave_speed = 0;
   double ave_speed_prev = 0;
-  constexpr int kAccelAveSamples = 10;
+  
   
   for (int i = 1; i < traj.states.size(); ++i) {
     // Check for over-speed
@@ -352,7 +375,7 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
   if (v_peak > kTargetSpeed) { spd_adj_ratio = kTargetSpeed / v_peak; }
   if (a_peak > kMaxA) { a_adj_ratio = kMaxA / a_peak; }
   
-  std::cout << "Traj check: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
+  //std::cout << "Traj check: v_peak = " << mps2mph(v_peak) << " mph, a_peak = " << a_peak << std::endl;
 
   return {spd_adj_ratio, a_adj_ratio};
 }

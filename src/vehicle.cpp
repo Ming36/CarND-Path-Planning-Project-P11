@@ -218,8 +218,8 @@ double EgoCheckSideGap(const VehSides check_side,
   std::vector<int> cars_in_check_lane;
   int car_id_ahead = ego_car.veh_id_;
   int car_id_behind = ego_car.veh_id_;
-  double rel_s_ahead;
-  double rel_s_behind;
+  double rel_s_ahead = kSensorRange;
+  double rel_s_behind = -kSensorRange;
   
   if ((check_side == kRight) && (ego_car.lane_ == kNumLanes)) {
     gap_on_side = 0.;
@@ -248,13 +248,13 @@ double EgoCheckSideGap(const VehSides check_side,
       }
     }
     else {
-      // No other cars in right lane
-      gap_on_side = kSensorRange;
+      // No other cars in side lane
+      gap_on_side = 2*kSensorRange;
     }
   }
   
   // DEBUG
-  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << ", between car's " << car_id_ahead << " and " << car_id_behind << std::endl;
+  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << "m  (" << rel_s_ahead << "m to car " << car_id_ahead << " ahead, " << rel_s_behind << "m to car " << car_id_behind << " behind)" << std::endl;
   
   return gap_on_side;
 }

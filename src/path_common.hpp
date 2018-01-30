@@ -32,10 +32,10 @@ constexpr int kNumLanes = 3; // # of lanes in the road
 
 // Prediction
 constexpr double kLatVelLaneChange = (5.0) / 2.23694; // mph -> m/s
+constexpr double kPredictTime = 2.0; // sec
 
 // Trajectory
-constexpr int kPathCycleTimeMS = 100; // 200 ms, cycle time to update path
-constexpr double kPredictTime = 5.0; // sec
+constexpr int kPathCycleTimeMS = 200; // 200 ms, cycle time to update path
 constexpr double kNewPathTime = 2.5; // sec
 constexpr double kPathBufferTime = 0.4; // sec, append traj after path is this short
 constexpr double kMinTrajPntDist = (3.) / 2.23694 * kSimCycleTime; // mph -> m, smooth standing start
@@ -45,28 +45,33 @@ constexpr double kAccAdjOffset = 1.; // m/s^2
 
 constexpr double kCollisionSThresh = 6.0;
 constexpr double kCollisionDThresh = 2.5; // 2.5 may be better
-constexpr int kEvalRiskStep = 5; // time step interval to check risk
+constexpr int kEvalRiskStep = 10; // time step interval to check risk
 
 constexpr int kTrajGenNum = 5;
 constexpr double kRandSpdMean = (5.) / 2.23694;
 constexpr double kRandSpdDev = (2.) / 2.23694;
 constexpr double kRandTimeMean = 1;
 constexpr double kRandTimeDev = 0.3;
-constexpr double kCostRandDev = 0.01;
+//constexpr double kCostRandDev = 0.01;
 
-constexpr double kTrajCostRisk = 1.0;
+constexpr double kTrajCostRisk = 10.0;
 constexpr double kTrajCostDeviation = 1.0;
+
+constexpr double kTrajCostThresh = 15.0;
+
+constexpr int kAccelAveSamples = 10;
 
 // Behavior
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
 
-constexpr double kTgtStartFollowDist = 30.; // 40 m
+constexpr double kTgtStartFollowDist = 40.; // 40 m
 constexpr double kTgtFollowDist = 15.; // m
-constexpr double kTgtMinFollowDist = 10.; // m
-constexpr double kTgtMinFollowGain = 1.; // speed slope gain multiplier
+constexpr double kTgtMinFollowDist = 13.; // m
+//constexpr double kTgtMinFollowGain = 1.; // speed slope gain multiplier
 constexpr double kTgtMinSpeed = (5.) / 2.23694; // mph -> m/s, min target speed
-constexpr double kTgtMinFollowTime = kNewPathTime; // shortened trajectory time
-constexpr double kTgtSpeedDec = (10.) / 2.23694; // 5 mph -> m/s, for Plan LC
+//constexpr double kTgtMinFollowTime = kNewPathTime; // shortened trajectory time
+constexpr double kMinFollowTgtSpeedDec = (10.) / 2.23694; // 5 mph -> m/s, for following too close
+constexpr double kPlanLCTgtSpeedDec = (5.) / 2.23694; // 5 mph -> m/s, for Plan LC
 
 constexpr double kCostDistAhead = 5.0;
 constexpr double kCostSpeedAhead = 4.0;
@@ -76,9 +81,9 @@ constexpr double kCostFreqLaneChange = 1.0;
 constexpr double kCostSideGap = 0.0; // 10
 
 constexpr int kCounterFreqLaneChange = 15; // path cycles
-constexpr double kLaneChangeMinGap = 8.; // m
+constexpr double kLaneChangeMinGap = 10.; // m
 
-constexpr double kTrajRiskLimit = 0.8;
+//constexpr double kTrajRiskLimit = 0.8;
 
 /**
  * Basic parameter helpers

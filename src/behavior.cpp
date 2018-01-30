@@ -113,6 +113,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     }
     else {
       ego_car.tgt_behavior_.intent = kLaneChangeLeft;
+      ego_car.counter_lane_change = kCounterFreqLaneChange;
     }
   }
   else if (best_lane > ego_car.lane_) {
@@ -121,6 +122,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     }
     else {
       ego_car.tgt_behavior_.intent = kLaneChangeRight;
+      ego_car.counter_lane_change = kCounterFreqLaneChange;
     }
   }
   else {
@@ -148,11 +150,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       target_speed = spd_slope * (dist_ahead - kTgtStartFollowDist) + kTargetSpeed;
       
       if (detected_cars.at(car_id_ahead).s_rel_ < kTgtMinFollowDist) {
-        target_speed = spd_ahead - kTgtSpeedDec;
-        /*
-        spd_slope *= kTgtMinFollowGain;
-        target_time = kTgtMinFollowTime;
-        */
+        target_speed = spd_ahead - kMinFollowTgtSpeedDec;
       }
       
       // DEBUG
@@ -182,7 +180,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     bool close_onleft_ahead = false;
     bool close_onleft_behind = false;
     if ((detected_cars.count(car_id_ahead) > 0)
-        && (rel_s_ahead < kTgtFollowDist)) {
+        && (rel_s_ahead < kTgtStartFollowDist)) {
       close_ahead = true;
     }
     if ((detected_cars.count(car_id_onleft_ahead) > 0)
@@ -190,7 +188,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       close_onleft_ahead = true;
     }
     if ((detected_cars.count(car_id_onleft_behind) > 0)
-        && (rel_s_onleft_behind < kLaneChangeMinGap)) {
+        && (abs(rel_s_onleft_behind) < kLaneChangeMinGap)) {
       close_onleft_behind = true;
     }
     
@@ -198,13 +196,13 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     if (close_ahead == true) {
       if ((close_onleft_ahead == true) && (close_onleft_behind == true)) {
         // Set target speed slower than close car behind (close car ahead and behind)
-        target_speed = detected_cars.at(car_id_onleft_behind).state_.s_dot - kTgtSpeedDec;
+        target_speed = detected_cars.at(car_id_onleft_behind).state_.s_dot - kPlanLCTgtSpeedDec;
         
         std::cout << " Over-ride target speed to car on left behind #" << car_id_onleft_behind << " = " << mps2mph(target_speed) << std::endl;
       }
       else if (close_onleft_ahead) {
         // Set target speed slower than close car ahead (no close car behind)
-        target_speed = detected_cars.at(car_id_onleft_ahead).state_.s_dot - kTgtSpeedDec;
+        target_speed = detected_cars.at(car_id_onleft_ahead).state_.s_dot - kPlanLCTgtSpeedDec;
         
         std::cout << " Over-ride target speed to car on left ahead #" << car_id_onleft_ahead << " = " << mps2mph(target_speed) << std::endl;
       }
@@ -213,13 +211,13 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
   }
   else if (ego_car.tgt_behavior_.intent == kPlanLaneChangeRight) {
   
-    // Look for car ahead in left lane
+    // Look for car ahead in right lane
     auto car_onright_ahead = GetCarAheadInLane(kRight, ego_car.veh_id_, ego_car,
                                                detected_cars, car_ids_by_lane);
     int car_id_onright_ahead = std::get<0>(car_onright_ahead);
     double rel_s_onright_ahead = std::get<1>(car_onright_ahead);
     
-    // Look for car behind in left lane
+    // Look for car behind in right lane
     auto car_onright_behind = GetCarBehindInLane(kRight, ego_car.veh_id_, ego_car,
                                                  detected_cars, car_ids_by_lane);
     int car_id_onright_behind = std::get<0>(car_onright_behind);
@@ -230,7 +228,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     bool close_onright_ahead = false;
     bool close_onright_behind = false;
     if ((detected_cars.count(car_id_ahead) > 0)
-        && (rel_s_ahead < kTgtFollowDist)) {
+        && (rel_s_ahead < kTgtStartFollowDist)) {
       close_ahead = true;
     }
     if ((detected_cars.count(car_id_onright_ahead) > 0)
@@ -238,7 +236,7 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
       close_onright_ahead = true;
     }
     if ((detected_cars.count(car_id_onright_behind) > 0)
-        && (rel_s_onright_behind < kLaneChangeMinGap)) {
+        && (abs(rel_s_onright_behind) < kLaneChangeMinGap)) {
       close_onright_behind = true;
     }
     
@@ -246,13 +244,13 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     if (close_ahead == true) {
       if ((close_onright_ahead == true) && (close_onright_behind == true)) {
         // Set target speed slower than close car behind (close car ahead and behind)
-        target_speed = detected_cars.at(car_id_onright_behind).state_.s_dot - kTgtSpeedDec;
+        target_speed = detected_cars.at(car_id_onright_behind).state_.s_dot - kPlanLCTgtSpeedDec;
         
         std::cout << " Over-ride target speed to car on right behind #" << car_id_onright_behind << " = " << mps2mph(target_speed) << std::endl;
       }
       else if (close_onright_ahead) {
         // Set target speed slower than close car ahead (no close car behind)
-        target_speed = detected_cars.at(car_id_onright_ahead).state_.s_dot - kTgtSpeedDec;
+        target_speed = detected_cars.at(car_id_onright_ahead).state_.s_dot - kPlanLCTgtSpeedDec;
         
         std::cout << " Over-ride target speed to car on right ahead #" << car_id_onright_ahead << " = " << mps2mph(target_speed) << std::endl;
       }

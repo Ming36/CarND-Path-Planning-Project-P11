@@ -197,7 +197,7 @@ int main() {
           if ((t_msg - t_last) > kPathCycleTimeMS) {
             
             std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-            std::cout << "Loop #" << count << std::endl;
+            std::cout << "Loop #" << count << ", t=" << t_msg << std::endl;
             t_last = t_msg;
             count++;
             
@@ -222,12 +222,42 @@ int main() {
             // of last processed trajectory point from previous path and evaluate
             // that time with the derivative polynomial coefficients
             int idx_current_pt = 0;
-            if (ego_car.traj_.states.size() > previous_path_x.size()) {
-              idx_current_pt = (ego_car.traj_.states.size()
-                                        - previous_path_x.size() - 1);
+            int traj_size = ego_car.traj_.states.size();
+            int prev_size = previous_path_x.size();
+            if (traj_size > prev_size) {
+              idx_current_pt = (traj_size - prev_size - 1);
             }
             
+            double car_s_dot = 0.;
+            double car_s_dotdot = 0.;
+            double car_d_dot = 0.;
+            double car_d_dotdot = 0.;
+            if (ego_car.traj_.states.size() > 0) {
+              car_s_dot = ego_car.traj_.states[idx_current_pt].s_dot;
+              car_s_dotdot = ego_car.traj_.states[idx_current_pt].s_dotdot;
+              car_d_dot = ego_car.traj_.states[idx_current_pt].d_dot;
+              car_d_dotdot = ego_car.traj_.states[idx_current_pt].d_dotdot;
+            }
+            
+            /*
             double t_current_pt = kSimCycleTime * idx_current_pt;
+            
+            double car_s_calc = EvalPoly(t_current_pt,
+                                        ego_car.traj_.coeffs_JMT_s);
+            
+            double car_d_calc = EvalPoly(t_current_pt,
+                                         ego_car.traj_.coeffs_JMT_d);
+            if (ego_car.traj_.states.size() > 0) {
+              car_s_calc = ego_car.traj_.states[idx_current_pt].s;
+              car_d_calc = ego_car.traj_.states[idx_current_pt].d;
+            }
+            
+            std::cout << "t cur: " << t_current_pt
+            << ", ego_s: " << car_s
+            << ", calc_s: " << car_s_calc
+            << ", ego_d: " << car_d
+            << ", calc_d: " << car_d_calc
+            << std::endl;
             
             double car_s_dot = EvalPoly(t_current_pt,
                                         ego_car.traj_.coeffs_JMT_s_dot);
@@ -240,6 +270,7 @@ int main() {
             
             double car_d_dotdot = EvalPoly(t_current_pt,
                                             ego_car.traj_.coeffs_JMT_d_dotdot);
+            */
             
             // Update ego car's state values
             ego_car.UpdateState(car_x, car_y, car_s, car_d, car_s_dot,
@@ -263,11 +294,6 @@ int main() {
                                                  map_interp_y);
                 const double sensed_s = det_car_sd[0];
                 const double sensed_d = det_car_sd[1];
-                
-                // DEBUG
-                if (sensed_d == 0) {
-                  std::cout << "D error:\n" << sensor_fusion << std::endl;
-                }
                 //const double sensed_s = sensor_fusion[i][5];
                 //const double sensed_d = sensor_fusion[i][6];
                 
@@ -462,7 +488,15 @@ int main() {
             for (int i = 0; i < new_traj.states.size(); ++i) {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }
-            
+            /*
+            ego_car.traj_.coeffs_JMT_s = new_traj.coeffs_JMT_s;
+            ego_car.traj_.coeffs_JMT_s_dot = new_traj.coeffs_JMT_s_dot;
+            ego_car.traj_.coeffs_JMT_s_dotdot = new_traj.coeffs_JMT_s_dotdot;
+            ego_car.traj_.coeffs_JMT_d = new_traj.coeffs_JMT_d;
+            ego_car.traj_.coeffs_JMT_d_dot = new_traj.coeffs_JMT_d_dot;
+            ego_car.traj_.coeffs_JMT_d_dotdot = new_traj.coeffs_JMT_d_dotdot;
+            */
+
             /*
             // DEBUG Basic telemetry output
             std::cout << count << ", t: " << t_msg
@@ -510,7 +544,8 @@ int main() {
             std::cout << std::endl;
             */
             
-            std::cout << "\n" << sensor_fusion << "\n" << std::endl;
+            //std::cout << "\n" << sensor_fusion << "\n" << std::endl;
+            
             
             /**
              * Control
@@ -532,6 +567,15 @@ int main() {
             msgJson["next_y"] = next_y_vals;
             auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
+            // Log time at end of processing
+            auto t_end = std::chrono::time_point_cast<std::chrono::milliseconds>
+            (std::chrono::high_resolution_clock::now())
+            .time_since_epoch().count();
+            std::cout << "Processing time = " << (t_end-t_msg) << " ms" << std::endl;
+            if ((t_end-t_msg) > kPathCycleTimeMS) {
+              std::cout << "WARNING! Processing time exceeded path cycle time." << std::endl;
+            }
+            
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
             
             // DEBUG print out diagram of sensed cars for debugging
