@@ -222,14 +222,15 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     double a_adj_ratio = adj_ratios[1];
     if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
       traj_backup = GetTrajectory(start_state, t_tgt,
-                                  (v_tgt * spd_adj_ratio - kSpdAdjOffset),
-                                  d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
+                                  (v_backup * spd_adj_ratio - kSpdAdjOffset),
+                                  d_backup, (kMaxA * a_adj_ratio - kAccAdjOffset),
                                   map_interp_s, map_interp_x, map_interp_y);
     }
+    
+    std::cout << "All traj's are too risky!  Use backup traj to keep D = " << d_backup << std::endl;
+
     traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     possible_trajs.push_back(traj_backup);
-    
-    std::cout << "All traj's are too risky!  Use backup traj to keep D." << std::endl;
   }
   
   // Get traj with lowest cost

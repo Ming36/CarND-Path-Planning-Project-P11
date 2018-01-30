@@ -104,7 +104,6 @@ std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int check_
                                           const std::map<int, std::vector<int>> &car_ids_by_lane) {
 
   int car_id_ahead = check_id;
-  //double s_rel_ahead = std::numeric_limits<double>::max();
   double s_rel_ahead = kSensorRange;
   double ref_s_rel;
   std::vector<int> cars_in_check_lane;
@@ -160,7 +159,6 @@ std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check
                                            const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
   int car_id_behind = check_id;
-  //double s_rel_ahead = -std::numeric_limits<double>::max();
   double s_rel_behind = -kSensorRange;
   double ref_s_rel;
   std::vector<int> cars_in_check_lane;

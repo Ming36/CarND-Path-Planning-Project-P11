@@ -162,15 +162,16 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
 
   // Over-ride base target speed if planning to change lanes with cars in the way
   if (ego_car.tgt_behavior_.intent == kPlanLaneChangeLeft) {
+    const int check_lane = ego_car.lane_ + kLeft;
 
     // Look for car ahead in left lane
-    auto car_onleft_ahead = GetCarAheadInLane(kLeft, ego_car.veh_id_, ego_car,
+    auto car_onleft_ahead = GetCarAheadInLane(check_lane, ego_car.veh_id_, ego_car,
                                               detected_cars, car_ids_by_lane);
     int car_id_onleft_ahead = std::get<0>(car_onleft_ahead);
     double rel_s_onleft_ahead = std::get<1>(car_onleft_ahead);
     
     // Look for car behind in left lane
-    auto car_onleft_behind = GetCarBehindInLane(kLeft, ego_car.veh_id_, ego_car,
+    auto car_onleft_behind = GetCarBehindInLane(check_lane, ego_car.veh_id_, ego_car,
                                                 detected_cars, car_ids_by_lane);
     int car_id_onleft_behind = std::get<0>(car_onleft_behind);
     double rel_s_onleft_behind = std::get<1>(car_onleft_behind);
@@ -210,15 +211,16 @@ void VehBehaviorFSM(EgoVehicle &ego_car,
     // Otherwise, just keep going ahead at original target speed to pass
   }
   else if (ego_car.tgt_behavior_.intent == kPlanLaneChangeRight) {
-  
+    const int check_lane = ego_car.lane_ + kRight;
+    
     // Look for car ahead in right lane
-    auto car_onright_ahead = GetCarAheadInLane(kRight, ego_car.veh_id_, ego_car,
+    auto car_onright_ahead = GetCarAheadInLane(check_lane, ego_car.veh_id_, ego_car,
                                                detected_cars, car_ids_by_lane);
     int car_id_onright_ahead = std::get<0>(car_onright_ahead);
     double rel_s_onright_ahead = std::get<1>(car_onright_ahead);
     
     // Look for car behind in right lane
-    auto car_onright_behind = GetCarBehindInLane(kRight, ego_car.veh_id_, ego_car,
+    auto car_onright_behind = GetCarBehindInLane(check_lane, ego_car.veh_id_, ego_car,
                                                  detected_cars, car_ids_by_lane);
     int car_id_onright_behind = std::get<0>(car_onright_behind);
     double rel_s_onright_behind = std::get<1>(car_onright_behind);
