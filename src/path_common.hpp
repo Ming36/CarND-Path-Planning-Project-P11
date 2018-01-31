@@ -20,6 +20,14 @@
  * Constant parameters
  */
 
+// Debug logging
+constexpr int kDBGMain = 1;
+constexpr int kDBGVehicle = 0;
+constexpr int kDBGSensorFusion = 0;
+constexpr int kDBGPrediction = 0;
+constexpr int kDBGBehavior = 1;
+constexpr int kDBGTrajectory = 1;
+
 // Simulation
 constexpr double kSimCycleTime = 0.02; // sec
 constexpr double kSensorRange = 100.; // m
@@ -52,7 +60,6 @@ constexpr double kRandSpdMean = (5.) / 2.23694;
 constexpr double kRandSpdDev = (2.) / 2.23694;
 constexpr double kRandTimeMean = 1;
 constexpr double kRandTimeDev = 0.3;
-//constexpr double kCostRandDev = 0.01;
 
 constexpr double kTrajCostRisk = 10.0;
 constexpr double kTrajCostDeviation = 1.0;
@@ -67,23 +74,17 @@ constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s
 constexpr double kTgtStartFollowDist = 40.; // 40 m
 constexpr double kTgtFollowDist = 15.; // m
 constexpr double kTgtMinFollowDist = 13.; // m
-//constexpr double kTgtMinFollowGain = 1.; // speed slope gain multiplier
 constexpr double kTgtMinSpeed = (5.) / 2.23694; // mph -> m/s, min target speed
-//constexpr double kTgtMinFollowTime = kNewPathTime; // shortened trajectory time
 constexpr double kMinFollowTgtSpeedDec = (10.) / 2.23694; // 5 mph -> m/s, for following too close
 constexpr double kPlanLCTgtSpeedDec = (5.) / 2.23694; // 5 mph -> m/s, for Plan LC
 
 constexpr double kCostDistAhead = 5.0;
 constexpr double kCostSpeedAhead = 4.0;
-constexpr double kCostSpeedBehind = 0.0;
 constexpr double kCostChangeLanes = 1.0;
 constexpr double kCostFreqLaneChange = 1.0;
-constexpr double kCostSideGap = 0.0; // 10
 
 constexpr int kCounterFreqLaneChange = 15; // path cycles
 constexpr double kLaneChangeMinGap = 10.; // m
-
-//constexpr double kTrajRiskLimit = 0.8;
 
 /**
  * Basic parameter helpers

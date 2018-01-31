@@ -34,6 +34,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		3F6280E220212CD700EB05F2 /* sensor_fusion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6280E020212CD700EB05F2 /* sensor_fusion.cpp */; };
 		3F6BCFFC20081E700054E514 /* vehicle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BCFFA20081E700054E514 /* vehicle.cpp */; };
 		3F6BCFFF2009500B0054E514 /* behavior.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BCFFD2009500B0054E514 /* behavior.cpp */; };
 		3F6BD002200950270054E514 /* trajectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BD000200950270054E514 /* trajectory.cpp */; };
@@ -68,6 +69,8 @@
 
 /* Begin PBXFileReference section */
 		3F332F9C200FDEEF0058D3FF /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spline.h; path = src/spline.h; sourceTree = "<group>"; };
+		3F6280E020212CD700EB05F2 /* sensor_fusion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = sensor_fusion.cpp; path = src/sensor_fusion.cpp; sourceTree = "<group>"; };
+		3F6280E120212CD700EB05F2 /* sensor_fusion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = sensor_fusion.hpp; path = src/sensor_fusion.hpp; sourceTree = "<group>"; };
 		3F6BCFFA20081E700054E514 /* vehicle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = vehicle.cpp; path = src/vehicle.cpp; sourceTree = "<group>"; };
 		3F6BCFFB20081E700054E514 /* vehicle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = vehicle.hpp; path = src/vehicle.hpp; sourceTree = "<group>"; };
 		3F6BCFFD2009500B0054E514 /* behavior.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = behavior.cpp; path = src/behavior.cpp; sourceTree = "<group>"; };
@@ -153,6 +156,8 @@
 				3F6BD003200951BB0054E514 /* path_common.cpp */,
 				3F6BCFFB20081E700054E514 /* vehicle.hpp */,
 				3F6BCFFA20081E700054E514 /* vehicle.cpp */,
+				3F6280E120212CD700EB05F2 /* sensor_fusion.hpp */,
+				3F6280E020212CD700EB05F2 /* sensor_fusion.cpp */,
 				3F7CFB4D2005DE3A003CE28A /* prediction.hpp */,
 				3F7CFB4C2005DE3A003CE28A /* prediction.cpp */,
 				3F6BCFFE2009500B0054E514 /* behavior.hpp */,
@@ -242,6 +247,7 @@
 			files = (
 				3F6BD005200951BB0054E514 /* path_common.cpp in Sources */,
 				3F7CFB4E2005DE3A003CE28A /* prediction.cpp in Sources */,
+				3F6280E220212CD700EB05F2 /* sensor_fusion.cpp in Sources */,
 				3F6BD002200950270054E514 /* trajectory.cpp in Sources */,
 				3F6BCFFF2009500B0054E514 /* behavior.cpp in Sources */,
 				3F6BCFFC20081E700054E514 /* vehicle.cpp in Sources */,

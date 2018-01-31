@@ -26,14 +26,15 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
     for (int i = 0; i < it->second.size(); ++i) {
       int cur_car_id = it->second.at(i);
       DetectedVehicle* cur_car = &detected_cars.at(cur_car_id);
+      cur_car->pred_trajs_.clear();
       
       // Predict behavior for this detected car
-      cur_car->pred_trajs_.clear();
       double t_tgt = kPredictTime;
       double v_tgt;
       double d_tgt;
-      auto car_ahead = GetCarAheadInLane(cur_car->lane_, cur_car->veh_id_, ego_car,
-                                         detected_cars, car_ids_by_lane);
+      auto car_ahead = GetCarAheadInLane(cur_car->lane_, cur_car->veh_id_,
+                                         ego_car, detected_cars,
+                                         car_ids_by_lane);
       int car_id_ahead = std::get<0>(car_ahead);
       double s_rel_ahead = std::get<1>(car_ahead);
       
@@ -53,8 +54,9 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
         v_tgt = cur_car->state_.s_dot;
       }
       d_tgt = cur_car->state_.d;
-      VehTrajectory traj_KL = GetTrajectory(cur_car->state_, t_tgt, v_tgt, d_tgt, kMaxA,
-                                            map_interp_s, map_interp_x, map_interp_y);
+      VehTrajectory traj_KL = GetTrajectory(cur_car->state_, t_tgt, v_tgt,
+                                            d_tgt, kMaxA, map_interp_s,
+                                            map_interp_x, map_interp_y);
       traj_KL.probability = 1.0;
       cur_car->pred_trajs_[kKeepLane] = traj_KL;
       
@@ -63,8 +65,9 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       if (cur_car->lane_ > 1) {
         v_tgt = cur_car->state_.s_dot;
         d_tgt = tgt_lane2tgt_d(cur_car->lane_ - 1);
-        VehTrajectory traj_LCL = GetTrajectory(cur_car->state_, t_tgt, v_tgt, d_tgt, kMaxA,
-                                               map_interp_s, map_interp_x, map_interp_y);
+        VehTrajectory traj_LCL = GetTrajectory(cur_car->state_, t_tgt, v_tgt,
+                                               d_tgt, kMaxA, map_interp_s,
+                                               map_interp_x, map_interp_y);
         
         double prob_LCL = 0.1;
         if (s_rel_ahead < kTgtFollowDist) { prob_LCL = 0.3; }
@@ -80,8 +83,9 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
       if (cur_car->lane_ < kNumLanes) {
         v_tgt = cur_car->state_.s_dot;
         d_tgt = tgt_lane2tgt_d(cur_car->lane_ + 1);
-        VehTrajectory traj_LCR = GetTrajectory(cur_car->state_, t_tgt, v_tgt, d_tgt, kMaxA,
-                                               map_interp_s, map_interp_x, map_interp_y);
+        VehTrajectory traj_LCR = GetTrajectory(cur_car->state_, t_tgt, v_tgt,
+                                               d_tgt, kMaxA, map_interp_s,
+                                               map_interp_x, map_interp_y);
         
         double prob_LCR = 0.1;
         if (s_rel_ahead < kTgtFollowDist) { prob_LCR = 0.3; }
@@ -91,6 +95,22 @@ void PredictBehavior(std::map<int, DetectedVehicle> &detected_cars,
         cur_car->pred_trajs_[kLaneChangeRight] = traj_LCR;
         cur_car->pred_trajs_.at(kKeepLane).probability -= prob_LCR;
       }
+    }
+  }
+  
+  // Debug logging
+  if (kDBGPrediction != 0) {
+    std::cout << "Predicted intents:" << std::endl;
+    for (auto it = detected_cars.begin();
+         it != detected_cars.end(); ++it) {
+      std::cout << "car #" << it->first << " - ";
+      auto predictions = it->second.pred_trajs_;
+      for (auto it2 = predictions.begin();
+           it2 != predictions.end(); ++it2) {
+        std::cout << it2->first << " = "
+        << it2->second.probability << ", ";
+      }
+      std::cout << std::endl;
     }
   }
 }

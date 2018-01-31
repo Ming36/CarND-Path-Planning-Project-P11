@@ -15,8 +15,27 @@
 #include <map>
 #include "vehicle.hpp"
 
-void VehBehaviorFSM(EgoVehicle &ego_car,
-                    const std::map<int, DetectedVehicle> &detected_cars,
-                    const std::map<int, std::vector<int>> &car_ids_by_lane);
+int LaneCostFcn(const EgoVehicle &ego_car,
+                const std::map<int, DetectedVehicle> &detected_cars,
+                const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+VehIntents BehaviorFSM(const EgoVehicle &ego_car,
+                       const std::map<int, DetectedVehicle> &detected_cars,
+                       const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+double SetTargetSpeed(const EgoVehicle &ego_car,
+                      const std::map<int, DetectedVehicle> &detected_cars,
+                      const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+double TargetSpeedKL(double base_tgt_spd, const EgoVehicle &ego_car,
+                     const std::map<int, DetectedVehicle> &detected_cars,
+                     const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
+                      const EgoVehicle &ego_car,
+                      const std::map<int, DetectedVehicle> &detected_cars,
+                      const std::map<int, std::vector<int>> &car_ids_by_lane);
+
+int UpdateCounterLC(const EgoVehicle &ego_car, int prev_tgt_lane);
 
 #endif /* behavior_hpp */

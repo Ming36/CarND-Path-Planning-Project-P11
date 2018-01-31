@@ -90,26 +90,16 @@ std::vector<double> GetHiResXY(double s, double d,
                                const std::vector<double> &map_x,
                                const std::vector<double> &map_y) {
   
-  /*
-  int wp1 = -1;
-  while ((s > map_s[wp1+1]) &&
-         (wp1 < (int)(map_s.size()-1))) {
-    wp1++;
-  }
-  */
-  
   // Wrap around S
   s = std::fmod(s, kMaxS);
-  
-  auto wp1_bst = std::lower_bound(map_s.begin(), map_s.end(), s);
 
-  //std::cout << wp1 << " = " << (wp1_bst-map_s.begin()-1) << std::endl;
-
-  int wp1 = (wp1_bst - map_s.begin() - 1);
-  int wp2 = (wp1 + 1) % map_s.size();
-  int wp3 = (wp2 + 1) % map_s.size();
-  int wp0 = wp1 - 1;
-  if (wp0 < 0) { wp0 = map_s.size() - 1; }
+  // Find 2 waypoints before S and 2 waypoints after S for angular interpolation
+  auto it_wp1_search = std::lower_bound(map_s.begin(), map_s.end(), s);
+  int wp1 = (it_wp1_search - map_s.begin() - 1); // wp before S
+  int wp2 = (wp1 + 1) % map_s.size(); // wp after S
+  int wp3 = (wp2 + 1) % map_s.size(); // wp 2nd after S
+  int wp0 = wp1 - 1; // wp 2nd before S
+  if (wp0 < 0) { wp0 = map_s.size() - 1; } // wrap around backwards
   
   double theta_wp = atan2((map_y[wp2] - map_y[wp1]),
                           (map_x[wp2] - map_x[wp1]));
@@ -210,8 +200,6 @@ std::vector<double> GetFrenetVelocity(double vx, double vy, int closest_wp,
   double dy = map_dy[closest_wp];
   double frenet_d_dot = (vx * dx + vy * dy);
   double frenet_s_dot = sqrt(sq(vx) + sq(vy) - sq(frenet_d_dot));
-  
-  //std::cout << "vx:" << vx << ",vy:" << vy << ",dx:" << dx << ",dy:" << dy << ",d_dot:" << frenet_d_dot << ",s_dot:" << frenet_s_dot << std::endl;
   
   return {frenet_s_dot, frenet_d_dot};
 }

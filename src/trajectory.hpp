@@ -15,11 +15,8 @@
 #include "path_common.hpp"
 #include "vehicle.hpp"
 
-VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
-                            double v_tgt, double d_tgt, double a_tgt,
-                            const std::vector<double> &map_interp_s,
-                            const std::vector<double> &map_interp_x,
-                            const std::vector<double> &map_interp_y);
+VehTrajectory GetBufferTrajectory(int idx_current_pt,
+                                  VehTrajectory prev_ego_traj);
 
 VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                const std::map<int, DetectedVehicle> &detected_cars,
@@ -27,6 +24,12 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                const std::vector<double> &map_interp_s,
                                const std::vector<double> &map_interp_x,
                                const std::vector<double> &map_interp_y);
+
+VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
+                            double v_tgt, double d_tgt, double a_tgt,
+                            const std::vector<double> &map_interp_s,
+                            const std::vector<double> &map_interp_x,
+                            const std::vector<double> &map_interp_y);
 
 std::vector<double> CheckTrajFeasibility(const VehTrajectory traj);
 

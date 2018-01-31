@@ -33,24 +33,22 @@ Vehicle::~Vehicle() { }
 /**
  * Updates vehicle's state values
  */
-void Vehicle::UpdateState(double x, double y, double s, double d,
-                          double s_dot, double d_dot,
-                          double s_dotdot, double d_dotdot) {
+void Vehicle::UpdateState(VehState new_state) {
   
   // Update state values
-  state_.x = x;
-  state_.y = y;
-  state_.s = s;
-  state_.s_dot = s_dot;
-  state_.s_dotdot = s_dotdot;
-  state_.d = d;
-  state_.d_dot = d_dot;
-  state_.d_dotdot = d_dotdot;
+  state_.x = new_state.x;
+  state_.y = new_state.y;
+  state_.s = new_state.s;
+  state_.s_dot = new_state.s_dot;
+  state_.s_dotdot = new_state.s_dotdot;
+  state_.d = new_state.d;
+  state_.d_dot = new_state.d_dot;
+  state_.d_dotdot = new_state.d_dotdot;
   
   // Detect lane number (1 is closest to middle of road)
   int lane = 0;
   double n = 0;
-  while (d > n * kLaneWidth) {
+  while (new_state.d > n * kLaneWidth) {
     lane++;
     n = n + 1.0;
   }
@@ -251,8 +249,13 @@ double EgoCheckSideGap(const VehSides check_side,
     }
   }
   
-  // DEBUG
-  std::cout << "GapOnSide " << check_side << ": " << gap_on_side << "m  (" << rel_s_ahead << "m to car " << car_id_ahead << " ahead, " << rel_s_behind << "m to car " << car_id_behind << " behind)" << std::endl;
+  // Debug logging
+  if (kDBGVehicle != 0) {
+    std::cout << "GapOnSide " << check_side << ": " << gap_on_side << "m  ("
+              << rel_s_ahead << "m to car " << car_id_ahead << " ahead, "
+              << rel_s_behind << "m to car " << car_id_behind << " behind)"
+              << std::endl;
+  }
   
   return gap_on_side;
 }

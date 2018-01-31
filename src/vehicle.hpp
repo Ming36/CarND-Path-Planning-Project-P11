@@ -86,9 +86,7 @@ public:
    */
   virtual ~Vehicle();
   
-  void UpdateState(double x, double y, double s, double d,
-                   double s_dot, double d_dot,
-                   double s_dotdot, double d_dotdot);
+  void UpdateState(VehState new_state);
   
 };
 
