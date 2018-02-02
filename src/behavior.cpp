@@ -8,11 +8,12 @@
 #include "behavior.hpp"
 
 /**
- * Cost function to set behavior target lane considering:
+ * Cost function to set target lane considering:
  *   #1) Cost by rel_s distance to car ahead
  *   #2) Cost by speed of car ahead
  *   #3) Cost of changing lanes
  *   #4) Cost of frequent lane changes
+ * Return best lane # with lowest cost
  */
 int LaneCostFcn(const EgoVehicle &ego_car,
                 const std::map<int, DetectedVehicle> &detected_cars,
@@ -25,8 +26,8 @@ int LaneCostFcn(const EgoVehicle &ego_car,
     double lane_cost = 0.;
     
     // #1) Cost by rel_s distance to car ahead
-    auto car_ahead = GetCarAheadInLane(tgt_lane, ego_car.veh_id_, ego_car,
-                                       detected_cars, car_ids_by_lane);
+    auto car_ahead = FindCarInLane(kFront, tgt_lane, ego_car.veh_id_, ego_car,
+                                   detected_cars, car_ids_by_lane);
     int car_id_ahead = std::get<0>(car_ahead);
     double rel_s_ahead = kSensorRange;
     if (car_id_ahead != ego_car.veh_id_) {
@@ -55,6 +56,7 @@ int LaneCostFcn(const EgoVehicle &ego_car,
       lane_cost += kCostFreqLaneChange * ego_car.counter_lane_change;
     }
     
+    // Save total cost for this lane to vector
     cost_by_lane.push_back(lane_cost);
     
     // Debug logging
@@ -72,38 +74,86 @@ int LaneCostFcn(const EgoVehicle &ego_car,
 }
 
 /**
- * Finite State Machine to set behavior target intent
+ * Finite State Machine for behavior intents.  Possible intents are:
+ *   1. Keep Lane (KL)
+ *   2. Plan Lane Change Left (PLCL)
+ *   3. Plan Lane Change Right (PLCR)
+ *   4. Lane Change Left (LCL)
+ *   5. Lane Change Right (LCR)
+ * Returns the target intent.
  */
 VehIntents BehaviorFSM(const EgoVehicle &ego_car,
                        const std::map<int, DetectedVehicle> &detected_cars,
                        const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
   VehIntents tgt_intent;
+  const double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars,
+                                             car_ids_by_lane);
+  const double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars,
+                                              car_ids_by_lane);
+  const VehIntents cur_intent = ego_car.tgt_behavior_.intent;
+  const int cur_tgt_lane = ego_car.tgt_behavior_.tgt_lane;
   
-  // Finite State Machine to decide between intents
-  double gap_on_left = EgoCheckSideGap(kLeft, ego_car, detected_cars,
-                                       car_ids_by_lane);
-  double gap_on_right = EgoCheckSideGap(kRight, ego_car, detected_cars,
-                                        car_ids_by_lane);
-
-  if (ego_car.tgt_behavior_.tgt_lane < ego_car.lane_) {
-    if (gap_on_left < kLaneChangeMinGap) {
-      tgt_intent = kPlanLaneChangeLeft;
+  // Behavior Intent FSM
+  switch (cur_intent) {
+    case kKeepLane: {
+      if (cur_tgt_lane < ego_car.lane_) {
+        tgt_intent = kPlanLaneChangeLeft; // tgt lane on left, plan LC
+      }
+      else if (cur_tgt_lane > ego_car.lane_) {
+        tgt_intent = kPlanLaneChangeRight; // tgt lane on right, plan LC
+      }
+      else {
+        tgt_intent = kKeepLane; // stay in KL
+      }
+      break;
     }
-    else {
-      tgt_intent = kLaneChangeLeft;
+    case kPlanLaneChangeLeft: {
+      if (gap_on_left > kLaneChangeMinGap) {
+        tgt_intent = kLaneChangeLeft; // lane on left is clear, change lanes
+      }
+      else if (cur_tgt_lane < ego_car.lane_) {
+        tgt_intent = kPlanLaneChangeLeft; // stay in PLCL
+      }
+      else {
+        tgt_intent = kKeepLane; // go back to keep lane
+      }
+      break;
     }
-  }
-  else if (ego_car.tgt_behavior_.tgt_lane > ego_car.lane_) {
-    if (gap_on_right < kLaneChangeMinGap) {
-      tgt_intent = kPlanLaneChangeRight;
+    case kPlanLaneChangeRight: {
+      if (gap_on_right > kLaneChangeMinGap) {
+        tgt_intent = kLaneChangeRight; // lane on right is clear, change lanes
+      }
+      else if (cur_tgt_lane > ego_car.lane_) {
+        tgt_intent = kPlanLaneChangeRight; // stay in PLCR
+      }
+      else {
+        tgt_intent = kKeepLane; // go back to keep lane
+      }
+      break;
     }
-    else {
-      tgt_intent = kLaneChangeRight;
+    case kLaneChangeLeft: {
+      if (cur_tgt_lane < ego_car.lane_) {
+        tgt_intent = kLaneChangeLeft; // stay in LCL
+      }
+      else {
+        tgt_intent = kKeepLane; // go back to keep lane
+      }
+      break;
     }
-  }
-  else {
-    tgt_intent = kKeepLane;
+    case kLaneChangeRight: {
+      if (cur_tgt_lane > ego_car.lane_) {
+        tgt_intent = kLaneChangeRight; // stay in LCR
+      }
+      else {
+        tgt_intent = kKeepLane; // go back to keep lane
+      }
+      break;
+    }
+    default: {
+      //assert(false);
+      tgt_intent = cur_intent; // pass-through, should not occur
+    }
   }
   
   return tgt_intent;
@@ -116,7 +166,7 @@ double SetTargetSpeed(const EgoVehicle &ego_car,
                       const std::map<int, DetectedVehicle> &detected_cars,
                       const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
-  // Set target speed based on behavior intent
+  // Set initial target speed to base target speed parameter
   double target_speed = kTargetSpeed;
   
   // Limit target speed based on following car ahead while Keeping Lane
@@ -147,44 +197,45 @@ double TargetSpeedKL(double base_tgt_spd, const EgoVehicle &ego_car,
                      const std::map<int, DetectedVehicle> &detected_cars,
                      const std::map<int, std::vector<int>> &car_ids_by_lane) {
 
-  double target_speed = base_tgt_spd;
+  double tgt_speed = base_tgt_spd; // default is to pass-through base speed
 
   // Check for closest car ahead in current lane
-  auto car_ahead = GetCarAheadInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
-                                     detected_cars, car_ids_by_lane);
-  int car_id_ahead = std::get<0>(car_ahead);
-  double rel_s_ahead = std::get<1>(car_ahead);
+  const auto car_ahead = FindCarInLane(kFront, ego_car.lane_, ego_car.veh_id_,
+                                       ego_car, detected_cars, car_ids_by_lane);
+  const int car_id_ahead = std::get<0>(car_ahead);
+  const double rel_s_ahead = std::get<1>(car_ahead);
   
   // Set base target speed limited by car ahead
   if (car_id_ahead >= 0) {
     if (detected_cars.at(car_id_ahead).s_rel_ < kTgtStartFollowDist) {
+      
       // Decrease target speed proportionally to distance of car ahead
       const double dist_ahead = detected_cars.at(car_id_ahead).s_rel_;
       const double spd_ahead = detected_cars.at(car_id_ahead).state_.s_dot;
-      double spd_slope = ((spd_ahead - kTargetSpeed)
-                          / (kTgtFollowDist - kTgtStartFollowDist));
       
-      target_speed = (spd_slope * (dist_ahead - kTgtStartFollowDist)
-                      + kTargetSpeed);
+      const double spd_slope = ((spd_ahead - kTargetSpeed)
+                                / (kTgtFollowDist - kTgtStartFollowDist));
       
-      // Decrease target speed with additional decrement if too close
+      tgt_speed = spd_slope * (dist_ahead - kTgtStartFollowDist) + kTargetSpeed;
+      
+      // Decrease target speed by a fixed decrement if too close
       if (detected_cars.at(car_id_ahead).s_rel_ < kTgtMinFollowDist) {
-        target_speed = spd_ahead - kMinFollowTgtSpeedDec;
+        tgt_speed = spd_ahead - kMinFollowTgtSpeedDec;
       }
       
       // Debug logging
       if (kDBGBehavior != 0) {
-        std::cout << "\nBase target speed = " << mps2mph(target_speed)
+        std::cout << "\nBase target speed = " << mps2mph(tgt_speed)
         << " car ahead id# " << car_id_ahead << " rel_s = " << rel_s_ahead
         << std::endl;
       }
       
       // Min guard target speed to avoid stopping on the freeway
-      target_speed = std::max(target_speed, kTgtMinSpeed);
+      tgt_speed = std::max(tgt_speed, kTgtMinSpeed);
     }
   }
   
-  return target_speed;
+  return tgt_speed;
 }
 
 /**
@@ -195,27 +246,28 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
                       const std::map<int, DetectedVehicle> &detected_cars,
                       const std::map<int, std::vector<int>> &car_ids_by_lane) {
   
-  double target_speed = base_tgt_spd;
+  double target_speed = base_tgt_spd; // default is to pass-through base speed
   const int check_lane = ego_car.lane_ + sidePLC;
   
   // Check for closest car ahead in current lane
-  auto car_ahead = GetCarAheadInLane(ego_car.lane_, ego_car.veh_id_, ego_car,
-                                     detected_cars, car_ids_by_lane);
-  int car_id_ahead = std::get<0>(car_ahead);
-  double rel_s_ahead = std::get<1>(car_ahead);
+  const auto car_ahead = FindCarInLane(kFront, ego_car.lane_, ego_car.veh_id_,
+                                       ego_car, detected_cars, car_ids_by_lane);
+  const int car_id_ahead = std::get<0>(car_ahead);
+  const double rel_s_ahead = std::get<1>(car_ahead);
   
   // Look for car ahead in lane on PLC side
-  auto car_side_ahead = GetCarAheadInLane(check_lane, ego_car.veh_id_, ego_car,
-                                          detected_cars, car_ids_by_lane);
-  int car_id_side_ahead = std::get<0>(car_side_ahead);
-  double rel_s_side_ahead = std::get<1>(car_side_ahead);
-  
-  // Look for car behind in left lane
-  auto car_side_behind = GetCarBehindInLane(check_lane, ego_car.veh_id_,
+  const auto car_side_ahead = FindCarInLane(kFront, check_lane, ego_car.veh_id_,
                                             ego_car, detected_cars,
                                             car_ids_by_lane);
-  int car_id_side_behind = std::get<0>(car_side_behind);
-  double rel_s_side_behind = std::get<1>(car_side_behind);
+  const int car_id_side_ahead = std::get<0>(car_side_ahead);
+  const double rel_s_side_ahead = std::get<1>(car_side_ahead);
+  
+  // Look for car behind in lane on PLC side
+  const auto car_side_behind = FindCarInLane(kBack, check_lane, ego_car.veh_id_,
+                                             ego_car, detected_cars,
+                                             car_ids_by_lane);
+  const int car_id_side_behind = std::get<0>(car_side_behind);
+  const double rel_s_side_behind = std::get<1>(car_side_behind);
   
   // Check which cars are close
   bool close_ahead = false;
@@ -237,7 +289,8 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
   // Slow down to find a gap if car ahead is close
   if (close_ahead == true) {
     if ((close_side_ahead == true) && (close_side_behind == true)) {
-      // Set target speed slower than close car behind (close car ahead and behind)
+      
+      // Set tgt speed slower than close car behind (close car ahead and behind)
       target_speed = (detected_cars.at(car_id_side_behind).state_.s_dot
                       - kPlanLCTgtSpeedDec);
       
@@ -264,15 +317,22 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
   return target_speed;
 }
 
+/**
+ * Update frequent lane change counter that counts down each cycle and resets
+ * up when the target lane changes or while a lane change is in progress.  This
+ * counter adds a higher cost to lanes other than the target to prevent rapid
+ * target switching.
+ */
 int UpdateCounterLC(const EgoVehicle &ego_car, int prev_tgt_lane) {
+  
   int counter = ego_car.counter_lane_change;
   if (counter > 0) {
-    counter--;
+    counter--; // count down
   }
   if ((ego_car.tgt_behavior_.tgt_lane != prev_tgt_lane)
       || (ego_car.tgt_behavior_.intent == kLaneChangeLeft)
       || (ego_car.tgt_behavior_.intent == kLaneChangeRight)) {
-    counter = kCounterFreqLaneChange;
+    counter = kCounterFreqLaneChange; // reset up
   }
   
   // Debug logging

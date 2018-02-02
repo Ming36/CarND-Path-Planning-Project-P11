@@ -9,19 +9,13 @@
 #define vehicle_hpp
 
 #include <stdio.h>
-
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <map>
-#include <string>
-#include <math.h>
-
 #include "path_common.hpp"
 
 enum VehSides {
   kLeft = -1,
   kRight = 1,
+  kBack = -2,
+  kFront = 2
 };
 
 enum VehIntents {
@@ -35,7 +29,6 @@ enum VehIntents {
 
 struct VehBehavior {
   VehIntents intent;
-  int car_ahead_id;
   int tgt_lane;
   double tgt_speed;
   double tgt_time;
@@ -54,40 +47,22 @@ struct VehState {
 
 struct VehTrajectory {
   std::deque<VehState> states;
-  
-  std::vector<double> coeffs_JMT_s; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_s_dot; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_s_dotdot; // [2*a2, 6*a3, 12*a4, 20*a5]
-  
-  std::vector<double> coeffs_JMT_d; // [a0, a1, a2, a3, a4, a5]
-  std::vector<double> coeffs_JMT_d_dot; // [a1, 2*a2, 3*a3, 4*a4, 5*a5]
-  std::vector<double> coeffs_JMT_d_dotdot; // [2*a2, 6*a3, 12*a4, 20*a5]
-
   double probability;
   double cost;
 };
 
 class Vehicle {
 public:
-  
   int veh_id_;
   int lane_;
   VehState state_;
-  VehTrajectory traj_;
-  
-  /**
-   * Constructor
-   */
+  VehTrajectory traj_;  
+
+  // Constructor/Destructor
   Vehicle();
-  Vehicle(int veh_id);
-  
-  /**
-   * Destructor
-   */
   virtual ~Vehicle();
-  
-  void UpdateState(VehState new_state);
-  
+
+  void UpdateStateAndLane(VehState new_state);
 };
 
 
@@ -97,15 +72,8 @@ public:
   int counter_lane_change;
   VehBehavior tgt_behavior_;
   
-  /**
-   * Constructor
-   */
+  // Constructor/destructor
   EgoVehicle();
-  EgoVehicle(int id);
-  
-  /**
-   * Destructor
-   */
   virtual ~EgoVehicle();
 };
 
@@ -114,33 +82,21 @@ public:
   
   double s_rel_;
   double d_rel_;
-  
   std::map<VehIntents, VehTrajectory> pred_trajs_;
   
-  /**
-   * Constructor
-   */
+  // Constructor/Destructor
   DetectedVehicle();
-  DetectedVehicle(int id);
-  
-  /**
-   * Destructor
-   */
   virtual ~DetectedVehicle();
   
   void UpdateRelDist(double s_ego, double d_ego);
 };
 
-std::tuple<int, double> GetCarAheadInLane(const int check_lane, const int check_id,
-                                          const EgoVehicle &ego_car,
-                                          const std::map<int, DetectedVehicle> &detected_cars,
-                                          const std::map<int, std::vector<int>> &car_ids_by_lane);
-
-std::tuple<int, double> GetCarBehindInLane(const int check_lane, const int check_id,
-                                           const EgoVehicle &ego_car,
-                                           const std::map<int, DetectedVehicle> &detected_cars,
-                                           const std::map<int, std::vector<int>> &car_ids_by_lane);
-
+std::tuple<int, double> FindCarInLane(const VehSides check_side,
+                        const int check_lane, const int check_id,
+                        const EgoVehicle &ego_car,
+                        const std::map<int, DetectedVehicle> &detected_cars,
+                        const std::map<int, std::vector<int>> &car_ids_by_lane);
+  
 double EgoCheckSideGap(const VehSides check_side,
                        const EgoVehicle &ego_car,
                        const std::map<int, DetectedVehicle> &detected_cars,

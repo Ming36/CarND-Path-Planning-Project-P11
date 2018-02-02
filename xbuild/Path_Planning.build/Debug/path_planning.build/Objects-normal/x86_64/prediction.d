@@ -1,6 +1,7 @@
 dependencies: \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp \
+  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/Dense \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/Core \
@@ -172,5 +173,4 @@ dependencies: \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/Eigen-3.3/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/spline.h \
-  /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp \
   /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp

@@ -41,7 +41,7 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
   spline_s_dx.set_points(map_s, map_dx);
   spline_s_dy.set_points(map_s, map_dy);
   
-  // Interpolate interp map from splines for s at every 1m
+  // Interpolate map from splines for s at every s_dist_inc increment
   std::vector<double> interp_s;
   std::vector<double> interp_x;
   std::vector<double> interp_y;
@@ -63,8 +63,6 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
  */
 int ClosestWaypoint(double x, double y, const std::vector<double> &map_x,
                     const std::vector<double> &map_y) {
-  
-  // TODO Make this a more efficient nearest neighbor search with nanoflann
   
   double closestLen = std::numeric_limits<double>::max(); //large number
   int closestWaypoint = 0;
@@ -90,20 +88,29 @@ std::vector<double> GetHiResXY(double s, double d,
                                const std::vector<double> &map_x,
                                const std::vector<double> &map_y) {
   
-  // Wrap around S
+  // Wrap around s
   s = std::fmod(s, kMaxS);
 
-  // Find 2 waypoints before S and 2 waypoints after S for angular interpolation
+  // Find 2 waypoints before s and 2 waypoints after s for angular interpolation
   auto it_wp1_search = std::lower_bound(map_s.begin(), map_s.end(), s);
-  int wp1 = (it_wp1_search - map_s.begin() - 1); // wp before S
-  int wp2 = (wp1 + 1) % map_s.size(); // wp after S
-  int wp3 = (wp2 + 1) % map_s.size(); // wp 2nd after S
-  int wp0 = wp1 - 1; // wp 2nd before S
+  int wp1 = (it_wp1_search - map_s.begin() - 1); // wp before s
+  int wp2 = (wp1 + 1) % map_s.size(); // wp after s
+  int wp3 = (wp2 + 1) % map_s.size(); // wp 2nd after s
+  int wp0 = wp1 - 1; // wp 2nd before s
   if (wp0 < 0) { wp0 = map_s.size() - 1; } // wrap around backwards
-  
+
+  // Use angle between wp1-wp2 to derive segment vector at distance s from wp1
   double theta_wp = atan2((map_y[wp2] - map_y[wp1]),
                           (map_x[wp2] - map_x[wp1]));
+  
+  // The (x,y,s) along the segment vector between wp1 and wp2
+  double seg_s = s - map_s[wp1];
+  double seg_x = map_x[wp1] + seg_s * cos(theta_wp);
+  double seg_y = map_y[wp1] + seg_s * sin(theta_wp);
 
+  // Interpolate theta at s based on the distance between wp1 (with ave angle
+  // from wp0 before and wp2 after) and wp2 (with ave angle from wp1 before
+  // and wp3 after)
   double theta_wp1ave = atan2((map_y[wp2] - map_y[wp0]),
                               (map_x[wp2] - map_x[wp0]));
   
@@ -111,15 +118,17 @@ std::vector<double> GetHiResXY(double s, double d,
                               (map_x[wp3] - map_x[wp1]));
   
   double s_interp = (s - map_s[wp1]) / (map_s[wp2] - map_s[wp1]);
-  double cos_interp = (1-s_interp)*cos(theta_wp1ave) + s_interp*cos(theta_wp2ave);
-  double sin_interp = (1-s_interp)*sin(theta_wp1ave) + s_interp*sin(theta_wp2ave);
+  
+  double cos_interp = ((1-s_interp) * cos(theta_wp1ave)
+                         + s_interp * cos(theta_wp2ave));
+  
+  double sin_interp = ((1-s_interp) * sin(theta_wp1ave)
+                         + s_interp * sin(theta_wp2ave));
+  
   double theta_interp = atan2(sin_interp, cos_interp);
   
-  // The x,y,s along the segment between waypoints
-  double seg_s = s - map_s[wp1];
-  double seg_x = map_x[wp1] + seg_s * cos(theta_wp);
-  double seg_y = map_y[wp1] + seg_s * sin(theta_wp);
-  
+  // Use interpolated theta to calculate final (x,y) at d offset from the
+  // segment vector
   double theta_perp = theta_interp - pi()/2;
   double x = seg_x + d * cos(theta_perp);
   double y = seg_y + d * sin(theta_perp);
@@ -140,7 +149,6 @@ std::vector<double> GetHiResFrenet(double x, double y,
   int next_wp = (close_wp + 1) % map_x.size(); // wrap around end
   int prev_wp = close_wp - 1;
   if (prev_wp < 0) { prev_wp = map_x.size() - 1; } // wrap around beginning
-
   double dist_nextwp = Distance(x, y, map_x[next_wp], map_y[next_wp]);
   double dist_prevwp = Distance(x, y, map_x[prev_wp], map_y[prev_wp]);
   int wp1;
@@ -166,24 +174,27 @@ std::vector<double> GetHiResFrenet(double x, double y,
   double norm_wp = sqrt(sq(vx_wp) + sq(vy_wp));
   double scalar_proj = ((vx_pos * vx_wp + vy_pos * vy_wp) / norm_wp);
   
-  double frenet_s;
+  // Calculate d using distance from projection to the position coord, with
+  // special cases where the position is outside of waypoint vector ends
   double frenet_d;
-  // Limit scalar projection length to limits of waypoint vector length
   if (scalar_proj < 0.) {
-    scalar_proj = 0.;
+    // Projection to position coord goes behind wp1
+    scalar_proj = 0.; // limit scalar proj to endpoint for calculating s
     frenet_d = Distance(map_x[wp1], map_y[wp1], x, y);
   }
   else if (scalar_proj > norm_wp) {
-    scalar_proj = norm_wp;
+    // Projection to position coord goes past wp2
+    scalar_proj = norm_wp; // limit scalar proj to endpoint for calculating s
     frenet_d = Distance(map_x[wp2], map_y[wp2], x, y);
   }
   else {
+    // Projection to position coord is within wp1-wp2
     double dist_wp1_pos = Distance(map_x[wp1], map_y[wp1], x, y);
-    frenet_d = sqrt(sq(dist_wp1_pos) - sq(scalar_proj));
+    frenet_d = sqrt(sq(dist_wp1_pos) - sq(scalar_proj)); // Pythagorean
   }
   
   // Calculate s using scalar_proj limited between waypoint pair (0, norm_wp)
-  frenet_s = map_s[wp1] + scalar_proj;
+  double frenet_s = map_s[wp1] + scalar_proj;
   
   return {frenet_s, frenet_d};
 }
@@ -205,33 +216,13 @@ std::vector<double> GetFrenetVelocity(double vx, double vy, int closest_wp,
 }
 
 /**
- * Calculate the Jerk Minimizing Trajectory that connects the initial state
- * to the final state in time t_end.
+ * Calculate the Jerk Minimizing Trajectory that connects the start state
+ * to the end state in time t_end.  The state variables are [s, s_dot, s_dotdot]
+ * and the output is a vector of 5th order polynomial coefficients a0-a5:
+ * s(t) = a0 + a1 * t + a2 * t^2 + a3 * t^3 + a4 * t^4 + a5 * t^5
  */
-std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
+std::vector<double> JMT(std::vector<double> start, std::vector<double> end,
                         double t_end) {
-  /*
-   INPUTS
-   
-   start - the vehicles start location given as a length three array
-   corresponding to initial values of [s, s_dot, s_double_dot]
-   
-   end - the desired end state for vehicle. Like "start" this is a
-   length three array.
-   
-   t_end - The duration, in seconds, over which this maneuver should occur.
-   
-   OUTPUT
-   
-   an array of length 6, each value corresponding to a coefficent in the polynomial
-   s(t) = a_0 + a_1 * t + a_2 * t**2 + a_3 * t**3 + a_4 * t**4 + a_5 * t**5
-   
-   EXAMPLE
-   
-   > JMT( [0, 10, 0], [10, 10, 0], 1)
-  
-   [0.0, 10.0, 0.0, 0.0, 0.0, 0.0]
-   */
   
   const double t_end2 = t_end * t_end;
   const double t_end3 = t_end2 * t_end;
@@ -256,11 +247,11 @@ std::vector<double> JMT(std::vector<double> start, std::vector <double> end,
     result.push_back(C.data()[i]);
   }
   
-  return result;
+  return result; // [a0, a1, a2, a3, a4, a5]
 }
 
 /**
- * Evaluate a polynomial with form f(x) = a0 + a1*x + a2*x^2 + ... at x
+ * Evaluate a polynomial with form "y = a0 + a1*x + a2*x^2 + ..." at x
  */
 double EvalPoly(double x, std::vector<double> coeffs) {
   double y = 0;
@@ -271,7 +262,7 @@ double EvalPoly(double x, std::vector<double> coeffs) {
 }
 
 /**
- * Differentiate a polynomial with form f(x) = a0 + a1*x + a2*x^2 + ... to get
+ * Differentiate a polynomial with form y = a0 + a1*x + a2*x^2 + ... to get
  * the derivative polynomial's coefficients
  */
 std::vector<double> DiffPoly(std::vector<double> coeffs) {
@@ -282,21 +273,16 @@ std::vector<double> DiffPoly(std::vector<double> coeffs) {
   return diff_coeffs;
 }
 
-/*
-def logistic(x):
-"""
-A function that returns a value between 0 and 1 for x in the
-range [0, infinity] and -1 to 1 for x in the range [-infinity, infinity].
-
-Useful for cost functions.
-"""
-return 2.0 / (1 + exp(-x)) - 1.0
-*/
+/**
+ * A logistic function used for cost functions that returns a value
+ * between 0 and 1 for x in the range [0, infinity] with saturating near 1
+ * at x = x_saturate.
+ */
 double LogCost(double x, double x_saturate) {
   if (abs(x_saturate) >= 1.0) {
-    return 2.0 / (1 + exp(-5 * x / x_saturate)) - 1.0;
+    return (2. / (1. + exp(-5. / x_saturate * x )) - 1.);
   }
   else {
-    return 2.0 / (1 + exp(-5 * x)) - 1.0;
+    return (2. / (1. + exp(-5. * x)) - 1.);
   }
 }

@@ -7,6 +7,13 @@
 
 #include "trajectory.hpp"
 
+/**
+ * Use a part of the previous ego trajectory as the start of the next
+ * trajectory as a buffer to keep smooth continuity for communication between
+ * the path planner and the simulator driving the points.
+ * Returns the buffer portion set of states of the previous trajectory, or an
+ * empty trajectory if the current index is at 0.
+ */
 VehTrajectory GetBufferTrajectory(int idx_current_pt,
                                   VehTrajectory prev_ego_traj) {
   
@@ -23,12 +30,23 @@ VehTrajectory GetBufferTrajectory(int idx_current_pt,
   return traj_prev_buffer;
 }
 
+/**
+ * Get a new trajectory for the ego car with target end state based on the
+ * target behavior.  Multiple trajectories are generated including the base
+ * target and additional variations for slower speed and longer time.  Each
+ * trajectory is checked for over-speed/accel in (x,y) coordinates and adjusted
+ * to stay within limits.  Each trajectory is evaluated for cost based on
+ * accumulated risk of collision with nearby car predicted paths and amount of
+ * deviation from the base target.  Trajectories with cost above a risk
+ * threshold are discarded. A backup trajectory of keeping lane at a slower
+ * speed is included if all other trajectories exceeded the risk threshold.
+ */
 VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
-                               const std::map<int, DetectedVehicle> &detected_cars,
-                               const std::map<int, std::vector<int>> &car_ids_by_lane,
-                               const std::vector<double> &map_interp_s,
-                               const std::vector<double> &map_interp_x,
-                               const std::vector<double> &map_interp_y) {
+                         const std::map<int, DetectedVehicle> &detected_cars,
+                         const std::map<int, std::vector<int>> &car_ids_by_lane,
+                         const std::vector<double> &map_interp_s,
+                         const std::vector<double> &map_interp_x,
+                         const std::vector<double> &map_interp_y) {
 
   // Initialize random generators
   std::random_device rand_dev;
@@ -46,8 +64,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   }
   
   // Set target time and speed from behavior target
-  double t_tgt = ego_car.tgt_behavior_.tgt_time;
-  double v_tgt = ego_car.tgt_behavior_.tgt_speed;
+  const double t_tgt = ego_car.tgt_behavior_.tgt_time;
+  const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
+  const double a_tgt = kMaxA;
 
   // Set target D based on behavior target lane
   double d_tgt;
@@ -79,21 +98,21 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     }
 
     // Calculate initial trajectory with the random deviation
-    double t_tgt_var = t_tgt + t_delta; // allow longer time
-    double v_tgt_var = v_tgt - v_delta; // allow slower speed
+    const double t_tgt_var = t_tgt + t_delta; // allow longer time
+    const double v_tgt_var = v_tgt - v_delta; // allow slower speed
     
     VehTrajectory traj_var = GetTrajectory(start_state, t_tgt_var, v_tgt_var,
-                                           d_tgt, kMaxA, map_interp_s,
+                                           d_tgt, a_tgt, map_interp_s,
                                            map_interp_x, map_interp_y);
 
     // Limit traj for max speed and accel
     auto adj_ratios = CheckTrajFeasibility(traj_var);
-    double spd_adj_ratio = adj_ratios[0];
-    double a_adj_ratio = adj_ratios[1];
+    const double spd_adj_ratio = adj_ratios[0];
+    const double a_adj_ratio = adj_ratios[1];
     if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
       traj_var = GetTrajectory(start_state, t_tgt_var,
                                (v_tgt_var * spd_adj_ratio - kSpdAdjOffset),
-                               d_tgt, (kMaxA * a_adj_ratio - kAccAdjOffset),
+                               d_tgt, (a_tgt * a_adj_ratio - kAccAdjOffset),
                                map_interp_s, map_interp_x, map_interp_y);
     }
 
@@ -114,21 +133,21 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
-    const double d_backup = tgt_lane2tgt_d(ego_car.state_.d);
+    const double d_backup = tgt_lane2tgt_d(ego_car.lane_);
     const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
     VehTrajectory traj_backup = GetTrajectory(start_state, t_tgt, v_backup,
-                                              d_backup, kMaxA, map_interp_s,
+                                              d_backup, a_tgt, map_interp_s,
                                               map_interp_x, map_interp_y);
     
     // Limit traj for max speed and accel
     auto adj_ratios = CheckTrajFeasibility(traj_backup);
-    double spd_adj_ratio = adj_ratios[0];
-    double a_adj_ratio = adj_ratios[1];
+    const double spd_adj_ratio = adj_ratios[0];
+    const double a_adj_ratio = adj_ratios[1];
     if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
       traj_backup = GetTrajectory(start_state, t_tgt,
                                   (v_backup * spd_adj_ratio - kSpdAdjOffset),
                                   d_backup,
-                                  (kMaxA * a_adj_ratio - kAccAdjOffset),
+                                  (a_tgt * a_adj_ratio - kAccAdjOffset),
                                   map_interp_s, map_interp_x, map_interp_y);
     }
     
@@ -148,9 +167,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   double lowest_cost = std::numeric_limits<double>::max();
   for (int i = 0; i < possible_trajs.size(); ++i) {
     if (possible_trajs[i].cost < lowest_cost) {
+      best_traj_idx = i;
       lowest_cost = possible_trajs[i].cost;
       best_traj = possible_trajs[i];
-      best_traj_idx = i;
     }
   }
   
@@ -163,7 +182,13 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   return best_traj;
 }
 
-
+/**
+ * Get a trajectory for a specified start state and a target time, speed,
+ * Frenet d value, and accel using JMT and basic kinematic estimations.  The
+ * JMT is applied to Frenet s and d coordinates separately, and then the (s,d)
+ * points are converted to (x,y) points.  The (x,y) points are also checked for
+ * a minimum separation distance and filtered to prevent low speed jitter.
+ */
 VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             double v_tgt, double d_tgt, double a_tgt,
                             const std::vector<double> &map_interp_s,
@@ -172,64 +197,63 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
   
   VehTrajectory new_traj;
   
-  // Generate S trajectory
+  //// Generate S trajectory ////
   
   double s_est;
   double s_dot_est;
-  double s_dot_dot_est;
+  double s_dotdot_est;
   
-  // Estimate s, s_dot, s_dot_dot to keep a reasonable JMT with basic kinematics
+  // Estimate s, s_dot, s_dot_dot with basic kinematics approximating with
+  // constant accel to keep a reasonable JMT
   const double t_maxa = abs(v_tgt - start_state.s_dot) / a_tgt;
-  double a_signed = (v_tgt > start_state.s_dot) ? a_tgt: -a_tgt;
+  const double a_signed = (v_tgt > start_state.s_dot) ? a_tgt : -a_tgt;
   if (t_maxa > t_tgt) {
     // Cut off target v and a to limit t
     s_dot_est = start_state.s_dot + a_signed * t_tgt;
-    s_dot_dot_est = a_signed;
+    s_dotdot_est = a_signed;
   }
   else {
     // Can achieve target speed in time
     s_dot_est = v_tgt;
-    s_dot_dot_est = (s_dot_est - start_state.s_dot) / t_tgt;
+    s_dotdot_est = (s_dot_est - start_state.s_dot) / t_tgt;
   }
-  
-  s_est = start_state.s + start_state.s_dot*t_tgt + 0.5*s_dot_dot_est*sq(t_tgt);
+  s_est = start_state.s + start_state.s_dot*t_tgt + 0.5*s_dotdot_est*sq(t_tgt);
   
   std::vector<double> start_state_s = {start_state.s, start_state.s_dot,
-    start_state.s_dotdot};
-  std::vector<double> end_state_s = {s_est, s_dot_est, s_dot_dot_est};
+                                       start_state.s_dotdot};
+  std::vector<double> end_state_s = {s_est, s_dot_est, s_dotdot_est};
   
-  new_traj.coeffs_JMT_s = JMT(start_state_s, end_state_s, t_tgt);
-  new_traj.coeffs_JMT_s_dot = DiffPoly(new_traj.coeffs_JMT_s);
-  new_traj.coeffs_JMT_s_dotdot = DiffPoly(new_traj.coeffs_JMT_s_dot);
+  auto coeffs_JMT_s = JMT(start_state_s, end_state_s, t_tgt);
+  auto coeffs_JMT_s_dot = DiffPoly(coeffs_JMT_s);
+  auto coeffs_JMT_s_dotdot = DiffPoly(coeffs_JMT_s_dot);
   
-  // Generate D trajectory
+  //// Generate D trajectory ////
   
-  double d_est = d_tgt;
-  double d_dot_est = 0;
-  double d_dot_dot_est = 0;
+  const double d_est = d_tgt;
+  const double d_dot_est = 0; // finish lane change by end of traj
+  const double d_dotdot_est = 0; // finish lane change by end of traj
   
   std::vector<double> start_state_d = {start_state.d, start_state.d_dot,
-    start_state.d_dotdot};
-  std::vector<double> end_state_d = {d_est, d_dot_est, d_dot_dot_est};
+                                       start_state.d_dotdot};
+  std::vector<double> end_state_d = {d_est, d_dot_est, d_dotdot_est};
   
-  new_traj.coeffs_JMT_d = JMT(start_state_d, end_state_d, t_tgt);
-  new_traj.coeffs_JMT_d_dot = DiffPoly(new_traj.coeffs_JMT_d);
-  new_traj.coeffs_JMT_d_dotdot = DiffPoly(new_traj.coeffs_JMT_d_dot);
+  auto coeffs_JMT_d = JMT(start_state_d, end_state_d, t_tgt);
+  auto coeffs_JMT_d_dot = DiffPoly(coeffs_JMT_d);
+  auto coeffs_JMT_d_dotdot = DiffPoly(coeffs_JMT_d_dot);
   
   // Look up (s,d) vals for each sim cycle time step and convert to (x,y)
-  
   const int num_pts = t_tgt / kSimCycleTime;
-  
+  double t;
   for (int i = 1; i < num_pts; ++i) {
-    double t = i * kSimCycleTime; // idx 0 is 1st point ahead of car
+    t = i * kSimCycleTime; // idx 0 is 1st point ahead of car, start from i = 1
     
     VehState state;
-    state.s = std::fmod(EvalPoly(t, new_traj.coeffs_JMT_s), kMaxS);
-    state.s_dot = EvalPoly(t, new_traj.coeffs_JMT_s_dot);
-    state.s_dotdot = EvalPoly(t, new_traj.coeffs_JMT_s_dotdot);
-    state.d = EvalPoly(t, new_traj.coeffs_JMT_d);
-    state.d_dot = EvalPoly(t, new_traj.coeffs_JMT_d_dot);
-    state.d_dotdot = EvalPoly(t, new_traj.coeffs_JMT_d_dotdot);
+    state.s = std::fmod(EvalPoly(t, coeffs_JMT_s), kMaxS);
+    state.s_dot = EvalPoly(t, coeffs_JMT_s_dot);
+    state.s_dotdot = EvalPoly(t, coeffs_JMT_s_dotdot);
+    state.d = EvalPoly(t, coeffs_JMT_d);
+    state.d_dot = EvalPoly(t, coeffs_JMT_d_dot);
+    state.d_dotdot = EvalPoly(t, coeffs_JMT_d_dotdot);
     
     std::vector<double> state_xy = GetHiResXY(state.s, state.d, map_interp_s,
                                               map_interp_x, map_interp_y);
@@ -238,13 +262,12 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
     
     // Check for min (x,y) dist from prev point, re-push prev point if too small
     if (i > 1) {
-      int prev_idx = new_traj.states.size()-1;
+      const int prev_idx = new_traj.states.size() - 1; // last pushed point
       const double dist_pnt = Distance(state.x, state.y,
                                        new_traj.states[prev_idx].x,
                                        new_traj.states[prev_idx].y);
-      
       if (dist_pnt < kMinTrajPntDist) {
-        state = new_traj.states[prev_idx];
+        state = new_traj.states[prev_idx]; // set state back to copy of previous
       }
     }
     
@@ -256,7 +279,8 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
 
 
 /**
- * Check trajectory feasibility for over-speed and over-accel limits
+ * Check trajectory feasibility for over-speed and over-accel limits.  Return
+ * adjustment ratios based on the amount of over-limit.
  */
 std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
 
@@ -272,15 +296,16 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
   double ave_speed = 0;
   double ave_speed_prev = 0;
   
-  
+  // Loop through each point in traj starting from 2nd point
   for (int i = 1; i < traj.states.size(); ++i) {
-    // Check for over-speed
+    
+    // Check for over-speed from previous point
     xy_speed = (Distance(traj.states[i].x, traj.states[i].y,
                          traj.states[i-1].x, traj.states[i-1].y)
                 / kSimCycleTime);
     if (xy_speed > v_peak) { v_peak = xy_speed; }
     
-    // Check for over-accel
+    // Check for over-accel with ave accel sampled over kAccelAveSamples points
     ave_speed += xy_speed; // accumulate speeds
     if ((i % kAccelAveSamples) == 0) {
       ave_speed = ave_speed / kAccelAveSamples; // calc ave speed
@@ -316,9 +341,11 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
   
   double traj_cost_risk = 0.0;
   double traj_cost_tgtdev = 0.0;
-  
-  const int idx_start_traj = ego_car.traj_.states.size(); // start after buffer
   double collision_risk_sum = 0.0;
+
+  // Set start index to start checking other car's predicted paths after ego's
+  // prev path buffer where the new trajectory will start
+  const int idx_start_traj = ego_car.traj_.states.size();
 
   // Check each time step of the traj to find overlap with other car pred paths
   for (int i = 0; i < traj.states.size(); i += kEvalRiskStep) {
@@ -336,19 +363,21 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
         // Stop if predicted traj is too short
         if ((idx_start_traj+i) > car_traj.states.size()) { break; }
         
-        double car_s = car_traj.states[idx_start_traj+i].s;
-        double car_d = car_traj.states[idx_start_traj+i].d;
+        const double car_s = car_traj.states[idx_start_traj+i].s;
+        const double car_d = car_traj.states[idx_start_traj+i].d;
         
         // Check if ego car and other car would be too close at this time step
         if ((abs(ego_s - car_s) < kCollisionSThresh)
             && (abs(ego_d - car_d) < kCollisionDThresh)) {
           
           // Risk probability with exponential decay over predicted time
-          collision_risk_sum += car_traj.probability * exp(-i*kSimCycleTime);
+          collision_risk_sum += car_traj.probability * exp(-i * kSimCycleTime);
         }
       } // loop to detected car's next predicted path
     } // loop to next detected car
   } // loop to traj's next time step
+  
+  // Apply cost function factor to risk sum
   traj_cost_risk += kTrajCostRisk * collision_risk_sum;
   
   // Add traj cost based on deviation from base target

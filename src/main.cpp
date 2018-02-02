@@ -16,8 +16,6 @@
 #include "behavior.hpp"
 #include "trajectory.hpp"
 
-//using namespace std;
-
 // for convenience
 using json = nlohmann::json;
 
@@ -53,10 +51,10 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
       lane_mark = "  ";
       
       if ((i == 0) && (j_lane == ego_car.lane_)) {
-        lane_mark = "@@"; // mark ego car
+        lane_mark = "@@"; // Mark ego car
       }
       else {
-        // Detected cars as map
+        // Find detected cars at this lane position
         for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
           if ((it->second.s_rel_ <= i+4) && (it->second.s_rel_ > i-6) &&
               (it->second.lane_ == j_lane)) {
@@ -77,20 +75,22 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
 }
 
 /**
- * Main loop
+ * Main loop to process measurements received from Udacity simulator via
+ * uWebSocket messages.  After receiving current vehicle (x,y) position,
+ * unprocessed previous path coordinates, and sensor fusion data of detected
+ * vehicles, process it using a Path Planner and send resulting path (x,y)
+ * coordinates back to the simulator for the car to follow.
  */
 int main() {
   uWS::Hub h;
 
-  // Load up map values for waypoint's x,y,s and dx,dy normal vectors
+  // Load up raw map values for waypoints (x,y,s,dx,dy)
   std::vector<double> map_x_raw;
   std::vector<double> map_y_raw;
   std::vector<double> map_s_raw;
   std::vector<double> map_dx_raw;
   std::vector<double> map_dy_raw;
-  
   std::string map_file_ = "../../data/highway_map.csv";
-
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
   std::string line;
   while (getline(in_map_, line)) {
@@ -112,30 +112,34 @@ int main() {
   	map_dy_raw.push_back(d_y);
   }
   
-  // Reinterpolate map waypoints
+  // Reinterpolate map waypoints for higher precision
   auto waypts_interp = InterpolateMap(map_s_raw, map_x_raw, map_y_raw,
                                       map_dx_raw, map_dy_raw, kMapInterpInc);
   
-  /*
-  // DEBUG
-  std::cout << "** Map interpolation for s, x, y, dx, dy **" << std::endl;
-  for (int i = 0; i < waypts_interp.size(); ++i) {
-    std::cout << "Map " << i << ":" << std::endl;
-    for (int j = 0; j < waypts_interp[i].size(); ++j) {
-      std::cout << waypts_interp[i][j] << std::endl;
+  // Debug logging
+  if (kDBGMain == 2) {
+    std::cout << "** Map interpolation for s, x, y, dx, dy **" << std::endl;
+    for (int i = 0; i < waypts_interp.size(); ++i) {
+      std::cout << "Map " << i << ":" << std::endl;
+      for (int j = 0; j < waypts_interp[i].size(); ++j) {
+        std::cout << waypts_interp[i][j] << std::endl;
+      }
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
   }
-  */
   
   // Instantiate ego car object and map of detected cars to hold their data
-  EgoVehicle ego_car = EgoVehicle(-1);
+  EgoVehicle ego_car = EgoVehicle();
+  ego_car.veh_id_ = -1;
   std::map<int, DetectedVehicle> detected_cars;
-  long int loop = 0;
+  long int loop = 0; // debug loop counter
   auto t_last = std::chrono::time_point_cast<std::chrono::milliseconds>
                 (std::chrono::high_resolution_clock::now())
                 .time_since_epoch().count();
   
+  /**
+   * Loop on communication message with simulator
+   */
   h.onMessage([&loop, &t_last, &waypts_interp, &ego_car, &detected_cars]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
@@ -179,19 +183,20 @@ int main() {
           // List of detected cars on same side of road
           const auto sensor_fusion = j[1]["sensor_fusion"];
           
+          // Interpolated map waypoints
           std::vector<double> map_interp_s = waypts_interp[0];
           std::vector<double> map_interp_x = waypts_interp[1];
           std::vector<double> map_interp_y = waypts_interp[2];
           std::vector<double> map_interp_dx = waypts_interp[3];
           std::vector<double> map_interp_dy = waypts_interp[4];
           
-          // DEBUG Log raw car (x,y) values every cycle
+          // DEBUG Log raw car (x,y) values at every communication cycle
           if (kDBGMain == 3) {
             std::cout << "t: " << t_msg << ", x: " << car_x
                       << ", y: " << car_y << std::endl;
           }
           
-          // Run path planning algorithm at slower cycle time
+          // Run path planning algorithm at a set slower cycle time
           if ((t_msg - t_last) > kPathCycleTimeMS) {
             
             if (kDBGMain != 0) {
@@ -204,17 +209,21 @@ int main() {
             
             /**
              * Sensor Fusion
-             *   1. Update ego car's state
-             *   2. Process detected cars within sensor range
-             *   3. Sort detected cars to start from farthest ahead of ego car
-             * Output:
-             *   ego_car, detected_cars
+             *   1. Determine where ego car is now in previous path
+             *   2. Use received (x,y) to update ego car's state
+             *   3. Process detected cars within sensor range
+             *   4. Group detected car ID's by lane #
+             * Outputs:
+             *   prev_ego_traj : ego's previous full trajectory
+             *   idx_current_pt : index of where ego car is now in prev traj
+             *   ego_car : ego car object updated with current state
+             *   detected_cars : updated detected cars (key=ID, val=det car obj)
+             *   car_ids_by_lane : grouped ID's (key=lane #, val=det car ID's)
              */
             
             // Store prev ego traj and find current idx from prev processed path
             VehTrajectory prev_ego_traj = ego_car.traj_;
             const int prev_path_size = previous_path_x.size();
-            
             const int idx_current_pt = GetCurrentTrajIndex(prev_ego_traj,
                                                            prev_path_size);
             
@@ -225,37 +234,41 @@ int main() {
                                                      map_interp_s,
                                                      map_interp_x,
                                                      map_interp_y);
-            ego_car.UpdateState(new_ego_state);
+            ego_car.UpdateStateAndLane(new_ego_state);
             
-            // Process detected cars' states
-            ProcessDetectedCars(detected_cars, ego_car, sensor_fusion,
-                                map_interp_s, map_interp_x, map_interp_y,
-                                map_interp_dx, map_interp_dy);
+            // Process detected cars' states (update detected_cars)
+            ProcessDetectedCars(ego_car, sensor_fusion, map_interp_s,
+                                map_interp_x, map_interp_y, map_interp_dx,
+                                map_interp_dy, &detected_cars);
             
             // Group detected car id's in a map by lane #
             auto car_ids_by_lane = SortDetectedCarsByLane(detected_cars);
             
-            
             /**
              * Prediction
-             *   1. Predict detected car behaviors and sort by lane
-             *   2. Predict trajectories for each veh over fixed time horizon
+             *   1. Predict detected car trajectories over fixed time horizon
+             *      for each possible behavior with associated probabilities
              * Output:
-             *   detected_cars, car_ids_by_lane
+             *   detected_cars : updated with predicted traj's for each det car
              */
             
-            PredictBehavior(detected_cars, ego_car, car_ids_by_lane,
-                            map_interp_s, map_interp_x, map_interp_y);
+            // Generate traj predictions for det cars (update detected_cars)
+            PredictBehavior(ego_car, car_ids_by_lane, map_interp_s,
+                            map_interp_x, map_interp_y, &detected_cars);
             
             /**
              * Behavior Planning
-             *   1. Use FSM to decide intent ("KL", "PLCL", "PLCR", "LCL", "LCR")
-             *   Example criteria to decide lane change:
-             *     Check distance and speed of current preceding vehicle,
-             *     Find lane with fastest preceding vehicles,
-             *     Find lane with farthest preceding vehicles
+             *   1. Decide the best lane to be in based on a cost function
+             *   2. Decide target intent based on the target lane using a
+             *      Finite State Machine with the following states:
+             *        (Keep Lane, Plan Lane Change Left, Plan Lane Change Right,
+             *         Lane Change Left, Lane Change Right)
+             *   3. Decide target time for the planned path
+             *   4. Decide target speed for the end of the planned path
+             *   5. Update a frequent lane change counter to use in lane cost
              * Output:
-             *   car_target_behavior [FSM state, car ahead, target lane, target time to achieve target]
+             *   ego_car.tgt_behavior_ : Target lane, intent, time, and speed
+             *   ego_car.counter_lane_change : Counter to avoid freq lane change
              */
             
             // Set target lane by cost function
@@ -263,7 +276,7 @@ int main() {
             ego_car.tgt_behavior_.tgt_lane = LaneCostFcn(ego_car, detected_cars,
                                                          car_ids_by_lane);
             
-            // Set target intent based on target lane
+            // Set target intent based on target lane using a FSM
             ego_car.tgt_behavior_.intent = BehaviorFSM(ego_car, detected_cars,
                                                        car_ids_by_lane);
             
@@ -279,38 +292,48 @@ int main() {
             ego_car.counter_lane_change = UpdateCounterLC(ego_car,
                                                           prev_tgt_lane);
             
-            
             /**
              * Trajectory Generation
-             *   1. Generate potential end states for target behavior with perturbations
-             *   2. Generate potential JMT trajectories for each end state
-             *   3. Evaluate trajectories with cost function to select best trajectory
-             *       (keep following distance, prevent collisions, keep lane center,
-             *        minimize lateral jerk, etc)
-             *   4. Rate limit best trajectory
-             *   5. Convert best trajectory from (s,d) to (x,y)
+             *   1. Keep some of prev path as a buffer to start the next path
+             *   2. Generate a new ego car path trajectory to achieve the target
+             *      behavior by
+             *     a) Generate multiple traj's with random variations in target
+             *        speed and time
+             *     b) Limit the trajs' max speed and accel in (x,y)
+             *     c) Assign a cost to each traj based on accumulated collision
+             *        risk from the predicted paths of detected vehicles, and
+             *        the amount of deviation from the base target
+             *     d) Add a backup traj to keep current lane and slightly slow
+             *        down in case all other trajs have cost above an allowable
+             *        threshold
+             *     e) Select the final traj with the lowest cost
              * Output:
-             *   next_xy_vals [trajectory_x, trajectory_y]
+             *   ego_car.traj_ : Final trajectory for ego car
              */
             
-            // Keep prev path buffer states and append new trajectory after that
+            // Keep some buffer traj from prev path to start the next traj
             ego_car.traj_.states.clear();
             ego_car.traj_ = GetBufferTrajectory(idx_current_pt, prev_ego_traj);
             
+            // Generate new ego car traj from target behavior
             VehTrajectory new_traj = GetEgoTrajectory(ego_car, detected_cars,
                                                       car_ids_by_lane,
                                                       map_interp_s,
                                                       map_interp_x,
                                                       map_interp_y);
             
+            // Append new traj after prev path buffer
             for (int i = 0; i < new_traj.states.size(); ++i) {
               ego_car.traj_.states.push_back(new_traj.states[i]);
             }
             
-            
             /**
              * Control
              *   1. Pack and send JSON path trajectory coordinates
+             * Outputs
+             *   next_x_vals : Vector of planned path x coordinates
+             *   next_y_vals : Vector of planned path y coordinates
+             *   msg : JSON message sent back to simulator with (x,y) coords
              */
 
             // Pack path vectors of x and y coordinates

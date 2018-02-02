@@ -9,10 +9,6 @@
 #define behavior_hpp
 
 #include <stdio.h>
-
-#include <string>
-#include <vector>
-#include <map>
 #include "vehicle.hpp"
 
 int LaneCostFcn(const EgoVehicle &ego_car,

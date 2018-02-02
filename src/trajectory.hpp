@@ -9,21 +9,18 @@
 #define trajectory_hpp
 
 #include <stdio.h>
-
-#include <vector>
 #include <random>
-#include "path_common.hpp"
 #include "vehicle.hpp"
 
 VehTrajectory GetBufferTrajectory(int idx_current_pt,
                                   VehTrajectory prev_ego_traj);
 
 VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
-                               const std::map<int, DetectedVehicle> &detected_cars,
-                               const std::map<int, std::vector<int>> &car_ids_by_lane,
-                               const std::vector<double> &map_interp_s,
-                               const std::vector<double> &map_interp_x,
-                               const std::vector<double> &map_interp_y);
+                         const std::map<int, DetectedVehicle> &detected_cars,
+                         const std::map<int, std::vector<int>> &car_ids_by_lane,
+                         const std::vector<double> &map_interp_s,
+                         const std::vector<double> &map_interp_x,
+                         const std::vector<double> &map_interp_y);
 
 VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             double v_tgt, double d_tgt, double a_tgt,
