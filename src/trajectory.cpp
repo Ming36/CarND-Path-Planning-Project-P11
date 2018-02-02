@@ -56,33 +56,34 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
 
   // Set start state
   VehState start_state;
-  if (ego_car.traj_.states.size() > 0) {
-    start_state = ego_car.traj_.states.back();
+  if (ego_car.GetTraj().states.size() > 0) {
+    start_state = ego_car.GetTraj().states.back();
   }
   else {
-    start_state = ego_car.state_;
+    start_state = ego_car.GetState();
   }
   
   // Set target time and speed from behavior target
-  const double t_tgt = ego_car.tgt_behavior_.tgt_time;
-  const double v_tgt = ego_car.tgt_behavior_.tgt_speed;
+  const VehBehavior ego_beh = ego_car.GetTgtBehavior();
+  const double t_tgt = ego_beh.tgt_time;
+  const double v_tgt = ego_beh.tgt_speed;
   const double a_tgt = kMaxA;
 
   // Set target D based on behavior target lane
   double d_tgt;
-  if ((ego_car.tgt_behavior_.tgt_lane > ego_car.lane_)
-      && (ego_car.tgt_behavior_.intent == kLaneChangeRight)) {
+  if ((ego_beh.tgt_lane > ego_car.GetLane())
+      && (ego_beh.intent == kLaneChangeRight)) {
     // "Lane Change Right"
-    d_tgt = tgt_lane2tgt_d(ego_car.lane_ + 1);
+    d_tgt = tgt_lane2tgt_d(ego_car.GetLane() + 1);
   }
-  else if ((ego_car.tgt_behavior_.tgt_lane < ego_car.lane_)
-           && (ego_car.tgt_behavior_.intent == kLaneChangeLeft)) {
+  else if ((ego_beh.tgt_lane < ego_car.GetLane())
+           && (ego_beh.intent == kLaneChangeLeft)) {
     // "Lane Change Left"
-    d_tgt = tgt_lane2tgt_d(ego_car.lane_ - 1);
+    d_tgt = tgt_lane2tgt_d(ego_car.GetLane() - 1);
   }
   else {
     // "Keep Lane" and "Plan Lane Change Left/Right"
-    d_tgt = tgt_lane2tgt_d(ego_car.lane_);
+    d_tgt = tgt_lane2tgt_d(ego_car.GetLane());
   }
   
   // Generate multiple potential trajectories
@@ -133,7 +134,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
-    const double d_backup = tgt_lane2tgt_d(ego_car.lane_);
+    const double d_backup = tgt_lane2tgt_d(ego_car.GetLane());
     const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
     VehTrajectory traj_backup = GetTrajectory(start_state, t_tgt, v_backup,
                                               d_backup, a_tgt, map_interp_s,
@@ -345,7 +346,7 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
 
   // Set start index to start checking other car's predicted paths after ego's
   // prev path buffer where the new trajectory will start
-  const int idx_start_traj = ego_car.traj_.states.size();
+  const int idx_start_traj = ego_car.GetTraj().states.size();
 
   // Check each time step of the traj to find overlap with other car pred paths
   for (int i = 0; i < traj.states.size(); i += kEvalRiskStep) {
@@ -355,10 +356,10 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
       
       // Check each predicted path of this detected vehicle at this time step
       DetectedVehicle car = it->second;
-      
-      for (auto it2 = car.pred_trajs_.begin();
-                it2 != car.pred_trajs_.end(); ++it2) {
-        VehTrajectory car_traj = it2->second;
+      std::map<VehIntents, VehTrajectory> cur_pred_trajs = car.GetPredTrajs();
+      for (auto it2 = cur_pred_trajs.begin();
+                it2 != cur_pred_trajs.end(); ++it2) {
+        const VehTrajectory car_traj = it2->second;
         
         // Stop if predicted traj is too short
         if ((idx_start_traj+i) > car_traj.states.size()) { break; }
@@ -381,10 +382,11 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
   traj_cost_risk += kTrajCostRisk * collision_risk_sum;
   
   // Add traj cost based on deviation from base target
+  const VehBehavior ego_beh = ego_car.GetTgtBehavior();
   const double t_traj = traj.states.size() * kSimCycleTime;
-  const double t_tgtdev = abs(ego_car.tgt_behavior_.tgt_time - t_traj);
+  const double t_tgtdev = abs(ego_beh.tgt_time - t_traj);
   const double v_traj = traj.states.back().s_dot;
-  const double v_tgtdev = abs(ego_car.tgt_behavior_.tgt_speed - v_traj);
+  const double v_tgtdev = abs(ego_beh.tgt_speed - v_traj);
   traj_cost_tgtdev += kTrajCostDeviation * (t_tgtdev + v_tgtdev);
 
   // Debug logging

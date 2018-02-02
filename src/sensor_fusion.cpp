@@ -102,7 +102,7 @@ void ProcessDetectedCars(const EgoVehicle &ego_car,
     const int sensed_id = sensor_fusion[i][0];
     const double sensed_x = sensor_fusion[i][1];
     const double sensed_y = sensor_fusion[i][2];
-    const double dist_to_sensed = Distance(ego_car.state_.x, ego_car.state_.y,
+    const double dist_to_sensed = Distance(ego_car.GetState().x, ego_car.GetState().y,
                                            sensed_x, sensed_y);
     
     // Process detected cars within sensor range
@@ -139,28 +139,27 @@ void ProcessDetectedCars(const EgoVehicle &ego_car,
       if (detected_cars->count(sensed_id) == 0) {
         // New sensed vehicle, build detected vehicle object to add
         DetectedVehicle sensed_car = DetectedVehicle();
-        sensed_car.veh_id_ = sensed_id;
-        sensed_car.UpdateStateAndLane(new_det_car_state);
-        sensed_car.UpdateRelDist(ego_car.state_.s, ego_car.state_.d);
+        sensed_car.SetID(sensed_id);
+        sensed_car.UpdateState(new_det_car_state);
+        sensed_car.UpdateRelDist(ego_car);
         
         // Add new vehicle to detected_cars map
-        (*detected_cars)[sensed_car.veh_id_] = sensed_car;
+        (*detected_cars)[sensed_car.GetID()] = sensed_car;
         
         // Debug logging
         if (kDBGSensorFusion != 0) {
-          std::cout << "Added ID: " << (*detected_cars)[sensed_id].veh_id_
+          std::cout << "Added ID: " << (*detected_cars)[sensed_id].GetID()
                     << std::endl;
         }
       }
       else {
         // Vehicle already in detected_cars map, just update values
-        detected_cars->at(sensed_id).UpdateStateAndLane(new_det_car_state);
-        detected_cars->at(sensed_id).UpdateRelDist(ego_car.state_.s,
-                                                  ego_car.state_.d);
+        detected_cars->at(sensed_id).UpdateState(new_det_car_state);
+        detected_cars->at(sensed_id).UpdateRelDist(ego_car);
         
         // Debug logging
         if (kDBGSensorFusion != 0) {
-          std::cout << "Updated ID: " << detected_cars->at(sensed_id).veh_id_
+          std::cout << "Updated ID: " << detected_cars->at(sensed_id).GetID()
                     << std::endl;
         }
       }
@@ -191,7 +190,7 @@ std::map<int, std::vector<int>> SortDetectedCarsByLane(
   
   // Gather detected car ID's in a map by lane number
   for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
-    car_ids_by_lane[it->second.lane_].push_back(it->second.veh_id_);
+    car_ids_by_lane[it->second.GetLane()].push_back(it->second.GetID());
   }
   
   // Lambda sort car ID's in each lane by s relative to ego car
@@ -199,8 +198,8 @@ std::map<int, std::vector<int>> SortDetectedCarsByLane(
     // it->second is a vector of int for the car ID's in that lane;
     std::sort(it->second.begin(), it->second.end(),
               [&detected_cars](int &lhs, int &rhs) -> bool {
-                auto lhs_s_rel = detected_cars.at(lhs).s_rel_;
-                auto rhs_s_rel = detected_cars.at(rhs).s_rel_;
+                auto lhs_s_rel = detected_cars.at(lhs).GetRelS();
+                auto rhs_s_rel = detected_cars.at(rhs).GetRelS();
                 return lhs_s_rel > rhs_s_rel; // higher s_rel first
               });
   }
@@ -213,7 +212,7 @@ std::map<int, std::vector<int>> SortDetectedCarsByLane(
       std::cout << "lane #" << it->first << " - ";
       for (int i = 0; i < it->second.size(); ++i) {
         std::cout << it->second[i] << "= "
-                  << detected_cars.at(it->second[i]).s_rel_ << ", ";
+                  << detected_cars.at(it->second[i]).GetRelS() << ", ";
       }
       std::cout << std::endl;
     }

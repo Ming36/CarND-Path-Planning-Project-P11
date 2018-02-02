@@ -24,14 +24,15 @@ void PredictBehavior(const EgoVehicle &ego_car,
     for (int i = 0; i < car_ids_in_lane.size(); ++i) {
       int cur_car_id = car_ids_in_lane[i];
       DetectedVehicle* cur_car_ptr = &detected_cars->at(cur_car_id);
-      cur_car_ptr->pred_trajs_.clear();
+      cur_car_ptr->ClearPredTrajs();
       
       // Predict behavior for this detected car
+      std::map<VehIntents, VehTrajectory> new_pred_trajs;
       double t_tgt = kPredictTime; // use same prediction time for all intents
       double v_tgt;
       double d_tgt;
-      const auto car_ahead = FindCarInLane(kFront, cur_car_ptr->lane_,
-                                           cur_car_ptr->veh_id_, ego_car,
+      const auto car_ahead = FindCarInLane(kFront, cur_car_ptr->GetLane(),
+                                           cur_car_ptr->GetID(), ego_car,
                                            (*detected_cars), car_ids_by_lane);
       const int car_id_ahead = std::get<0>(car_ahead);
       const double s_rel_ahead = std::get<1>(car_ahead);
@@ -43,37 +44,37 @@ void PredictBehavior(const EgoVehicle &ego_car,
       // expected following distance
       if (s_rel_ahead < kTgtFollowDist) {
         double v_car_ahead;
-        if (car_id_ahead != ego_car.veh_id_) {
-          v_car_ahead = detected_cars->at(car_id_ahead).state_.s_dot;
+        if (car_id_ahead != ego_car.GetID()) {
+          v_car_ahead = detected_cars->at(car_id_ahead).GetState().s_dot;
         }
         else {
-          v_car_ahead = ego_car.state_.s_dot;
+          v_car_ahead = ego_car.GetState().s_dot;
         }
-        v_tgt = std::min(cur_car_ptr->state_.s_dot, v_car_ahead);
+        v_tgt = std::min(cur_car_ptr->GetState().s_dot, v_car_ahead);
       }
       else {
-        v_tgt = cur_car_ptr->state_.s_dot;
+        v_tgt = cur_car_ptr->GetState().s_dot;
       }
       
       // Set target d to keep current value
-      d_tgt = cur_car_ptr->state_.d;
+      d_tgt = cur_car_ptr->GetState().d;
       
       // Generate predicted traj for KeepLane intent
-      auto traj_KL = GetTrajectory(cur_car_ptr->state_, t_tgt, v_tgt, d_tgt,
+      auto traj_KL = GetTrajectory(cur_car_ptr->GetState(), t_tgt, v_tgt, d_tgt,
                                    kMaxA, map_interp_s, map_interp_x,
                                    map_interp_y);
       traj_KL.probability = 1.0;
-      cur_car_ptr->pred_trajs_[kKeepLane] = traj_KL;
+      new_pred_trajs[kKeepLane] = traj_KL;
       
       //// LaneChangeLeft intent predicted traj ////
       // Add if lane is open to left and set high prob if car ahead is close
 
-      if (cur_car_ptr->lane_ > 1) {
-        v_tgt = cur_car_ptr->state_.s_dot; // keep current speed
-        d_tgt = tgt_lane2tgt_d(cur_car_ptr->lane_ - 1); // target left lane
+      if (cur_car_ptr->GetLane() > 1) {
+        v_tgt = cur_car_ptr->GetState().s_dot; // keep current speed
+        d_tgt = tgt_lane2tgt_d(cur_car_ptr->GetLane() - 1); // target left lane
         
         // Generate predicted traj for LaneChangeLeft intent
-        auto traj_LCL = GetTrajectory(cur_car_ptr->state_, t_tgt, v_tgt, d_tgt,
+        auto traj_LCL = GetTrajectory(cur_car_ptr->GetState(), t_tgt, v_tgt, d_tgt,
                                       kMaxA, map_interp_s, map_interp_x,
                                       map_interp_y);
 
@@ -81,22 +82,22 @@ void PredictBehavior(const EgoVehicle &ego_car,
         // already moving to the left fast enough
         double prob_LCL = 0.1;
         if (s_rel_ahead < kTgtFollowDist) { prob_LCL = 0.3; }
-        if (cur_car_ptr->state_.d_dot < -kLatVelLaneChange) { prob_LCL = 0.8; }
+        if (cur_car_ptr->GetState().d_dot < -kLatVelLaneChange) { prob_LCL = 0.8; }
         traj_LCL.probability = prob_LCL;
         
-        cur_car_ptr->pred_trajs_[kLaneChangeLeft] = traj_LCL;
-        cur_car_ptr->pred_trajs_.at(kKeepLane).probability -= prob_LCL;
+        new_pred_trajs[kLaneChangeLeft] = traj_LCL;
+        new_pred_trajs.at(kKeepLane).probability -= prob_LCL;
       }
       
       //// LaneChangeRight intent predicted traj ////
       // Add if lane is open to right and set high prob if car ahead is close
       
-      if (cur_car_ptr->lane_ < kNumLanes) {
-        v_tgt = cur_car_ptr->state_.s_dot; // keep current speed
-        d_tgt = tgt_lane2tgt_d(cur_car_ptr->lane_ + 1); // target right lane
+      if (cur_car_ptr->GetLane() < kNumLanes) {
+        v_tgt = cur_car_ptr->GetState().s_dot; // keep current speed
+        d_tgt = tgt_lane2tgt_d(cur_car_ptr->GetLane() + 1); // target right lane
         
         // Generate predicted traj for LaneChangeRight intent
-        auto traj_LCR = GetTrajectory(cur_car_ptr->state_, t_tgt, v_tgt, d_tgt,
+        auto traj_LCR = GetTrajectory(cur_car_ptr->GetState(), t_tgt, v_tgt, d_tgt,
                                       kMaxA, map_interp_s, map_interp_x,
                                       map_interp_y);
         
@@ -104,12 +105,15 @@ void PredictBehavior(const EgoVehicle &ego_car,
         // already moving to the right fast enough
         double prob_LCR = 0.1;
         if (s_rel_ahead < kTgtFollowDist) { prob_LCR = 0.3; }
-        if (cur_car_ptr->state_.d_dot > kLatVelLaneChange) { prob_LCR = 0.8; }
+        if (cur_car_ptr->GetState().d_dot > kLatVelLaneChange) { prob_LCR = 0.8; }
         traj_LCR.probability = prob_LCR;
         
-        cur_car_ptr->pred_trajs_[kLaneChangeRight] = traj_LCR;
-        cur_car_ptr->pred_trajs_.at(kKeepLane).probability -= prob_LCR;
+        new_pred_trajs[kLaneChangeRight] = traj_LCR;
+        new_pred_trajs.at(kKeepLane).probability -= prob_LCR;
       }
+      
+      // Set predicted trajectories to current car
+      cur_car_ptr->SetPredTrajs(new_pred_trajs);
     }
   }
   
@@ -118,7 +122,7 @@ void PredictBehavior(const EgoVehicle &ego_car,
     std::cout << "Predicted intents:" << std::endl;
     for (auto it = detected_cars->begin(); it != detected_cars->end(); ++it) {
       std::cout << "car #" << it->first << " - ";
-      auto predictions = it->second.pred_trajs_;
+      auto predictions = it->second.GetPredTrajs();
       for (auto it2 = predictions.begin();
            it2 != predictions.end(); ++it2) {
         std::cout << it2->first << " = "

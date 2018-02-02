@@ -32,6 +32,4 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
                       const std::map<int, DetectedVehicle> &detected_cars,
                       const std::map<int, std::vector<int>> &car_ids_by_lane);
 
-int UpdateCounterLC(const EgoVehicle &ego_car, int prev_tgt_lane);
-
 #endif /* behavior_hpp */

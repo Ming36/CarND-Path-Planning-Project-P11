@@ -53,42 +53,62 @@ struct VehTrajectory {
 
 class Vehicle {
 public:
-  int veh_id_;
-  int lane_;
-  VehState state_;
-  VehTrajectory traj_;  
-
+  
   // Constructor/Destructor
   Vehicle();
   virtual ~Vehicle();
 
-  void UpdateStateAndLane(VehState new_state);
+  void UpdateState(VehState new_state);
+  void ClearTraj();
+  void SetTraj(VehTrajectory traj);
+  void AppendTraj(VehTrajectory traj);
+  void SetID(int veh_id);
+  int GetID() const;
+  int GetLane() const;
+  VehState GetState() const;
+  VehTrajectory GetTraj() const;
+  
+private:
+  int veh_id_;
+  int lane_;
+  VehState state_;
+  VehTrajectory traj_;
 };
 
 
 class EgoVehicle : public Vehicle {
 public:
   
-  int counter_lane_change;
-  VehBehavior tgt_behavior_;
-  
   // Constructor/destructor
   EgoVehicle();
   virtual ~EgoVehicle();
+  
+  void SetTgtBehavior(VehBehavior new_tgt_beh);
+  int GetLaneChangeCounter() const;
+  VehBehavior GetTgtBehavior() const;
+  
+private:
+  int counter_lane_change_;
+  int prev_tgt_lane_;
+  VehBehavior tgt_behavior_;
 };
 
 class DetectedVehicle : public Vehicle {
 public:
   
-  double s_rel_;
-  double d_rel_;
-  std::map<VehIntents, VehTrajectory> pred_trajs_;
-  
   // Constructor/Destructor
   DetectedVehicle();
   virtual ~DetectedVehicle();
   
-  void UpdateRelDist(double s_ego, double d_ego);
+  void UpdateRelDist(const EgoVehicle &ego_car);
+  std::map<VehIntents, VehTrajectory> GetPredTrajs() const;
+  void ClearPredTrajs();
+  void SetPredTrajs(std::map<VehIntents, VehTrajectory> pred_trajs);
+  double GetRelS() const;
+
+private:
+  double s_rel_;
+  std::map<VehIntents, VehTrajectory> pred_trajs_;
 };
 
 std::tuple<int, double> FindCarInLane(const VehSides check_side,

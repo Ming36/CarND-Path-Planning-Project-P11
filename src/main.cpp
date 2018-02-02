@@ -41,7 +41,7 @@ std::string hasData(std::string s) {
  */
 void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
                     const EgoVehicle &ego_car) {
-  
+
   std::cout << std::endl;
   std::string lane_mark;
   
@@ -50,19 +50,19 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
       std::cout << "|";
       lane_mark = "  ";
       
-      if ((i == 0) && (j_lane == ego_car.lane_)) {
+      if ((i == 0) && (j_lane == ego_car.GetLane())) {
         lane_mark = "@@"; // Mark ego car
       }
       else {
         // Find detected cars at this lane position
         for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
-          if ((it->second.s_rel_ <= i+4) && (it->second.s_rel_ > i-6) &&
-              (it->second.lane_ == j_lane)) {
-            if (it->second.veh_id_ < 10) {
-              lane_mark = "0" + std::to_string(it->second.veh_id_);
+          if ((it->second.GetRelS() <= i+4) && (it->second.GetRelS() > i-6) &&
+              (it->second.GetLane() == j_lane)) {
+            if (it->second.GetID() < 10) {
+              lane_mark = "0" + std::to_string(it->second.GetID());
             }
             else {
-              lane_mark = std::to_string(it->second.veh_id_);
+              lane_mark = std::to_string(it->second.GetID());
             }
           }
         }
@@ -130,7 +130,7 @@ int main() {
   
   // Instantiate ego car object and map of detected cars to hold their data
   EgoVehicle ego_car = EgoVehicle();
-  ego_car.veh_id_ = -1;
+  ego_car.SetID(-1);
   std::map<int, DetectedVehicle> detected_cars;
   long int loop = 0; // debug loop counter
   auto t_last = std::chrono::time_point_cast<std::chrono::milliseconds>
@@ -222,7 +222,7 @@ int main() {
              */
             
             // Store prev ego traj and find current idx from prev processed path
-            VehTrajectory prev_ego_traj = ego_car.traj_;
+            VehTrajectory prev_ego_traj = ego_car.GetTraj();
             const int prev_path_size = previous_path_x.size();
             const int idx_current_pt = GetCurrentTrajIndex(prev_ego_traj,
                                                            prev_path_size);
@@ -234,7 +234,7 @@ int main() {
                                                      map_interp_s,
                                                      map_interp_x,
                                                      map_interp_y);
-            ego_car.UpdateStateAndLane(new_ego_state);
+            ego_car.UpdateState(new_ego_state);
             
             // Process detected cars' states (update detected_cars)
             ProcessDetectedCars(ego_car, sensor_fusion, map_interp_s,
@@ -271,27 +271,25 @@ int main() {
              *   ego_car.counter_lane_change : Counter to avoid freq lane change
              */
             
+            VehBehavior new_ego_beh;
+
             // Set target lane by cost function
-            int prev_tgt_lane = ego_car.tgt_behavior_.tgt_lane;
-            ego_car.tgt_behavior_.tgt_lane = LaneCostFcn(ego_car, detected_cars,
-                                                         car_ids_by_lane);
+            new_ego_beh.tgt_lane = LaneCostFcn(ego_car, detected_cars,
+                                               car_ids_by_lane);
             
             // Set target intent based on target lane using a FSM
-            ego_car.tgt_behavior_.intent = BehaviorFSM(ego_car, detected_cars,
-                                                       car_ids_by_lane);
+            new_ego_beh.intent = BehaviorFSM(ego_car, detected_cars,
+                                             car_ids_by_lane);
             
             // Set target time
-            ego_car.tgt_behavior_.tgt_time = kNewPathTime;
+            new_ego_beh.tgt_time = kNewPathTime;
 
             // Set target speed
-            ego_car.tgt_behavior_.tgt_speed = SetTargetSpeed(ego_car,
-                                                             detected_cars,
-                                                             car_ids_by_lane);
+            new_ego_beh.tgt_speed = SetTargetSpeed(ego_car, detected_cars,
+                                                   car_ids_by_lane);
             
-            // Update frequent lane change counter
-            ego_car.counter_lane_change = UpdateCounterLC(ego_car,
-                                                          prev_tgt_lane);
-            
+            ego_car.SetTgtBehavior(new_ego_beh);
+                        
             /**
              * Trajectory Generation
              *   1. Keep some of prev path as a buffer to start the next path
@@ -312,8 +310,9 @@ int main() {
              */
             
             // Keep some buffer traj from prev path to start the next traj
-            ego_car.traj_.states.clear();
-            ego_car.traj_ = GetBufferTrajectory(idx_current_pt, prev_ego_traj);
+            ego_car.ClearTraj();
+            auto buff_traj = GetBufferTrajectory(idx_current_pt, prev_ego_traj);
+            ego_car.SetTraj(buff_traj);
             
             // Generate new ego car traj from target behavior
             VehTrajectory new_traj = GetEgoTrajectory(ego_car, detected_cars,
@@ -323,9 +322,7 @@ int main() {
                                                       map_interp_y);
             
             // Append new traj after prev path buffer
-            for (int i = 0; i < new_traj.states.size(); ++i) {
-              ego_car.traj_.states.push_back(new_traj.states[i]);
-            }
+            ego_car.AppendTraj(new_traj);
             
             /**
              * Control
@@ -339,9 +336,10 @@ int main() {
             // Pack path vectors of x and y coordinates
             std::vector<double> next_x_vals;
             std::vector<double> next_y_vals;
-            for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
-              next_x_vals.push_back(ego_car.traj_.states[i].x);
-              next_y_vals.push_back(ego_car.traj_.states[i].y);
+            const VehTrajectory ego_traj = ego_car.GetTraj();
+            for (int i = 0; i < ego_traj.states.size(); ++i) {
+              next_x_vals.push_back(ego_traj.states[i].x);
+              next_y_vals.push_back(ego_traj.states[i].y);
             }
             
             // Output path vectors to JSON message
@@ -372,26 +370,27 @@ int main() {
             }
             else if ((kDBGMain == 2) || (kDBGMain == 3)) {
               // Detailed telemetry output
+              VehState ego_state = ego_car.GetState();
               std::cout << loop << ", t: " << t_msg
               << ", num_prev_path: " << previous_path_x.size()
               << ", idx_current_pt: " << idx_current_pt
-              << ", x: " << ego_car.state_.x
-              << ", y: " << ego_car.state_.y
-              << ", s: " << ego_car.state_.s
-              << ", s_dot: " << ego_car.state_.s_dot
-              << ", s_dotdot: " << ego_car.state_.s_dotdot
-              << ", d: " << ego_car.state_.d
-              << ", d_dot: " << ego_car.state_.d_dot
-              << ", d_dotdot: " << ego_car.state_.d_dotdot;
+              << ", x: " << ego_state.x
+              << ", y: " << ego_state.y
+              << ", s: " << ego_state.s
+              << ", s_dot: " << ego_state.s_dot
+              << ", s_dotdot: " << ego_state.s_dotdot
+              << ", d: " << ego_state.d
+              << ", d_dot: " << ego_state.d_dot
+              << ", d_dotdot: " << ego_state.d_dotdot;
               
               std::cout << ", traj_x: ";
-              for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
-                std::cout << ego_car.traj_.states[i].x << ";";
+              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
+                std::cout << ego_car.GetTraj().states[i].x << ";";
               }
               
               std::cout << ", traj_y: ";
-              for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
-                std::cout << ego_car.traj_.states[i].y << ";";
+              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
+                std::cout << ego_car.GetTraj().states[i].y << ";";
               }
               
               std::cout << ", prev_path_x: ";
@@ -405,13 +404,13 @@ int main() {
               }
               
               std::cout << ", traj_s: ";
-              for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
-                std::cout << ego_car.traj_.states[i].s << ";";
+              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
+                std::cout << ego_car.GetTraj().states[i].s << ";";
               }
               
               std::cout << ", traj_d: ";
-              for (int i = 0; i < ego_car.traj_.states.size(); ++i) {
-                std::cout << ego_car.traj_.states[i].d << ";";
+              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
+                std::cout << ego_car.GetTraj().states[i].d << ";";
               }
               
               std::cout << std::endl;
