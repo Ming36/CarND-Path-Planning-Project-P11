@@ -56,8 +56,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
 
   // Set start state
   VehState start_state;
-  if (ego_car.GetTraj().states.size() > 0) {
-    start_state = ego_car.GetTraj().states.back();
+  const VehTrajectory ego_traj = ego_car.GetTraj();
+  if (ego_traj.states.size() > 0) {
+    start_state = ego_traj.states.back();
   }
   else {
     start_state = ego_car.GetState();
@@ -65,25 +66,26 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   
   // Set target time and speed from behavior target
   const VehBehavior ego_beh = ego_car.GetTgtBehavior();
+  const int ego_lane = ego_car.GetLane();
   const double t_tgt = ego_beh.tgt_time;
   const double v_tgt = ego_beh.tgt_speed;
   const double a_tgt = kMaxA;
 
   // Set target D based on behavior target lane
   double d_tgt;
-  if ((ego_beh.tgt_lane > ego_car.GetLane())
+  if ((ego_beh.tgt_lane > ego_lane)
       && (ego_beh.intent == kLaneChangeRight)) {
     // "Lane Change Right"
-    d_tgt = tgt_lane2tgt_d(ego_car.GetLane() + 1);
+    d_tgt = tgt_lane2tgt_d(ego_lane + 1);
   }
-  else if ((ego_beh.tgt_lane < ego_car.GetLane())
+  else if ((ego_beh.tgt_lane < ego_lane)
            && (ego_beh.intent == kLaneChangeLeft)) {
     // "Lane Change Left"
-    d_tgt = tgt_lane2tgt_d(ego_car.GetLane() - 1);
+    d_tgt = tgt_lane2tgt_d(ego_lane - 1);
   }
   else {
     // "Keep Lane" and "Plan Lane Change Left/Right"
-    d_tgt = tgt_lane2tgt_d(ego_car.GetLane());
+    d_tgt = tgt_lane2tgt_d(ego_lane);
   }
   
   // Generate multiple potential trajectories
@@ -134,8 +136,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
-    const double d_backup = tgt_lane2tgt_d(ego_car.GetLane());
-    const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
+    const double d_backup = tgt_lane2tgt_d(ego_lane);
+    //const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
+    const double v_backup = kTgtMinSpeed;
     VehTrajectory traj_backup = GetTrajectory(start_state, t_tgt, v_backup,
                                               d_backup, a_tgt, map_interp_s,
                                               map_interp_x, map_interp_y);

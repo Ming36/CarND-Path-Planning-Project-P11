@@ -370,7 +370,8 @@ int main() {
             }
             else if ((kDBGMain == 2) || (kDBGMain == 3)) {
               // Detailed telemetry output
-              VehState ego_state = ego_car.GetState();
+              const VehState ego_state = ego_car.GetState();
+              const VehTrajectory ego_traj = ego_car.GetTraj();
               std::cout << loop << ", t: " << t_msg
               << ", num_prev_path: " << previous_path_x.size()
               << ", idx_current_pt: " << idx_current_pt
@@ -384,13 +385,13 @@ int main() {
               << ", d_dotdot: " << ego_state.d_dotdot;
               
               std::cout << ", traj_x: ";
-              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
-                std::cout << ego_car.GetTraj().states[i].x << ";";
+              for (int i = 0; i < ego_traj.states.size(); ++i) {
+                std::cout << ego_traj.states[i].x << ";";
               }
               
               std::cout << ", traj_y: ";
-              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
-                std::cout << ego_car.GetTraj().states[i].y << ";";
+              for (int i = 0; i < ego_traj.states.size(); ++i) {
+                std::cout << ego_traj.states[i].y << ";";
               }
               
               std::cout << ", prev_path_x: ";
@@ -404,13 +405,13 @@ int main() {
               }
               
               std::cout << ", traj_s: ";
-              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
-                std::cout << ego_car.GetTraj().states[i].s << ";";
+              for (int i = 0; i < ego_traj.states.size(); ++i) {
+                std::cout << ego_traj.states[i].s << ";";
               }
               
               std::cout << ", traj_d: ";
-              for (int i = 0; i < ego_car.GetTraj().states.size(); ++i) {
-                std::cout << ego_car.GetTraj().states[i].d << ";";
+              for (int i = 0; i < ego_traj.states.size(); ++i) {
+                std::cout << ego_traj.states[i].d << ";";
               }
               
               std::cout << std::endl;

@@ -102,7 +102,8 @@ void ProcessDetectedCars(const EgoVehicle &ego_car,
     const int sensed_id = sensor_fusion[i][0];
     const double sensed_x = sensor_fusion[i][1];
     const double sensed_y = sensor_fusion[i][2];
-    const double dist_to_sensed = Distance(ego_car.GetState().x, ego_car.GetState().y,
+    const VehState ego_state = ego_car.GetState();
+    const double dist_to_sensed = Distance(ego_state.x, ego_state.y,
                                            sensed_x, sensed_y);
     
     // Process detected cars within sensor range

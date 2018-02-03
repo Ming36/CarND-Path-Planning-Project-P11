@@ -55,7 +55,7 @@ constexpr int kCounterFreqLaneChange = 15; // (#) path cycles
 constexpr double kLaneChangeMinGap = 9.; // (m)
 //constexpr double kLaneChangeMinGap = 10.; // (m)
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s, base target
-constexpr double kTgtMinSpeed = (5.) / 2.23694; // mph -> m/s, min target speed
+constexpr double kTgtMinSpeed = (10.) / 2.23694; // mph -> m/s, min target speed
 constexpr double kTgtStartFollowDist = 40.; // (m)
 constexpr double kTgtFollowDist = 15.; // (m)
 constexpr double kTgtMinFollowDist = 13.; // (m)
@@ -80,7 +80,7 @@ constexpr double kRandTimeMean = 1.; // (sec) path time adj mean
 constexpr double kRandTimeDev = 0.3; // (sec) path time adj std dev
 constexpr double kTrajCostRisk = 10.; // cost for traj collision risk
 constexpr double kTrajCostDeviation = 1.; // cost for traj deviation from base
-constexpr double kTrajCostThresh = 7.; // cost thresh to judge traj risk
+constexpr double kTrajCostThresh = 10.; // cost thresh to judge traj risk
 
 /**
  * Basic parameter helpers
