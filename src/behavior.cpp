@@ -137,7 +137,7 @@ VehIntents BehaviorFSM(const EgoVehicle &ego_car,
       break;
     }
     case kLaneChangeLeft: {
-      if (cur_tgt_lane < ego_lane) {
+      if ((cur_tgt_lane < ego_lane) && (gap_on_left > kLaneChangeMinGap)) {
         tgt_intent = kLaneChangeLeft; // stay in LCL
       }
       else {
@@ -146,7 +146,7 @@ VehIntents BehaviorFSM(const EgoVehicle &ego_car,
       break;
     }
     case kLaneChangeRight: {
-      if (cur_tgt_lane > ego_lane) {
+      if ((cur_tgt_lane > ego_lane) && (gap_on_right > kLaneChangeMinGap)) {
         tgt_intent = kLaneChangeRight; // stay in LCR
       }
       else {
@@ -174,6 +174,10 @@ double SetTargetSpeed(const EgoVehicle &ego_car,
   double target_speed = kTargetSpeed;
   const VehBehavior ego_beh = ego_car.GetTgtBehavior();
   
+  // Limit target speed by car ahead in current lane
+  target_speed = TargetSpeedKL(target_speed, ego_car, detected_cars,
+                               car_ids_by_lane);
+  
   // Set target speed if planning to change lanes with cars in the way
   if (ego_beh.intent == kPlanLaneChangeLeft) {
     target_speed = TargetSpeedPLC(kLeft, target_speed, ego_car, detected_cars,
@@ -183,11 +187,13 @@ double SetTargetSpeed(const EgoVehicle &ego_car,
     target_speed = TargetSpeedPLC(kRight, target_speed, ego_car, detected_cars,
                                   car_ids_by_lane);
   }
-  else {
-    // Limit target speed based on following car ahead while Keeping Lane or
-    // Lane Change in progress
-    target_speed = TargetSpeedKL(target_speed, ego_car, detected_cars,
-                                 car_ids_by_lane);
+  else if (ego_beh.intent == kLaneChangeLeft) {
+    target_speed = TargetSpeedLC(kLeft, target_speed, ego_car, detected_cars,
+                                  car_ids_by_lane);
+  }
+  else if (ego_beh.intent == kLaneChangeRight) {
+    target_speed = TargetSpeedLC(kRight, target_speed, ego_car, detected_cars,
+                                  car_ids_by_lane);
   }
   
   // Final min/max guard
@@ -225,7 +231,7 @@ double TargetSpeedKL(double base_tgt_spd, const EgoVehicle &ego_car,
       
       tgt_speed = spd_slope * (dist_ahead - kTgtStartFollowDist) + kTargetSpeed;
       
-      // Decrease target speed by a fixed decrement if too close
+      // Decrease target speed by a fixed decrement offset if too close
       if (dist_ahead < kTgtMinFollowDist) {
         tgt_speed = spd_ahead - kMinFollowTgtSpeedDec;
       }
@@ -233,8 +239,8 @@ double TargetSpeedKL(double base_tgt_spd, const EgoVehicle &ego_car,
       // Debug logging
       if (kDBGBehavior != 0) {
         std::cout << "\nBase target speed = " << mps2mph(tgt_speed)
-        << " car ahead id# " << car_id_ahead << " rel_s = " << rel_s_ahead
-        << std::endl;
+        << " mph, car ahead id# " << car_id_ahead << " rel_s = " << rel_s_ahead
+        << "m" << std::endl;
       }
       
       // Min guard target speed to avoid stopping on the freeway
@@ -282,7 +288,7 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
   bool close_side_ahead = false;
   bool close_side_behind = false;
   if ((detected_cars.count(car_id_ahead) > 0)
-      && (rel_s_ahead < kTgtStartFollowDist)) {
+      && (rel_s_ahead < kPlanLCCloseDist)) {
     close_ahead = true;
   }
   if ((detected_cars.count(car_id_side_ahead) > 0)
@@ -294,46 +300,59 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
     close_side_behind = true;
   }
   
-  // Slow down to find a gap if car ahead is close
-  if (close_ahead == true) {
-    const VehState car_state_ahead = detected_cars.at(car_id_ahead).GetState();
+  // Slow down to find a gap if car ahead and a car on the side is close
+  if ((close_ahead == true)
+      && ((close_side_ahead == true) || (close_side_behind == true))) {
     
-    if ((close_side_ahead == true) && (close_side_behind == true)) {
+    target_speed -=  kPlanLCTgtSpeedDec;
       
-      const VehState car_state_side_behind = detected_cars
-                                             .at(car_id_side_behind).GetState();
-      
-      if (car_state_ahead.s_dot <= car_state_side_behind.s_dot) {
-        // Set tgt speed slower than close car behind (close car ahead and behind)
-        target_speed = std::min(base_tgt_spd,
-                            (car_state_side_behind.s_dot - kPlanLCTgtSpeedDec));
-      }
-      
-      // Debug logging
-      if (kDBGBehavior != 0) {
-        std::cout << " Over-ride tgt speed to car on side behind #"
-        << car_id_side_behind << " = " << mps2mph(target_speed) << std::endl;
-      }
-    }
-    else if (close_side_ahead) {
-      
-      const VehState car_state_side_ahead = detected_cars.at(car_id_side_ahead)
-                                            .GetState();
-      
-      if (car_state_ahead.s_dot <= car_state_side_ahead.s_dot) {
-        // Set target speed slower than close car ahead (no close car behind)
-        target_speed = std::min(base_tgt_spd,
-                             (car_state_side_ahead.s_dot - kPlanLCTgtSpeedDec));
-      }
-      
-      // Debug logging
-      if (kDBGBehavior != 0) {
-        std::cout << " Over-ride target speed to car on side ahead #"
-        << car_id_side_ahead << " = " << mps2mph(target_speed) << std::endl;
-      }
+    // Debug logging
+    if (kDBGBehavior != 0) {
+      std::cout << " Over-ride tgt speed for PLC to slow down to find a gap = "
+                << mps2mph(target_speed) << " mph" << std::endl;
     }
   }
-  // Otherwise, just keep going ahead at original target speed to pass
+  // Otherwise, car ahead is not close so keep going ahead at original speed
+  
+  return target_speed;
+}
+
+/**
+ * Set target speed for Lane Change Left/Right intents (check speed of car ahead in next lane)
+ */
+double TargetSpeedLC(VehSides sideLC, double base_tgt_spd,
+                      const EgoVehicle &ego_car,
+                      const std::map<int, DetectedVehicle> &detected_cars,
+                      const std::map<int, std::vector<int>> &car_ids_by_lane) {
+
+  double target_speed = base_tgt_spd; // default is to pass-through base speed
+  
+  const int check_lane = ego_car.GetLane() + sideLC;
+  const int ego_id = ego_car.GetID();
+  
+  // Look for car ahead in lane on LC side
+  const auto car_side_ahead = FindCarInLane(kFront, check_lane, ego_id,
+                                            ego_car, detected_cars,
+                                            car_ids_by_lane);
+  const int car_id_side_ahead = std::get<0>(car_side_ahead);
+  const double rel_s_side_ahead = std::get<1>(car_side_ahead);
+  
+  // Set target speed to match car ahead in lane that ego is changing to
+  if ((detected_cars.count(car_id_side_ahead) > 0)
+      && (rel_s_side_ahead < kLaneChangeMinGap)) {
+    
+    const double spd_side_ahead = detected_cars.at(car_id_side_ahead)
+                                  .GetState().s_dot;
+    
+    target_speed = spd_side_ahead;
+    
+    // Debug logging
+    if (kDBGBehavior != 0) {
+      std::cout << " Over-ride tgt speed to car #" << car_id_side_ahead
+                << " ahead in lane changing to = " << mps2mph(target_speed)
+                << " mph" << std::endl;
+    }
+  }
   
   return target_speed;
 }

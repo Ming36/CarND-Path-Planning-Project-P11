@@ -99,9 +99,10 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
       v_delta = dist_v(random_gen);
       t_delta = dist_t(random_gen);
     }
-
+    
     // Calculate initial trajectory with the random deviation
-    const double t_tgt_var = t_tgt + t_delta; // allow longer time
+    double t_tgt_var = t_tgt + t_delta; // allow longer or shorter time
+    t_tgt_var = std::max(t_tgt_var, kMinTrajTime); // min guard time
     const double v_tgt_var = v_tgt - v_delta; // allow slower speed
     
     VehTrajectory traj_var = GetTrajectory(start_state, t_tgt_var, v_tgt_var,
@@ -122,7 +123,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     // Debug logging
     if (kDBGTrajectory != 0) {
       std::cout << "Possible traj# " << i << " t=" << t_tgt_var
-                << " v=" << mps2mph(v_tgt_var) << std::endl;
+                << " sec, v=" << mps2mph(v_tgt_var) << "mph" << std::endl;
     }
 
     // Evaluate traj cost using other vehicle predicted paths
@@ -137,8 +138,8 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
     const double d_backup = tgt_lane2tgt_d(ego_lane);
-    //const double v_backup = v_tgt - kMinFollowTgtSpeedDec;
-    const double v_backup = kTgtMinSpeed;
+    const double v_backup = v_tgt - kBackupTgtSpeedDec;
+    
     VehTrajectory traj_backup = GetTrajectory(start_state, t_tgt, v_backup,
                                               d_backup, a_tgt, map_interp_s,
                                               map_interp_x, map_interp_y);
@@ -374,7 +375,7 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
         if ((abs(ego_s - car_s) < kCollisionSThresh)
             && (abs(ego_d - car_d) < kCollisionDThresh)) {
           
-          // Risk probability with exponential decay over predicted time
+          // Risk probability with exponential decay over predicted time e^(-t)
           collision_risk_sum += car_traj.probability * exp(-i * kSimCycleTime);
         }
       } // loop to detected car's next predicted path

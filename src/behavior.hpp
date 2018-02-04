@@ -32,4 +32,9 @@ double TargetSpeedPLC(VehSides sidePLC, double base_tgt_spd,
                       const std::map<int, DetectedVehicle> &detected_cars,
                       const std::map<int, std::vector<int>> &car_ids_by_lane);
 
+double TargetSpeedLC(VehSides sideLC, double base_tgt_spd,
+                      const EgoVehicle &ego_car,
+                      const std::map<int, DetectedVehicle> &detected_cars,
+                      const std::map<int, std::vector<int>> &car_ids_by_lane);
+
 #endif /* behavior_hpp */
