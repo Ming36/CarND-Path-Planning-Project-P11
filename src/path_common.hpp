@@ -23,12 +23,12 @@
  */
 
 // Debug logging
-constexpr int kDBGMain = 1; // 1=Basic, 2=Telemetry, 3=Every Sim Loop
-constexpr int kDBGVehicle = 1;
+constexpr int kDBGMain = 0; // 1=Basic, 2=Telemetry, 3=Every Sim Loop
+constexpr int kDBGVehicle = 0;
 constexpr int kDBGSensorFusion = 0;
 constexpr int kDBGPrediction = 0;
-constexpr int kDBGBehavior = 1;
-constexpr int kDBGTrajectory = 1;
+constexpr int kDBGBehavior = 0;
+constexpr int kDBGTrajectory = 0;
 
 // Simulation and Track
 constexpr double kSimCycleTime = 0.02; // (sec)
@@ -45,18 +45,17 @@ constexpr double kSensorRange = 100.; // (m)
 constexpr double kLatVelLaneChange = (5.) / 2.23694; // (mph)->m/s to judge LC
 constexpr double kPredictTime = 1.5; // (sec) time to predict car paths
 //constexpr double kPredictTime = 2.; // (sec) time to predict car paths
-constexpr double kPredictRange = (50.) / 2.23694 * kPredictTime; // mph->m
 
 // Behavior
 constexpr double kCostDistAhead = 5.;
 constexpr double kCostSpeedAhead = 7.;
-constexpr double kCostSpeedBehind = 3.;
+constexpr double kCostSpeedBehind = 7.;
 constexpr double kCostChangeLanes = 0.8;
 constexpr double kCostFreqLaneChange = 1.;
 constexpr int kCounterFreqLaneChange = 15; // (#) path cycles
 constexpr double kRelSpeedBehind = (10.) / 2.23694; // mph -> m/s
-//constexpr double kLaneChangeMinGap = 10.; // (m)
-constexpr double kLaneChangeMinGap = 9.; // (m)
+constexpr double kLaneChangeMinGap = 10.; // (m)
+//constexpr double kLaneChangeMinGap = 9.; // (m)
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s, base target
 constexpr double kTgtMinSpeed = (0.) / 2.23694; // mph -> m/s, min target speed
 constexpr double kTgtStartFollowDist = 40.; // (m)
@@ -86,8 +85,8 @@ constexpr double kRandTimeDev = 0.6; // (sec) path time adj std dev
 constexpr double kMinTrajTime = 1.5; // sec
 constexpr double kTrajCostRisk = 10.; // cost for traj collision risk
 constexpr double kTrajCostDeviation = 1.; // cost for traj deviation from base
-//constexpr double kTrajCostThresh = 20; // cost thresh to judge traj risk
-constexpr double kTrajCostThresh = 10; // cost thresh to judge traj risk
+constexpr double kTrajCostThresh = 20; // cost thresh to judge traj risk
+//constexpr double kTrajCostThresh = 10; // cost thresh to judge traj risk
 constexpr double kBackupTgtSpeedDec = (10.) / 2.23694; // (mph)->m/s to slow
 
 /**

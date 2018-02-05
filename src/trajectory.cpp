@@ -48,8 +48,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                          const std::vector<double> &map_interp_x,
                          const std::vector<double> &map_interp_y) {
 
-  auto t_a1 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-  
   // Initialize random generators
   std::random_device rand_dev;
   std::default_random_engine random_gen(rand_dev());
@@ -94,9 +92,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
   std::vector<VehTrajectory> possible_trajs;
   for (int i = 0; i < kTrajGenNum; ++i) {
     
-    auto t_a2 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a2-" << i << " = " << (t_a2-t_a1) << " ms" << std::endl;
-    
     double v_delta = 0;
     double t_delta = 0;
     // After the 1st base traj, sample some variations in target speed and time
@@ -110,21 +105,12 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     t_tgt_var = std::max(t_tgt_var, kMinTrajTime); // min guard time
     const double v_tgt_var = v_tgt - v_delta; // allow slower speed
     
-    auto t_b1 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_b1 = " << (t_b1-t_a2) << " ms" << std::endl;
-    
     VehTrajectory traj_var = GetTrajectory(start_state, t_tgt_var, v_tgt_var,
                                            d_tgt, a_tgt, map_interp_s,
                                            map_interp_x, map_interp_y);
 
-    auto t_b2 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_b2 = " << (t_b2-t_b1) << " ms" << std::endl;
-    
     // Limit traj for max speed and accel
     auto adj_ratios = CheckTrajFeasibility(traj_var);
-    
-    auto t_b3 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_b3 = " << (t_b3-t_b2) << " ms" << std::endl;
     
     const double spd_adj_ratio = adj_ratios[0];
     const double a_adj_ratio = adj_ratios[1];
@@ -134,9 +120,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                d_tgt, (a_tgt * a_adj_ratio - kAccAdjOffset),
                                map_interp_s, map_interp_x, map_interp_y);
     }
-
-    auto t_b4 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_b4 = " << (t_b4-t_b3) << " ms" << std::endl;
     
     // Debug logging
     if (kDBGTrajectory != 0) {
@@ -144,23 +127,14 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                 << " sec, v=" << mps2mph(v_tgt_var) << "mph" << std::endl;
     }
 
-    auto t_a3 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a3 = " << (t_a3-t_a2) << " ms" << std::endl;
-    
     // Evaluate traj cost using other vehicle predicted paths
     traj_var.cost = EvalTrajCost(traj_var, ego_car, detected_cars);
-    
-    auto t_a4 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a4 = " << (t_a4-t_a3) << " ms" << std::endl;
     
     // Only keep traj's with cost below thresh
     if (traj_var.cost < kTrajCostThresh) {
       possible_trajs.push_back(traj_var);
     }
   }
-  
-  auto t_a5 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-  std::cout << "t_a5-a1 = " << (t_a5-t_a1) << " ms" << std::endl;
   
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
@@ -177,9 +151,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                               map_interp_x, map_interp_y);
     traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     
-    auto t_a6 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a6 = " << (t_a6-t_a5) << " ms" << std::endl;
-    
     // Reduce target speed until cost is low enough
     while (traj_backup.cost > kTrajCostThresh) {
       if (v_backup < (kTgtMinSpeed + kBackupTgtSpeedDec)) { break; }
@@ -193,9 +164,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
       traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     }
     
-    auto t_a7 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a7 = " << (t_a7-t_a6) << " ms" << std::endl;
-    
+    /*
     // Check LC if cost is still too high from KL
     if (traj_backup.cost > kTrajCostThresh) {
 
@@ -226,9 +195,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
         }        
       }
     
-      auto t_a8 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-      std::cout << "t_a8 = " << (t_a8-t_a7) << " ms" << std::endl;
-      
       // Check LCL
       if (ego_lane > 1) {
         if (kDBGTrajectory != 0) {
@@ -247,9 +213,6 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                               detected_cars);
         }
       }
-      
-      auto t_a9 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-      std::cout << "t_a9 = " << (t_a9-t_a8) << " ms" << std::endl;
       
       // Choose best backup traj
       if ((traj_backup_LCR.cost < traj_backup.cost)
@@ -283,9 +246,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
         }
       }
     }
-
-    auto t_a10 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a10 = " << (t_a10-t_a7) << " ms" << std::endl;
+    */
     
     // Limit traj for max speed and accel
     auto adj_ratios = CheckTrajFeasibility(traj_backup);
@@ -308,14 +269,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     }
     
     possible_trajs.push_back(traj_backup);
-    
-    auto t_a11 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-    std::cout << "t_a11 = " << (t_a11-t_a10) << " ms" << std::endl;
-    
   }
-  
-  auto t_a12 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-  std::cout << "t_a12-a1 = " << (t_a12-t_a1) << " ms" << std::endl;
   
   // Get traj with lowest cost
   VehTrajectory best_traj;
@@ -334,10 +288,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     std::cout << "\nBest traj #" << best_traj_idx << " cost = " << lowest_cost
               << "\n" << std::endl;
   }
-  
-  auto t_a13 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-  std::cout << "t_a13 = " << (t_a13-t_a12) << " ms" << std::endl;
-  
+    
   return best_traj;
 }
 
@@ -510,36 +461,29 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
   for (int i = 0; i < traj.states.size(); i += kEvalRiskStep) {
     const double ego_s = traj.states[i].s;
     const double ego_d = traj.states[i].d;
-    const double ego_x = traj.states[i].x;
-    const double ego_y = traj.states[i].y;
     for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
       
       // Check each predicted path of this detected vehicle at this time step
       DetectedVehicle car = it->second;
-      const double car_dist = Distance(ego_x, ego_y,
-                                       car.GetState().x, car.GetState().y);
-      // Only check car if within prediction distance threshold
-      if (car_dist < kPredictRange) {
-        std::map<VehIntents, VehTrajectory> cur_pred_trajs = car.GetPredTrajs();
-        for (auto it2 = cur_pred_trajs.begin();
-                  it2 != cur_pred_trajs.end(); ++it2) {
-          const VehTrajectory car_traj = it2->second;
+      std::map<VehIntents, VehTrajectory> cur_pred_trajs = car.GetPredTrajs();
+      for (auto it2 = cur_pred_trajs.begin();
+                it2 != cur_pred_trajs.end(); ++it2) {
+        const VehTrajectory car_traj = it2->second;
+        
+        // Stop if predicted traj is too short
+        if ((idx_start_traj+i) > car_traj.states.size()) { break; }
+        
+        const double car_s = car_traj.states[idx_start_traj+i].s;
+        const double car_d = car_traj.states[idx_start_traj+i].d;
+        
+        // Check if ego car and other car would be too close at this time step
+        if ((abs(ego_s - car_s) < kCollisionSThresh)
+            && (abs(ego_d - car_d) < kCollisionDThresh)) {
           
-          // Stop if predicted traj is too short
-          if ((idx_start_traj+i) > car_traj.states.size()) { break; }
-          
-          const double car_s = car_traj.states[idx_start_traj+i].s;
-          const double car_d = car_traj.states[idx_start_traj+i].d;
-          
-          // Check if ego car and other car would be too close at this time step
-          if ((abs(ego_s - car_s) < kCollisionSThresh)
-              && (abs(ego_d - car_d) < kCollisionDThresh)) {
-            
-            // Risk probability with exponential decay over predicted time e^(-t)
-            collision_risk_sum += car_traj.probability * exp(-i * kSimCycleTime);
-          }
-        } // loop to detected car's next predicted path
-      }
+          // Risk probability with exponential decay over predicted time e^(-t)
+          collision_risk_sum += car_traj.probability * exp(-i * kSimCycleTime);
+        }
+      } // loop to detected car's next predicted path
     } // loop to next detected car
   } // loop to traj's next time step
   

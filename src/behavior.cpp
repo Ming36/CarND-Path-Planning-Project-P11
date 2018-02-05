@@ -11,8 +11,9 @@
  * Cost function to set target lane considering:
  *   #1) Cost by rel_s distance to car ahead
  *   #2) Cost by speed of car ahead
- *   #3) Cost of changing lanes
- *   #4) Cost of frequent lane changes
+ *   #3) Cost of fast car coming up from close behind
+ *   #4) Cost of changing lanes
+ *   #5) Cost of frequent lane changes
  * Return best lane # with lowest cost
  */
 int LaneCostFcn(const EgoVehicle &ego_car,
@@ -64,13 +65,13 @@ int LaneCostFcn(const EgoVehicle &ego_car,
       lane_cost += kCostSpeedBehind * cost_behind_spd;
     }
     
-    // #3) Cost of changing lanes
+    // #4) Cost of changing lanes
     if (lane_num != ego_lane) {
       const double cost_lane_change = (abs(ego_lane - lane_num));
       lane_cost += kCostChangeLanes * cost_lane_change;
     }
     
-    // #4) Cost of frequent lane changes
+    // #5) Cost of frequent lane changes
     if ((ego_car.GetLaneChangeCounter() > 0)
         && (lane_num != ego_car.GetTgtBehavior().tgt_lane)) {
       lane_cost += kCostFreqLaneChange * ego_car.GetLaneChangeCounter();
