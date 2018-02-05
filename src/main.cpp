@@ -244,6 +244,9 @@ int main() {
             // Group detected car id's in a map by lane #
             auto car_ids_by_lane = SortDetectedCarsByLane(detected_cars);
             
+            auto t_1 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+            std::cout << "t1 = " << (t_1-t_msg) << " ms" << std::endl;
+            
             /**
              * Prediction
              *   1. Predict detected car trajectories over fixed time horizon
@@ -255,6 +258,9 @@ int main() {
             // Generate traj predictions for det cars (update detected_cars)
             PredictBehavior(ego_car, car_ids_by_lane, map_interp_s,
                             map_interp_x, map_interp_y, &detected_cars);
+            
+            auto t_2 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+            std::cout << "t2 = " << (t_2-t_1) << " ms" << std::endl;
             
             /**
              * Behavior Planning
@@ -289,7 +295,10 @@ int main() {
                                                    car_ids_by_lane);
             
             ego_car.SetTgtBehavior(new_ego_beh);
-                        
+            
+            auto t_3 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+            std::cout << "t3 = " << (t_3-t_2) << " ms" << std::endl;
+            
             /**
              * Trajectory Generation
              *   1. Keep some of prev path as a buffer to start the next path
@@ -324,6 +333,9 @@ int main() {
             // Append new traj after prev path buffer
             ego_car.AppendTraj(new_traj);
             
+            auto t_4 = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+            std::cout << "t4 = " << (t_4-t_3) << " ms" << std::endl;
+            
             /**
              * Control
              *   1. Pack and send JSON path trajectory coordinates
@@ -352,7 +364,7 @@ int main() {
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
             
             // Debug logging
-            if (kDBGMain == 1) {
+            //if (kDBGMain == 1) {
               // Log time at end of processing
               auto t_end = std::chrono::time_point_cast
               <std::chrono::milliseconds>
@@ -360,12 +372,13 @@ int main() {
               .time_since_epoch().count();
               std::cout << "Processing time = " << (t_end-t_msg)
               << " ms" << std::endl;
-              if ((t_end-t_msg) > kPathCycleTimeMS) {
-                std::cout << "WARNING! Processing time exceeded path cycle time"
-                << std::endl;
+              if ((t_end-t_msg) > kPathBufferTime*1000) {
+                std::cout << "WARNING Processing time exceeded path buffer time"
+                          << std::endl;
               }
               
-              // Print out road diagram
+            if (kDBGMain == 1) {
+            // Print out road diagram
               DebugPrintRoad(detected_cars, ego_car);
             }
             else if ((kDBGMain == 2) || (kDBGMain == 3)) {

@@ -43,51 +43,52 @@ constexpr double kSensorRange = 100.; // (m)
 
 // Prediction
 constexpr double kLatVelLaneChange = (5.) / 2.23694; // (mph)->m/s to judge LC
-constexpr double kPredictTime = 2.; // (sec) time to predict car paths
+constexpr double kPredictTime = 1.5; // (sec) time to predict car paths
+//constexpr double kPredictTime = 2.; // (sec) time to predict car paths
+constexpr double kPredictRange = (50.) / 2.23694 * kPredictTime; // mph->m
 
 // Behavior
 constexpr double kCostDistAhead = 5.;
-constexpr double kCostSpeedAhead = 10.;
-//constexpr double kCostChangeLanes = 0.5;
+constexpr double kCostSpeedAhead = 7.;
+constexpr double kCostSpeedBehind = 3.;
 constexpr double kCostChangeLanes = 0.8;
 constexpr double kCostFreqLaneChange = 1.;
 constexpr int kCounterFreqLaneChange = 15; // (#) path cycles
-constexpr double kLaneChangeMinGap = 9.; // (m)
+constexpr double kRelSpeedBehind = (10.) / 2.23694; // mph -> m/s
 //constexpr double kLaneChangeMinGap = 10.; // (m)
+constexpr double kLaneChangeMinGap = 9.; // (m)
 constexpr double kTargetSpeed = (49.) / 2.23694; // mph -> m/s, base target
 constexpr double kTgtMinSpeed = (0.) / 2.23694; // mph -> m/s, min target speed
 constexpr double kTgtStartFollowDist = 40.; // (m)
-constexpr double kTgtFollowDist = 15.; // (m)
+constexpr double kTgtFollowDist = 14.; // (m)
+//constexpr double kTgtFollowDist = 15.; // (m)
 constexpr double kTgtMinFollowDist = 11.; // (m)
-//constexpr double kTgtMinFollowDist = 13.; // (m)
 constexpr double kMinFollowTgtSpeedDec = (10.) / 2.23694; // (mph)->m/s to slow
 constexpr double kPlanLCTgtSpeedDec = (20.) / 2.23694; // (mph)->m/s, to find gap
-constexpr double kPlanLCCloseDist = 15.; // (m)
+constexpr double kPlanLCCloseDist = 11.; // (m)
 
 // Trajectory
-constexpr double kPathBufferTime = 0.4; // (sec) duration of prev path buffer
+constexpr double kPathBufferTime = 0.5; // (sec) duration of prev path buffer
 constexpr double kNewPathTime = 2.5; // (sec) duration of new planned path
 constexpr double kMinTrajPntDist = (3.) / 2.23694 * kSimCycleTime; // (mph)->m
 constexpr double kMaxA = 8.; // (m/s^2) target max accel to keep peak < 10m/s^2
 constexpr double kSpdAdjOffset = (2.) / 2.23694; // (mph)->m/s
 constexpr double kAccAdjOffset = 1.; // (m/s^2)
 constexpr int kAccelAveSamples = 10; // (#) smoothing ave accel
-constexpr double kCollisionSThresh = 6.; // (m) gap S to judge collision risk
-constexpr double kCollisionDThresh = 2.5; // (m) gap D to judge collision risk
+constexpr double kCollisionSThresh = 8.; // (m) gap S to judge collision risk
+constexpr double kCollisionDThresh = 3.; // (m) gap D to judge collision risk
 constexpr int kEvalRiskStep = 10; // (#) time step interval to check risk
 constexpr int kTrajGenNum = 5; // (#) possible traj's to sample from
 constexpr double kRandSpdMean = (5.) / 2.23694; // (mph)->m/s speed adj mean
 constexpr double kRandSpdDev = (2.) / 2.23694; // (mph)->m/s speed adj std dev
 constexpr double kRandTimeMean = 0.; // (sec) path time adj mean
-//constexpr double kRandTimeMean = 1.; // (sec) path time adj mean
 constexpr double kRandTimeDev = 0.6; // (sec) path time adj std dev
-constexpr double kMinTrajTime = 1.0; // sec
-//constexpr double kRandTimeDev = 0.3; // (sec) path time adj std dev
+constexpr double kMinTrajTime = 1.5; // sec
 constexpr double kTrajCostRisk = 10.; // cost for traj collision risk
 constexpr double kTrajCostDeviation = 1.; // cost for traj deviation from base
-constexpr double kTrajCostThresh = 7; // cost thresh to judge traj risk
-
-constexpr double kBackupTgtSpeedDec = (5.) / 2.23694; // (mph)->m/s to slow
+//constexpr double kTrajCostThresh = 20; // cost thresh to judge traj risk
+constexpr double kTrajCostThresh = 10; // cost thresh to judge traj risk
+constexpr double kBackupTgtSpeedDec = (10.) / 2.23694; // (mph)->m/s to slow
 
 /**
  * Basic parameter helpers

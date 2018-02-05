@@ -23,6 +23,7 @@ int LaneCostFcn(const EgoVehicle &ego_car,
   std::vector<double> cost_by_lane;
   const int ego_id = ego_car.GetID();
   const int ego_lane = ego_car.GetLane();
+  const double ego_spd = ego_car.GetState().s_dot;
   for (int lane_idx = 0; lane_idx < kNumLanes; ++lane_idx) {
     const int lane_num = lane_idx + 1;
     double lane_cost = 0.;
@@ -45,6 +46,23 @@ int LaneCostFcn(const EgoVehicle &ego_car,
     }
     const double cost_ahead_spd = (1-LogCost(s_dot_ahead, kTargetSpeed));
     lane_cost += kCostSpeedAhead * cost_ahead_spd;
+    
+    // #3) Cost of fast car coming up from close behind
+    auto car_behind = FindCarInLane(kBack, lane_num, ego_id, ego_car,
+                                    detected_cars, car_ids_by_lane);
+    int car_id_behind = std::get<0>(car_behind);
+    double rel_s_behind = -kSensorRange;
+    double rel_s_dot_behind = 0.;
+    if (car_id_behind != ego_id) {
+      rel_s_behind = detected_cars.at(car_id_behind).GetRelS();
+      rel_s_dot_behind = (detected_cars.at(car_id_behind).GetState().s_dot
+                          - ego_spd);
+      rel_s_dot_behind = std::max(rel_s_dot_behind, 0.);
+    }
+    if (abs(rel_s_behind) < kTgtFollowDist) {
+      const double cost_behind_spd = LogCost(rel_s_dot_behind, kRelSpeedBehind);
+      lane_cost += kCostSpeedBehind * cost_behind_spd;
+    }
     
     // #3) Cost of changing lanes
     if (lane_num != ego_lane) {
@@ -339,7 +357,7 @@ double TargetSpeedLC(VehSides sideLC, double base_tgt_spd,
   
   // Set target speed to match car ahead in lane that ego is changing to
   if ((detected_cars.count(car_id_side_ahead) > 0)
-      && (rel_s_side_ahead < kLaneChangeMinGap)) {
+      && (rel_s_side_ahead < kTgtStartFollowDist)) {
     
     const double spd_side_ahead = detected_cars.at(car_id_side_ahead)
                                   .GetState().s_dot;
