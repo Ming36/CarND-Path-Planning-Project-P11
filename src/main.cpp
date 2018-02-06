@@ -90,8 +90,13 @@ int main() {
   std::vector<double> map_s_raw;
   std::vector<double> map_dx_raw;
   std::vector<double> map_dy_raw;
-  std::string map_file_ = "../../data/highway_map.csv";
+  std::string map_file_ = "../data/highway_map.csv"; // for cmake in 'build/'
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
+  if (!in_map_) {
+    map_file_ = "../../data/highway_map.csv"; // for Xcode in 'xbuild/Debug/'
+    in_map_.clear();
+    in_map_.open(map_file_.c_str(), std::ifstream::in);
+  }
   std::string line;
   while (getline(in_map_, line)) {
   	std::istringstream iss(line);

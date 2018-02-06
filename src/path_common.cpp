@@ -61,7 +61,7 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> map_s,
 /**
  * Find closest waypoint ahead or behind
  *
- * Note: This is NOT efficient, might be improved by k-d tree search
+ * Note: This is not efficient, might be improved by k-d tree search
  */
 int ClosestWaypoint(double x, double y, const std::vector<double> &map_x,
                     const std::vector<double> &map_y) {

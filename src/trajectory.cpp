@@ -459,7 +459,8 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
 /**
  * Evaluate trajectory's cost based on collision risk and deviation from target
  *
- * Note: This implementation is currently NOT very efficient.
+ * Note: This implementation is currently not very efficient and could probably
+ *       be multithreaded.
  */
 double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
                     const std::map<int, DetectedVehicle> &detected_cars) {
