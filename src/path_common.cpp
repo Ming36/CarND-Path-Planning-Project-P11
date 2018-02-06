@@ -15,13 +15,13 @@ double Distance(double x1, double y1, double x2, double y2) {
 }
 
 /**
- * Interpolate map waypoints with higher resolution (s at every 1m)
+ * Interpolate map waypoints with higher resolution by Frenet s increments
  */
-std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
-                                                std::vector<double> &map_x,
-                                                std::vector<double> &map_y,
-                                                std::vector<double> &map_dx,
-                                                std::vector<double> &map_dy,
+std::vector<std::vector<double>> InterpolateMap(std::vector<double> map_s,
+                                                std::vector<double> map_x,
+                                                std::vector<double> map_y,
+                                                std::vector<double> map_dx,
+                                                std::vector<double> map_dy,
                                                 double s_dist_inc) {
   
   // Add initial map point back to end of map points for wrap-around
@@ -60,6 +60,8 @@ std::vector<std::vector<double>> InterpolateMap(std::vector<double> &map_s,
 
 /**
  * Find closest waypoint ahead or behind
+ *
+ * Note: This is NOT efficient, might be improved by k-d tree search
  */
 int ClosestWaypoint(double x, double y, const std::vector<double> &map_x,
                     const std::vector<double> &map_y) {
@@ -175,7 +177,7 @@ std::vector<double> GetHiResFrenet(double x, double y,
   double scalar_proj = ((vx_pos * vx_wp + vy_pos * vy_wp) / norm_wp);
   
   // Calculate d using distance from projection to the position coord, with
-  // special cases where the position is outside of waypoint vector ends
+  // special cases where the projection is outside of waypoint vector ends
   double frenet_d;
   if (scalar_proj < 0.) {
     // Projection to position coord goes behind wp1

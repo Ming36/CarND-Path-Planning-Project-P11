@@ -8,7 +8,9 @@
 #include "prediction.hpp"
 
 /**
- *
+ * Predict detected car trajectories over fixed time horizon for each possible
+ * behavior with associated probabilities.  Update the detected_cars map to add
+ * the predicted trajectories to each detected vehicle object.
  */
 void PredictBehavior(const EgoVehicle &ego_car,
                      const std::map<int, std::vector<int>> &car_ids_by_lane,
@@ -20,7 +22,8 @@ void PredictBehavior(const EgoVehicle &ego_car,
   // Loop through each lane of veh ID's
   for (auto it = car_ids_by_lane.begin(); it != car_ids_by_lane.end(); ++it) {
     auto car_ids_in_lane = it->second;
-    // Loop through each lane's vector of car id's
+    
+    // Loop through each lane's vector of car ID's
     for (int i = 0; i < car_ids_in_lane.size(); ++i) {
       int cur_car_id = car_ids_in_lane[i];
       DetectedVehicle* cur_car_ptr = &detected_cars->at(cur_car_id);
@@ -33,9 +36,9 @@ void PredictBehavior(const EgoVehicle &ego_car,
       double t_tgt = kPredictTime; // use same prediction time for all intents
       double v_tgt;
       double d_tgt;
-      const auto car_ahead = FindCarInLane(kFront, cur_car_lane,
-                                           cur_car_id, ego_car,
-                                           (*detected_cars), car_ids_by_lane);
+      const auto car_ahead = FindCarInLane(kFront, cur_car_lane, cur_car_id,
+                                           ego_car, (*detected_cars),
+                                           car_ids_by_lane);
       const int car_id_ahead = std::get<0>(car_ahead);
       const double s_rel_ahead = std::get<1>(car_ahead);
       
@@ -62,23 +65,22 @@ void PredictBehavior(const EgoVehicle &ego_car,
       d_tgt = cur_car_state.d;
       
       // Generate predicted traj for KeepLane intent
-      auto traj_KL = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt,
-                                   kMaxA, map_interp_s, map_interp_x,
-                                   map_interp_y);
+      auto traj_KL = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt, kMaxA,
+                                   map_interp_s, map_interp_x, map_interp_y);
       traj_KL.probability = 1.0;
       new_pred_trajs[kKeepLane] = traj_KL;
       
       //// LaneChangeLeft intent predicted traj ////
       // Add if lane is open to left and set high prob if car ahead is close
+      // or already moving to the left fast enough
 
       if (cur_car_lane > 1) {
         v_tgt = cur_car_state.s_dot; // keep current speed
         d_tgt = tgt_lane2tgt_d(cur_car_lane - 1); // target left lane
         
         // Generate predicted traj for LaneChangeLeft intent
-        auto traj_LCL = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt,
-                                      kMaxA, map_interp_s, map_interp_x,
-                                      map_interp_y);
+        auto traj_LCL = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt, kMaxA,
+                                      map_interp_s, map_interp_x, map_interp_y);
 
         // LCL probability 0.1 default, 0.3 if close to car ahead, 0.8 if
         // already moving to the left fast enough
@@ -93,15 +95,15 @@ void PredictBehavior(const EgoVehicle &ego_car,
       
       //// LaneChangeRight intent predicted traj ////
       // Add if lane is open to right and set high prob if car ahead is close
+      // or already moving to the right fast enough
       
       if (cur_car_lane < kNumLanes) {
         v_tgt = cur_car_state.s_dot; // keep current speed
         d_tgt = tgt_lane2tgt_d(cur_car_lane + 1); // target right lane
         
         // Generate predicted traj for LaneChangeRight intent
-        auto traj_LCR = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt,
-                                      kMaxA, map_interp_s, map_interp_x,
-                                      map_interp_y);
+        auto traj_LCR = GetTrajectory(cur_car_state, t_tgt, v_tgt, d_tgt, kMaxA,
+                                      map_interp_s, map_interp_x, map_interp_y);
         
         // LCR probability 0.1 default, 0.3 if close to car ahead, 0.8 if
         // already moving to the right fast enough

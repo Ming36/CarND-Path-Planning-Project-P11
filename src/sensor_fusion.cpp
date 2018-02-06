@@ -26,7 +26,7 @@ int GetCurrentTrajIndex(const VehTrajectory &prev_ego_traj,
 }
 
 /**
- * Use the ego car's current (x,y) position and the previous trajectory, find
+ * Use the ego car's current (x,y) position and the previous trajectory to find
  * the corresponding state values [s, s_dot, s_dotdot, d, d_dot, d_dotdot] with
  * the index for the current state and the map waypoints for (x,y)->(s,d)
  * Frenet conversion.  Return the current ego state.
@@ -59,6 +59,7 @@ VehState ProcessEgoState(double car_x, double car_y, int idx_current_pt,
     car_d_dotdot = prev_ego_traj.states[idx_current_pt].d_dotdot;
   }
   
+  // Pack state
   ego_state.x = car_x;
   ego_state.y = car_y;
   ego_state.s = car_s;
@@ -185,7 +186,7 @@ void ProcessDetectedCars(const EgoVehicle &ego_car,
  * are sorted by relative s from the ego car.
  */
 std::map<int, std::vector<int>> SortDetectedCarsByLane(
-                         const std::map<int, DetectedVehicle> &detected_cars) {
+                          const std::map<int, DetectedVehicle> &detected_cars) {
   
   std::map<int, std::vector<int>> car_ids_by_lane;
   

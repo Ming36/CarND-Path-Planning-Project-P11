@@ -54,11 +54,11 @@ void DebugPrintRoad(const std::map<int, DetectedVehicle> &detected_cars,
         lane_mark = "@@"; // Mark ego car
       }
       else {
-        // Find detected cars at this lane position
+        // Find detected cars at this lane position (10m blocks)
         for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
-          if ((it->second.GetRelS() <= i+4) && (it->second.GetRelS() > i-6) &&
-              (it->second.GetLane() == j_lane)) {
-            if (it->second.GetID() < 10) {
+          if ((it->second.GetRelS() <= i+4) && (it->second.GetRelS() > i-6)
+              && (it->second.GetLane() == j_lane)) {
+            if (it->second.GetID() < 10) { // pad single digit ID with leading 0
               lane_mark = "0" + std::to_string(it->second.GetID());
             }
             else {
@@ -167,6 +167,7 @@ int main() {
           // Main car's localization Data
           const double car_x = j[1]["x"];
           const double car_y = j[1]["y"];
+          
           //const double car_s = j[1]["s"];
           //const double car_d = j[1]["d"];
           //const double car_yaw = j[1]["yaw"];
@@ -199,21 +200,25 @@ int main() {
           // Run path planning algorithm at a set slower cycle time
           if ((t_msg - t_last) > kPathCycleTimeMS) {
             
+            // Debug logging
             if (kDBGMain != 0) {
               std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
               std::cout << "Loop #" << loop << ", t=" << t_msg
                         << " ms" << std::endl << std::endl;
             }
+            
+            // Store timestamp and increment loop counter
             t_last = t_msg;
             loop++;
             
             /**
              * Sensor Fusion
-             *   1. Determine where ego car is now in previous path
+             *   1. Process prev ego path to determine where ego car is now
              *   2. Use received (x,y) to update ego car's state
              *   3. Process detected cars within sensor range
-             *   4. Group detected car ID's by lane #
-             * Outputs:
+             *   4. Group detected car ID's by lane # for easier lookups
+             *
+             * Output:
              *   prev_ego_traj : ego's previous full trajectory
              *   idx_current_pt : index of where ego car is now in prev traj
              *   ego_car : ego car object updated with current state
@@ -236,7 +241,7 @@ int main() {
                                                      map_interp_y);
             ego_car.UpdateState(new_ego_state);
             
-            // Process detected cars' states (update detected_cars)
+            // Process detected cars' states (updates detected_cars map by ptr)
             ProcessDetectedCars(ego_car, sensor_fusion, map_interp_s,
                                 map_interp_x, map_interp_y, map_interp_dx,
                                 map_interp_dy, &detected_cars);
@@ -248,11 +253,13 @@ int main() {
              * Prediction
              *   1. Predict detected car trajectories over fixed time horizon
              *      for each possible behavior with associated probabilities
+             *
              * Output:
              *   detected_cars : updated with predicted traj's for each det car
              */
             
-            // Generate traj predictions for det cars (update detected_cars)
+            // Generate trajectory predictions for all detected cars (updates
+            //   detected_cars map by ptr)
             PredictBehavior(ego_car, car_ids_by_lane, map_interp_s,
                             map_interp_x, map_interp_y, &detected_cars);
             
@@ -265,7 +272,7 @@ int main() {
              *         Lane Change Left, Lane Change Right)
              *   3. Decide target time for the planned path
              *   4. Decide target speed for the end of the planned path
-             *   5. Update a frequent lane change counter to use in lane cost
+             *
              * Output:
              *   ego_car.tgt_behavior_ : Target lane, intent, time, and speed
              *   ego_car.counter_lane_change : Counter to avoid freq lane change
@@ -281,35 +288,28 @@ int main() {
             new_ego_beh.intent = BehaviorFSM(ego_car, detected_cars,
                                              car_ids_by_lane);
             
-            // Set target time
+            // Set target path plan time
             new_ego_beh.tgt_time = kNewPathTime;
 
             // Set target speed
             new_ego_beh.tgt_speed = SetTargetSpeed(ego_car, detected_cars,
                                                    car_ids_by_lane);
             
+            // Set final target behavior and update lane change counter
             ego_car.SetTgtBehavior(new_ego_beh);
             
             /**
              * Trajectory Generation
-             *   1. Keep some of prev path as a buffer to start the next path
-             *   2. Generate a new ego car path trajectory to achieve the target
-             *      behavior by
-             *     a) Generate multiple traj's with random variations in target
-             *        speed and time
-             *     b) Limit the trajs' max speed and accel in (x,y)
-             *     c) Assign a cost to each traj based on accumulated collision
-             *        risk from the predicted paths of detected vehicles, and
-             *        the amount of deviation from the base target
-             *     d) Add a backup traj to keep current lane and slightly slow
-             *        down in case all other trajs have cost above an allowable
-             *        threshold
-             *     e) Select the final traj with the lowest cost
+             *   1. Keep some of prev path as a buffer to start the next traj
+             *   2. Generate a new ego car path trajectory to achieve the
+             *      target behavior
+             *  3. Append the new traj after the prev path buffer
+             *
              * Output:
              *   ego_car.traj_ : Final trajectory for ego car
              */
             
-            // Keep some buffer traj from prev path to start the next traj
+            // Keep some buffer traj from prev path to start the next path
             ego_car.ClearTraj();
             auto buff_traj = GetBufferTrajectory(idx_current_pt, prev_ego_traj);
             ego_car.SetTraj(buff_traj);
@@ -327,7 +327,8 @@ int main() {
             /**
              * Control
              *   1. Pack and send JSON path trajectory coordinates
-             * Outputs
+             *
+             * Output:
              *   next_x_vals : Vector of planned path x coordinates
              *   next_y_vals : Vector of planned path y coordinates
              *   msg : JSON message sent back to simulator with (x,y) coords
@@ -356,7 +357,7 @@ int main() {
                          <std::chrono::milliseconds>
                          (std::chrono::high_resolution_clock::now())
                          .time_since_epoch().count();
-            if ((t_end-t_msg) > kPathBufferTime*1000) {
+            if ((t_end-t_msg) > (kPathBufferTime*1000)) {
               std::cout << "WARNING Processing time exceeded path buffer time"
                         << std::endl;
             }
@@ -383,41 +384,34 @@ int main() {
               << ", d: " << ego_state.d
               << ", d_dot: " << ego_state.d_dot
               << ", d_dotdot: " << ego_state.d_dotdot;
-              
               std::cout << ", traj_x: ";
               for (int i = 0; i < ego_traj.states.size(); ++i) {
                 std::cout << ego_traj.states[i].x << ";";
               }
-              
               std::cout << ", traj_y: ";
               for (int i = 0; i < ego_traj.states.size(); ++i) {
                 std::cout << ego_traj.states[i].y << ";";
               }
-              
               std::cout << ", prev_path_x: ";
               for (int i = 0; i < previous_path_x.size(); ++i) {
                 std::cout << previous_path_x[i] << ";";
               }
-              
               std::cout << ", prev_path_y: ";
               for (int i = 0; i < previous_path_y.size(); ++i) {
                 std::cout << previous_path_y[i] << ";";
               }
-              
               std::cout << ", traj_s: ";
               for (int i = 0; i < ego_traj.states.size(); ++i) {
                 std::cout << ego_traj.states[i].s << ";";
               }
-              
               std::cout << ", traj_d: ";
               for (int i = 0; i < ego_traj.states.size(); ++i) {
                 std::cout << ego_traj.states[i].d << ";";
               }
-              
               std::cout << std::endl;
             }
           }
-          else {
+          else { // Not time for path plan update yet
             // Send previous path back to simulator to continue driving it
             json msgJson;
             msgJson["next_x"] = previous_path_x;

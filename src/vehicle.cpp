@@ -14,6 +14,16 @@ Vehicle::Vehicle() { }
 Vehicle::~Vehicle() { }
 
 /**
+ * Member data accessors
+ */
+int Vehicle::GetID() const { return veh_id_; }
+void Vehicle::SetID(int veh_id) { veh_id_ = veh_id; }
+int Vehicle::GetLane() const { return lane_; }
+VehState Vehicle::GetState() const { return state_; }
+VehTrajectory Vehicle::GetTraj() const { return traj_; }
+void Vehicle::SetTraj(VehTrajectory traj) { traj_ = traj; }
+
+/**
  * Update vehicle's state values and calculate its new lane position
  */
 void Vehicle::UpdateState(VehState new_state) {
@@ -31,30 +41,23 @@ void Vehicle::UpdateState(VehState new_state) {
   lane_ = lane;
 }
 
-int Vehicle::GetID() const { return veh_id_; }
-
-void Vehicle::SetID(int veh_id) { veh_id_ = veh_id; }
-
-int Vehicle::GetLane() const { return lane_; }
-
-VehState Vehicle::GetState() const { return state_; }
-
-VehTrajectory Vehicle::GetTraj() const { return traj_; }
-
+/**
+ * Reset vehicle's trajectory
+ */
 void Vehicle::ClearTraj() {
   traj_.states.clear();
   traj_.probability = 0.;
   traj_.cost = 0.;
 }
 
-void Vehicle::SetTraj(VehTrajectory traj) { traj_ = traj; }
-
+/**
+ * Append a trajectory to the end of the vehicle's current trajectory
+ */
 void Vehicle::AppendTraj(VehTrajectory traj) {
   for (int i = 0; i < traj.states.size(); ++i) {
     traj_.states.push_back(traj.states[i]);
   }
 }
-
 
 //// EgoVehicle sub-class ////
 
@@ -65,10 +68,15 @@ EgoVehicle::EgoVehicle() : Vehicle() {
 }
 EgoVehicle::~EgoVehicle() { }
 
+/**
+ * Member data accessors
+ */
 int EgoVehicle::GetLaneChangeCounter() const { return counter_lane_change_; }
-
 VehBehavior EgoVehicle::GetTgtBehavior() const { return tgt_behavior_; }
 
+/**
+ * Set the vehicle's final target behavior and update lane counter
+ */
 void EgoVehicle::SetTgtBehavior(VehBehavior new_tgt_beh) {
   
   // Store previous target lane
@@ -108,6 +116,19 @@ DetectedVehicle::DetectedVehicle() : Vehicle() { }
 DetectedVehicle::~DetectedVehicle() { }
 
 /**
+ * Member data accessors
+ */
+double DetectedVehicle::GetRelS() const { return s_rel_; }
+void DetectedVehicle::ClearPredTrajs() { pred_trajs_.clear(); }
+std::map<VehIntents, VehTrajectory> DetectedVehicle::GetPredTrajs() const {
+  return pred_trajs_;
+}
+void DetectedVehicle::SetPredTrajs(std::map<VehIntents,
+                                   VehTrajectory> pred_trajs) {
+  pred_trajs_ = pred_trajs;
+}
+
+/**
  * Calculate relative s from ego car
  */
 void DetectedVehicle::UpdateRelDist(const EgoVehicle &ego_car) {
@@ -117,19 +138,6 @@ void DetectedVehicle::UpdateRelDist(const EgoVehicle &ego_car) {
   while (s_rel > kSensorRange) { s_rel -= kMaxS; }
   while (s_rel < -kSensorRange) { s_rel += kMaxS; }
   s_rel_ = s_rel;
-}
-
-double DetectedVehicle::GetRelS() const { return s_rel_; }
-
-std::map<VehIntents, VehTrajectory> DetectedVehicle::GetPredTrajs() const {
-  return pred_trajs_;
-}
-
-void DetectedVehicle::ClearPredTrajs() { pred_trajs_.clear(); }
-
-void DetectedVehicle::SetPredTrajs( std::map<VehIntents,
-                                             VehTrajectory> pred_trajs) {
-  pred_trajs_ = pred_trajs;
 }
 
 //// General vehicle functions ////
@@ -207,7 +215,7 @@ std::tuple<int, double> FindCarInLane(const VehSides check_side,
  * Check the size of the gap on the left/right side of the ego car
  * (check_side = kLeft or kRight) to the car ahead/behind and return the size
  * of the gap.  Set the gap to 0 if either the car ahead or behind are closer
- * than the minimum distance for lane change kLaneChangeMinGap or there is no
+ * than the minimum distance for lane change (kLaneChangeMinGap) or there is no
  * lane on that side of the ego car.
  */
 double EgoCheckSideGap(const VehSides check_side,

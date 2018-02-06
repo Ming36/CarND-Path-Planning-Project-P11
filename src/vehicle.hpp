@@ -51,22 +51,22 @@ struct VehTrajectory {
   double cost;
 };
 
+// Base class for all vehicles
 class Vehicle {
 public:
-  
   // Constructor/Destructor
   Vehicle();
   virtual ~Vehicle();
 
-  void UpdateState(VehState new_state);
-  void ClearTraj();
-  void SetTraj(VehTrajectory traj);
-  void AppendTraj(VehTrajectory traj);
-  void SetID(int veh_id);
   int GetID() const;
+  void SetID(int veh_id);
   int GetLane() const;
   VehState GetState() const;
   VehTrajectory GetTraj() const;
+  void SetTraj(VehTrajectory traj);
+  void UpdateState(VehState new_state);
+  void ClearTraj();
+  void AppendTraj(VehTrajectory traj);
   
 private:
   int veh_id_;
@@ -75,17 +75,16 @@ private:
   VehTrajectory traj_;
 };
 
-
+// Subclass for ego vehicle
 class EgoVehicle : public Vehicle {
 public:
-  
   // Constructor/destructor
   EgoVehicle();
   virtual ~EgoVehicle();
   
-  void SetTgtBehavior(VehBehavior new_tgt_beh);
   int GetLaneChangeCounter() const;
   VehBehavior GetTgtBehavior() const;
+  void SetTgtBehavior(VehBehavior new_tgt_beh);
   
 private:
   int counter_lane_change_;
@@ -93,24 +92,25 @@ private:
   VehBehavior tgt_behavior_;
 };
 
+// Subclass for all detected vehicles
 class DetectedVehicle : public Vehicle {
 public:
-  
   // Constructor/Destructor
   DetectedVehicle();
   virtual ~DetectedVehicle();
   
-  void UpdateRelDist(const EgoVehicle &ego_car);
-  std::map<VehIntents, VehTrajectory> GetPredTrajs() const;
-  void ClearPredTrajs();
-  void SetPredTrajs(std::map<VehIntents, VehTrajectory> pred_trajs);
   double GetRelS() const;
-
+  void ClearPredTrajs();
+  std::map<VehIntents, VehTrajectory> GetPredTrajs() const;
+  void SetPredTrajs(std::map<VehIntents, VehTrajectory> pred_trajs);
+  void UpdateRelDist(const EgoVehicle &ego_car);
+  
 private:
   double s_rel_;
   std::map<VehIntents, VehTrajectory> pred_trajs_;
 };
 
+// General vehicle functions
 std::tuple<int, double> FindCarInLane(const VehSides check_side,
                         const int check_lane, const int check_id,
                         const EgoVehicle &ego_car,

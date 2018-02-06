@@ -30,6 +30,6 @@ void ProcessDetectedCars(const EgoVehicle &ego_car,
                          std::map<int, DetectedVehicle> *detected_cars);
 
 std::map<int, std::vector<int>> SortDetectedCarsByLane(
-                          const std::map<int, DetectedVehicle> &detected_cars);
+                           const std::map<int, DetectedVehicle> &detected_cars);
 
 #endif /* sensor_fusion_hpp */

@@ -22,6 +22,7 @@ VehTrajectory GetBufferTrajectory(int idx_current_pt,
   if (idx_current_pt > 0) {
     int end_pt = std::min(idx_current_pt+1 + buffer_pts,
                           int(prev_ego_traj.states.size()));
+    
     for (int i = idx_current_pt+1; i < end_pt; ++i) {
       traj_prev_buffer.states.push_back(prev_ego_traj.states[i]);
     }
@@ -32,14 +33,19 @@ VehTrajectory GetBufferTrajectory(int idx_current_pt,
 
 /**
  * Get a new trajectory for the ego car with target end state based on the
- * target behavior.  Multiple trajectories are generated including the base
- * target and additional variations for slower speed and longer time.  Each
- * trajectory is checked for over-speed/accel in (x,y) coordinates and adjusted
- * to stay within limits.  Each trajectory is evaluated for cost based on
- * accumulated risk of collision with nearby car predicted paths and amount of
- * deviation from the base target.  Trajectories with cost above a risk
- * threshold are discarded. A backup trajectory of keeping lane at a slower
- * speed is included if all other trajectories exceeded the risk threshold.
+ * target behavior by:
+ *   a) Generate multiple traj's with random variations in target
+ *      speed and time
+ *   b) Limit the traj's max speed and accel in (x,y) to stay within limits
+ *   c) Assign a cost to each traj based on accumulated collision
+ *      risk from the predicted paths of detected vehicles, and
+ *      the amount of deviation from the base target
+ *   d) Add a backup traj to keep current lane and slightly slow
+ *      down in case all other trajs have cost above an allowable
+ *      threshold
+ *   e) Select the final traj with the lowest cost
+ *
+ * Returns the new ego car best trajectory
  */
 VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                          const std::map<int, DetectedVehicle> &detected_cars,
@@ -134,7 +140,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     if (traj_var.cost < kTrajCostThresh) {
       possible_trajs.push_back(traj_var);
     }
-  }
+  } // loop to generate next traj
   
   // Add backup traj to keep current D if all possible traj's were too risky
   if (possible_trajs.size() == 0) {
@@ -145,10 +151,11 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     const double t_backup = kMinTrajTime;
     double d_backup = tgt_lane2tgt_d(ego_lane);
     double v_backup = v_tgt;
-    //double cost_backup;
+
     VehTrajectory traj_backup = GetTrajectory(start_state, t_backup, v_backup,
                                               d_backup, a_tgt, map_interp_s,
                                               map_interp_x, map_interp_y);
+    
     traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     
     // Reduce target speed until cost is low enough
@@ -161,6 +168,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
       traj_backup = GetTrajectory(start_state, t_backup, v_backup,
                                   d_backup, a_tgt, map_interp_s,
                                   map_interp_x, map_interp_y);
+      
       traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     }
     
@@ -248,8 +256,9 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
     }
     */
     
-    // Limit traj for max speed and accel
+    // Limit final backup traj for max speed and accel
     auto adj_ratios = CheckTrajFeasibility(traj_backup);
+    
     const double spd_adj_ratio = adj_ratios[0];
     const double a_adj_ratio = adj_ratios[1];
     if ((spd_adj_ratio != 1.0) || (a_adj_ratio != 1.0)) {
@@ -258,6 +267,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
                                   d_backup,
                                   (a_tgt * a_adj_ratio - kAccAdjOffset),
                                   map_interp_s, map_interp_x, map_interp_y);
+      
       traj_backup.cost = EvalTrajCost(traj_backup, ego_car, detected_cars);
     }
       
@@ -298,6 +308,7 @@ VehTrajectory GetEgoTrajectory(const EgoVehicle &ego_car,
  * JMT is applied to Frenet s and d coordinates separately, and then the (s,d)
  * points are converted to (x,y) points.  The (x,y) points are also checked for
  * a minimum separation distance and filtered to prevent low speed jitter.
+ * Returns the trajectory with states up to time t_tgt.
  */
 VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
                             double v_tgt, double d_tgt, double a_tgt,
@@ -376,6 +387,7 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
       const double dist_pnt = Distance(state.x, state.y,
                                        new_traj.states[prev_idx].x,
                                        new_traj.states[prev_idx].y);
+      
       if (dist_pnt < kMinTrajPntDist) {
         state = new_traj.states[prev_idx]; // set state back to copy of previous
       }
@@ -389,7 +401,7 @@ VehTrajectory GetTrajectory(VehState start_state, double t_tgt,
 
 
 /**
- * Check trajectory feasibility for over-speed and over-accel limits.  Return
+ * Check trajectory feasibility for over-speed and over-accel limits.  Returns
  * adjustment ratios based on the amount of over-limit.
  */
 std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
@@ -400,7 +412,6 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
   
   double v_peak = 0;
   double xy_speed = 0;
-
   double a_peak = 0;
   double xy_accel = 0;
   double ave_speed = 0;
@@ -413,6 +424,7 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
     xy_speed = (Distance(traj.states[i].x, traj.states[i].y,
                          traj.states[i-1].x, traj.states[i-1].y)
                 / kSimCycleTime);
+    
     if (xy_speed > v_peak) { v_peak = xy_speed; }
     
     // Check for over-accel with ave accel sampled over kAccelAveSamples points
@@ -423,6 +435,7 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
         // After prev ave speed was initialized, calculate ave accel
         xy_accel = (abs(ave_speed - ave_speed_prev)
                     / (kAccelAveSamples * kSimCycleTime));
+    
         if (xy_accel > a_peak) { a_peak = xy_accel; }
       }
       ave_speed_prev = ave_speed; // store prev ave speed
@@ -445,12 +458,12 @@ std::vector<double> CheckTrajFeasibility(const VehTrajectory traj) {
 
 /**
  * Evaluate trajectory's cost based on collision risk and deviation from target
+ *
+ * Note: This implementation is currently NOT very efficient.
  */
 double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
                     const std::map<int, DetectedVehicle> &detected_cars) {
   
-  double traj_cost_risk = 0.0;
-  double traj_cost_tgtdev = 0.0;
   double collision_risk_sum = 0.0;
   
   // Set start index to start checking other car's predicted paths after ego's
@@ -461,16 +474,18 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
   for (int i = 0; i < traj.states.size(); i += kEvalRiskStep) {
     const double ego_s = traj.states[i].s;
     const double ego_d = traj.states[i].d;
+    
+    // Check for each detected vehicle
     for (auto it = detected_cars.begin(); it != detected_cars.end(); ++it) {
-      
-      // Check each predicted path of this detected vehicle at this time step
       DetectedVehicle car = it->second;
       std::map<VehIntents, VehTrajectory> cur_pred_trajs = car.GetPredTrajs();
+
+      // Check each predicted path of this detected vehicle at this time step
       for (auto it2 = cur_pred_trajs.begin();
                 it2 != cur_pred_trajs.end(); ++it2) {
         const VehTrajectory car_traj = it2->second;
         
-        // Stop if predicted traj is too short
+        // Stop if predicted traj reached its end
         if ((idx_start_traj+i) > car_traj.states.size()) { break; }
         
         const double car_s = car_traj.states[idx_start_traj+i].s;
@@ -487,8 +502,8 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
     } // loop to next detected car
   } // loop to traj's next time step
   
-  // Apply cost function factor to risk sum
-  traj_cost_risk += kTrajCostRisk * collision_risk_sum;
+  // Apply cost function factor to collision risk sum
+  const double traj_cost_risk = kTrajCostRisk * collision_risk_sum;
   
   // Add traj cost based on deviation from base target
   const VehBehavior ego_beh = ego_car.GetTgtBehavior();
@@ -496,13 +511,16 @@ double EvalTrajCost(const VehTrajectory traj, const EgoVehicle &ego_car,
   const double t_tgtdev = abs(ego_beh.tgt_time - t_traj);
   const double v_traj = traj.states.back().s_dot;
   const double v_tgtdev = abs(ego_beh.tgt_speed - v_traj);
-  traj_cost_tgtdev += kTrajCostDeviation * (t_tgtdev + v_tgtdev);
+  const double traj_cost_tgtdev = kTrajCostDeviation * (t_tgtdev + v_tgtdev);
 
+  // Set total trajectory cost
+  const double traj_cost = traj_cost_risk + traj_cost_tgtdev;
+  
   // Debug logging
   if (kDBGTrajectory != 0) {
     std::cout << "  Eval traj cost: risk = " << traj_cost_risk
               << " tgt_dev = " << traj_cost_tgtdev << std::endl;
   }
   
-  return (traj_cost_risk + traj_cost_tgtdev);
+  return traj_cost;
 }
