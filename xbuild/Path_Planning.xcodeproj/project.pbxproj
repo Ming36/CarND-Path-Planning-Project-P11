@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		3CDD6E309F1045ABA21D0B0C /* ALL_BUILD */ = {
+		67CEB809C0ED4BE5974A897A /* ALL_BUILD */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 79F766B045B84C019ED9339B /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildConfigurationList = 4B6203511E29464989FA395D /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
 			buildPhases = (
-				77A2EFB6231E4EF79CF39408 /* CMake Rules */,
+				025EEFD2DE7A4895A36F56F6 /* CMake Rules */,
 			);
 			dependencies = (
-				1E77EF133B0A40B9A65DC53F /* PBXTargetDependency */,
-				A95375C323D648C2AB7F35D7 /* PBXTargetDependency */,
+				27BF2BF4DF554B75A245B280 /* PBXTargetDependency */,
+				4855CBFAF2C24B439BDB9748 /* PBXTargetDependency */,
 			);
 			name = ALL_BUILD;
 			productName = ALL_BUILD;
 		};
-		D68324DACBBA43BE972F5ED9 /* ZERO_CHECK */ = {
+		CE51EB4D355F4B78931B7280 /* ZERO_CHECK */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = FF06BB7B8CAB499CB81DB65B /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildConfigurationList = 5761C94B7AE348BB9F7919D9 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
 			buildPhases = (
-				A66493B0233D4F8980F454DB /* CMake Rules */,
+				DD8F4F0ED1504ECB82868812 /* CMake Rules */,
 			);
 			dependencies = (
 			);
@@ -34,195 +34,237 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		128451F9173D4394A324CD59 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EC6E8590B8F49899E75C552 /* main.cpp */; };
-		142D3813232D4642B712A390 /* sensor_fusion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 734EBBDCE9494D99BDBA9D22 /* sensor_fusion.cpp */; };
-		38932D50229B41B8B9D0DB29 /* vehicle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E12B00671554B98A850DE31 /* vehicle.cpp */; };
-		3E732C98D1B344F29B806735 /* trajectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15B06DA492064E44A6C37ED8 /* trajectory.cpp */; };
-		75FDD2FAA68E4BB492B6F7CA /* path_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3412933DBD834D22B7F87560 /* path_common.cpp */; };
-		BF6669E94BA34A9395BE699F /* behavior.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 13B4F87E86404403902D97F8 /* behavior.cpp */; };
-		DBF1E0FC38C341B28390451F /* prediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E7D602767BB5410CA1E37EC6 /* prediction.cpp */; };
+		15AD011C4CB540A79FB6354B /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp */ = {isa = PBXBuildFile; fileRef = 46ACE6198FD3414E9E5B0FB1 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp */; };
+		422C0A65476D4532BBA5B659 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.hpp */ = {isa = PBXBuildFile; fileRef = 09AC145E27CA46F78C73EF7E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.hpp */; };
+		554C073270EB4A4198A6A4B0 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp */ = {isa = PBXBuildFile; fileRef = A22D0A1393264EB398FC5C35 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp */; };
+		6D2711DEFE5D4E789A350878 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 00D9AB8664014265803A9947 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */; };
+		7697B53B5710402CB135F746 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp */ = {isa = PBXBuildFile; fileRef = E24561C243384A209D872FC7 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp */; };
+		82790C6BA7A944758B18969D /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp */ = {isa = PBXBuildFile; fileRef = 56D070EFAC1A47C9A5E25262 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp */; };
+		920C65481B714A97957120E2 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.cpp */ = {isa = PBXBuildFile; fileRef = 923D1C36DD164CBF9D756FCF /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.cpp */; };
+		95A0E38AE38E4728BE8C00C2 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.cpp */ = {isa = PBXBuildFile; fileRef = 2E1512B4DDF04087A57107A8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.cpp */; };
+		9E8E5D4DC8D04FF598932DA8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp */ = {isa = PBXBuildFile; fileRef = 17AD4D624E5A4A368CCFE380 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp */; };
+		A80F840603C649328ACC329E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.hpp */ = {isa = PBXBuildFile; fileRef = EBEA978EC4EA47A89EB02866 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.hpp */; };
+		AC49ECF5D4AC481CACEFC2CD /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/main.cpp */ = {isa = PBXBuildFile; fileRef = E34B3A7ED1B4485EACD8BB8E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/main.cpp */; };
+		C285CBD644DA46218048BC80 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp */ = {isa = PBXBuildFile; fileRef = 32939CF0F5E14B378266E0DC /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp */; };
+		EFD090B70D0C463B97C5CAA8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.cpp */ = {isa = PBXBuildFile; fileRef = 7B3A70CE3605461F9358523F /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.cpp */; };
+		F5552BAFF3A148A1B7B3B4F6 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.cpp */ = {isa = PBXBuildFile; fileRef = 7C4EE2EF579B4FDE93ED18BD /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildStyle section */
+		34857387DD1E45F1881B3270 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+		66A285F8FC53430D8AEF7D86 /* RelWithDebInfo */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = RelWithDebInfo;
+		};
+		790401F120F74F278A168BCD /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		CBEE41638E3F4465859E6BAD /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
+		};
+/* End PBXBuildStyle section */
+
 /* Begin PBXContainerItemProxy section */
-		3826A5B9FBF74D61AE894C07 /* PBXContainerItemProxy */ = {
+		137913590CB54153B8CDF2F3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 75E72B1303514D278517EE65 /* Project object */;
+			containerPortal = D8B4E6BBE741487F96902412 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = D68324DACBBA43BE972F5ED9;
+			remoteGlobalIDString = CE51EB4D355F4B78931B7280;
 			remoteInfo = ZERO_CHECK;
 		};
-		4DD85D53A34542D9A83DE477 /* PBXContainerItemProxy */ = {
+		1D41308A579748099397DB38 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 75E72B1303514D278517EE65 /* Project object */;
+			containerPortal = D8B4E6BBE741487F96902412 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = D68324DACBBA43BE972F5ED9;
+			remoteGlobalIDString = CE51EB4D355F4B78931B7280;
 			remoteInfo = ZERO_CHECK;
 		};
-		7C251AA80C8A4026B7BEE45A /* PBXContainerItemProxy */ = {
+		C5ED917CDBB04136BB547EE6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 75E72B1303514D278517EE65 /* Project object */;
+			containerPortal = D8B4E6BBE741487F96902412 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 9A15A531B0A94FE8BB8958EC;
+			remoteGlobalIDString = 17BF7D654FF54FB88C9DD6C6;
 			remoteInfo = path_planning;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		13B4F87E86404403902D97F8 /* behavior.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = behavior.cpp; path = src/behavior.cpp; sourceTree = SOURCE_ROOT; };
-		15B06DA492064E44A6C37ED8 /* trajectory.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = trajectory.cpp; path = src/trajectory.cpp; sourceTree = SOURCE_ROOT; };
-		1BFB6D9DE7A8460080A6A24E /* prediction.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = prediction.hpp; path = src/prediction.hpp; sourceTree = SOURCE_ROOT; };
-		3412933DBD834D22B7F87560 /* path_common.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = path_common.cpp; path = src/path_common.cpp; sourceTree = SOURCE_ROOT; };
-		363D3620905D4F8BBD5C6D4B /* path_common.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = path_common.hpp; path = src/path_common.hpp; sourceTree = SOURCE_ROOT; };
-		44A3E401665D4232BEE523A2 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		5718A02CDB5B4E34A8750410 /* vehicle.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = vehicle.hpp; path = src/vehicle.hpp; sourceTree = SOURCE_ROOT; };
-		6B6864676AEB495DBBAC7C26 /* behavior.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = behavior.hpp; path = src/behavior.hpp; sourceTree = SOURCE_ROOT; };
-		6EC6E8590B8F49899E75C552 /* main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = main.cpp; path = src/main.cpp; sourceTree = SOURCE_ROOT; };
-		734EBBDCE9494D99BDBA9D22 /* sensor_fusion.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = sensor_fusion.cpp; path = src/sensor_fusion.cpp; sourceTree = SOURCE_ROOT; };
-		743E532CA05642B9BC0F9709 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		8965396897C548889FE0743B /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		8E12B00671554B98A850DE31 /* vehicle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = vehicle.cpp; path = src/vehicle.cpp; sourceTree = SOURCE_ROOT; };
-		A66EAA3146BF4969A9ACF0DA /* sensor_fusion.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = sensor_fusion.hpp; path = src/sensor_fusion.hpp; sourceTree = SOURCE_ROOT; };
-		D9C7CF94061A4B69B9A1A5C2 /* path_planning */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = path_planning; sourceTree = BUILT_PRODUCTS_DIR; };
-		E0729CEE295B4828B0FECF12 /* trajectory.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = trajectory.hpp; path = src/trajectory.hpp; sourceTree = SOURCE_ROOT; };
-		E7D602767BB5410CA1E37EC6 /* prediction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = prediction.cpp; path = src/prediction.cpp; sourceTree = SOURCE_ROOT; };
+		00D9AB8664014265803A9947 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		09AC145E27CA46F78C73EF7E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = sensor_fusion.hpp; path = src/sensor_fusion.hpp; sourceTree = SOURCE_ROOT; };
+		17AD4D624E5A4A368CCFE380 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = prediction.hpp; path = src/prediction.hpp; sourceTree = SOURCE_ROOT; };
+		2E1512B4DDF04087A57107A8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = behavior.cpp; path = src/behavior.cpp; sourceTree = SOURCE_ROOT; };
+		32939CF0F5E14B378266E0DC /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = path_common.hpp; path = src/path_common.hpp; sourceTree = SOURCE_ROOT; };
+		34495352A33C425D92A6A3EE /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		46ACE6198FD3414E9E5B0FB1 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = vehicle.hpp; path = src/vehicle.hpp; sourceTree = SOURCE_ROOT; };
+		56D070EFAC1A47C9A5E25262 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = trajectory.hpp; path = src/trajectory.hpp; sourceTree = SOURCE_ROOT; };
+		7B3A70CE3605461F9358523F /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = path_common.cpp; path = src/path_common.cpp; sourceTree = SOURCE_ROOT; };
+		7C4EE2EF579B4FDE93ED18BD /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = sensor_fusion.cpp; path = src/sensor_fusion.cpp; sourceTree = SOURCE_ROOT; };
+		814DDB1DE6834F3095434EEC /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		8550DC9A9A7B4BCF88216AC3 /* path_planning */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = path_planning; sourceTree = BUILT_PRODUCTS_DIR; };
+		923D1C36DD164CBF9D756FCF /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = vehicle.cpp; path = src/vehicle.cpp; sourceTree = SOURCE_ROOT; };
+		A22D0A1393264EB398FC5C35 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = trajectory.cpp; path = src/trajectory.cpp; sourceTree = SOURCE_ROOT; };
+		E24561C243384A209D872FC7 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = prediction.cpp; path = src/prediction.cpp; sourceTree = SOURCE_ROOT; };
+		E34B3A7ED1B4485EACD8BB8E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = main.cpp; path = src/main.cpp; sourceTree = SOURCE_ROOT; };
+		EBEA978EC4EA47A89EB02866 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = behavior.hpp; path = src/behavior.hpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		51CE1F3006974B25A5C2D95C /* ALL_BUILD */ = {
+		12E4F2F6CE4349FCAB992337 = {
 			isa = PBXGroup;
 			children = (
-				EE5B621E605C4692ACC7A136 /* CMake Rules */,
-				8965396897C548889FE0743B /* CMakeLists.txt */,
-			);
-			name = ALL_BUILD;
-			sourceTree = "<group>";
-		};
-		6D062653CB22416E8A5D8A56 = {
-			isa = PBXGroup;
-			children = (
-				BC1E664733A646E3A407FF69 /* path_planning */,
-				51CE1F3006974B25A5C2D95C /* ALL_BUILD */,
-				BD5B08B75B2A4FA8A831E282 /* ZERO_CHECK */,
-				E3F9CBDFA11C4198BB9BB31D /* Products */,
+				19E5AB5915E34801A1484723 /* path_planning */,
+				B037D2A6BB2C444A93B0AA34 /* ALL_BUILD */,
+				F2D72EBCB39147BD9C9E91C8 /* ZERO_CHECK */,
+				67B75A1309234529B7386E9A /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		BBEA5647DCAB48A4BBD2B997 /* CMake Rules */ = {
+		19E5AB5915E34801A1484723 /* path_planning */ = {
 			isa = PBXGroup;
 			children = (
-			);
-			name = "CMake Rules";
-			sourceTree = "<group>";
-		};
-		BC1E664733A646E3A407FF69 /* path_planning */ = {
-			isa = PBXGroup;
-			children = (
-				F0FA635EA65541D6BD0A51FF /* Source Files */,
-				D124768CF0A74CDCB1590AA3 /* Header Files */,
-				44A3E401665D4232BEE523A2 /* CMakeLists.txt */,
+				E2D245AAB1534BCD80F2DD3E /* Source Files */,
+				962AE724028A43EDA29490A1 /* Header Files */,
+				00D9AB8664014265803A9947 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */,
 			);
 			name = path_planning;
 			sourceTree = "<group>";
 		};
-		BD5B08B75B2A4FA8A831E282 /* ZERO_CHECK */ = {
+		67B75A1309234529B7386E9A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				BBEA5647DCAB48A4BBD2B997 /* CMake Rules */,
-				743E532CA05642B9BC0F9709 /* CMakeLists.txt */,
-			);
-			name = ZERO_CHECK;
-			sourceTree = "<group>";
-		};
-		D124768CF0A74CDCB1590AA3 /* Header Files */ = {
-			isa = PBXGroup;
-			children = (
-				6B6864676AEB495DBBAC7C26 /* behavior.hpp */,
-				363D3620905D4F8BBD5C6D4B /* path_common.hpp */,
-				1BFB6D9DE7A8460080A6A24E /* prediction.hpp */,
-				A66EAA3146BF4969A9ACF0DA /* sensor_fusion.hpp */,
-				E0729CEE295B4828B0FECF12 /* trajectory.hpp */,
-				5718A02CDB5B4E34A8750410 /* vehicle.hpp */,
-			);
-			name = "Header Files";
-			sourceTree = "<group>";
-		};
-		E3F9CBDFA11C4198BB9BB31D /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				D9C7CF94061A4B69B9A1A5C2 /* path_planning */,
+				8550DC9A9A7B4BCF88216AC3 /* path_planning */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		EE5B621E605C4692ACC7A136 /* CMake Rules */ = {
+		8C1089D3D7764679BFA3EBE8 /* CMake Rules */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = "CMake Rules";
 			sourceTree = "<group>";
 		};
-		F0FA635EA65541D6BD0A51FF /* Source Files */ = {
+		962AE724028A43EDA29490A1 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
-				6EC6E8590B8F49899E75C552 /* main.cpp */,
-				13B4F87E86404403902D97F8 /* behavior.cpp */,
-				3412933DBD834D22B7F87560 /* path_common.cpp */,
-				E7D602767BB5410CA1E37EC6 /* prediction.cpp */,
-				734EBBDCE9494D99BDBA9D22 /* sensor_fusion.cpp */,
-				15B06DA492064E44A6C37ED8 /* trajectory.cpp */,
-				8E12B00671554B98A850DE31 /* vehicle.cpp */,
+				EBEA978EC4EA47A89EB02866 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.hpp */,
+				32939CF0F5E14B378266E0DC /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.hpp */,
+				17AD4D624E5A4A368CCFE380 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.hpp */,
+				09AC145E27CA46F78C73EF7E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.hpp */,
+				56D070EFAC1A47C9A5E25262 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.hpp */,
+				46ACE6198FD3414E9E5B0FB1 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.hpp */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		A203D0454D264D9AB13017B1 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		B037D2A6BB2C444A93B0AA34 /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				A203D0454D264D9AB13017B1 /* CMake Rules */,
+				34495352A33C425D92A6A3EE /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */,
+			);
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		E2D245AAB1534BCD80F2DD3E /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				2E1512B4DDF04087A57107A8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.cpp */,
+				E34B3A7ED1B4485EACD8BB8E /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/main.cpp */,
+				7B3A70CE3605461F9358523F /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.cpp */,
+				E24561C243384A209D872FC7 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp */,
+				7C4EE2EF579B4FDE93ED18BD /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.cpp */,
+				A22D0A1393264EB398FC5C35 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp */,
+				923D1C36DD164CBF9D756FCF /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.cpp */,
 			);
 			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		F2D72EBCB39147BD9C9E91C8 /* ZERO_CHECK */ = {
+			isa = PBXGroup;
+			children = (
+				8C1089D3D7764679BFA3EBE8 /* CMake Rules */,
+				814DDB1DE6834F3095434EEC /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/CMakeLists.txt */,
+			);
+			name = ZERO_CHECK;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9A15A531B0A94FE8BB8958EC /* path_planning */ = {
+		17BF7D654FF54FB88C9DD6C6 /* path_planning */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9F78B337B4EF473ABCDE8E58 /* Build configuration list for PBXNativeTarget "path_planning" */;
+			buildConfigurationList = 0917F5B4374A41EEB9F87A1F /* Build configuration list for PBXNativeTarget "path_planning" */;
 			buildPhases = (
-				A8C489CE8C594C76BE971A78 /* Sources */,
+				0A0236F0FB804D1595FAA8EB /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				1D957DA3B6344BA1A1DACB18 /* PBXTargetDependency */,
+				0328E885B2E94CD5BD7ED26C /* PBXTargetDependency */,
 			);
 			name = path_planning;
 			productName = path_planning;
-			productReference = D9C7CF94061A4B69B9A1A5C2 /* path_planning */;
+			productReference = 8550DC9A9A7B4BCF88216AC3 /* path_planning */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		75E72B1303514D278517EE65 /* Project object */ = {
+		D8B4E6BBE741487F96902412 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 0920;
 			};
-			buildConfigurationList = D040393312ED49C1BC567349 /* Build configuration list for PBXProject "Path_Planning" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
+			buildConfigurationList = CB8B596484A8460DB1C0B370 /* Build configuration list for PBXProject "Path_Planning" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				790401F120F74F278A168BCD /* Debug */,
+				34857387DD1E45F1881B3270 /* Release */,
+				CBEE41638E3F4465859E6BAD /* MinSizeRel */,
+				66A285F8FC53430D8AEF7D86 /* RelWithDebInfo */,
 			);
-			mainGroup = 6D062653CB22416E8A5D8A56;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = 12E4F2F6CE4349FCAB992337;
 			projectDirPath = ../;
 			projectRoot = "";
 			targets = (
-				3CDD6E309F1045ABA21D0B0C /* ALL_BUILD */,
-				D68324DACBBA43BE972F5ED9 /* ZERO_CHECK */,
-				9A15A531B0A94FE8BB8958EC /* path_planning */,
+				67CEB809C0ED4BE5974A897A /* ALL_BUILD */,
+				CE51EB4D355F4B78931B7280 /* ZERO_CHECK */,
+				17BF7D654FF54FB88C9DD6C6 /* path_planning */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		77A2EFB6231E4EF79CF39408 /* CMake Rules */ = {
+		025EEFD2DE7A4895A36F56F6 /* CMake Rules */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -233,7 +275,37 @@
 			shellScript = "make -C /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild -f /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
-		A66493B0233D4F8980F454DB /* CMake Rules */ = {
+		7AF255A86CDC429293C8235B = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		7B88202C52BF48AA9FEE2562 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		DD8F4F0ED1504ECB82868812 /* CMake Rules */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -247,42 +319,42 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A8C489CE8C594C76BE971A78 /* Sources */ = {
+		0A0236F0FB804D1595FAA8EB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF6669E94BA34A9395BE699F /* behavior.cpp in Sources */,
-				128451F9173D4394A324CD59 /* main.cpp in Sources */,
-				75FDD2FAA68E4BB492B6F7CA /* path_common.cpp in Sources */,
-				DBF1E0FC38C341B28390451F /* prediction.cpp in Sources */,
-				142D3813232D4642B712A390 /* sensor_fusion.cpp in Sources */,
-				3E732C98D1B344F29B806735 /* trajectory.cpp in Sources */,
-				38932D50229B41B8B9D0DB29 /* vehicle.cpp in Sources */,
+				95A0E38AE38E4728BE8C00C2 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/behavior.cpp */,
+				AC49ECF5D4AC481CACEFC2CD /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/main.cpp */,
+				EFD090B70D0C463B97C5CAA8 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/path_common.cpp */,
+				7697B53B5710402CB135F746 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/prediction.cpp */,
+				F5552BAFF3A148A1B7B3B4F6 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/sensor_fusion.cpp */,
+				554C073270EB4A4198A6A4B0 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/trajectory.cpp */,
+				920C65481B714A97957120E2 /* /Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/src/vehicle.cpp */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		1D957DA3B6344BA1A1DACB18 /* PBXTargetDependency */ = {
+		0328E885B2E94CD5BD7ED26C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D68324DACBBA43BE972F5ED9 /* ZERO_CHECK */;
-			targetProxy = 3826A5B9FBF74D61AE894C07 /* PBXContainerItemProxy */;
+			target = CE51EB4D355F4B78931B7280 /* ZERO_CHECK */;
+			targetProxy = 1D41308A579748099397DB38 /* PBXContainerItemProxy */;
 		};
-		1E77EF133B0A40B9A65DC53F /* PBXTargetDependency */ = {
+		27BF2BF4DF554B75A245B280 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D68324DACBBA43BE972F5ED9 /* ZERO_CHECK */;
-			targetProxy = 4DD85D53A34542D9A83DE477 /* PBXContainerItemProxy */;
+			target = CE51EB4D355F4B78931B7280 /* ZERO_CHECK */;
+			targetProxy = 137913590CB54153B8CDF2F3 /* PBXContainerItemProxy */;
 		};
-		A95375C323D648C2AB7F35D7 /* PBXTargetDependency */ = {
+		4855CBFAF2C24B439BDB9748 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9A15A531B0A94FE8BB8958EC /* path_planning */;
-			targetProxy = 7C251AA80C8A4026B7BEE45A /* PBXContainerItemProxy */;
+			target = 17BF7D654FF54FB88C9DD6C6 /* path_planning */;
+			targetProxy = C5ED917CDBB04136BB547EE6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		052BB135A1FC4A6C9464445C /* MinSizeRel */ = {
+		02171D9F134E4C2AAD9652D2 /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ONLY_ACTIVE_ARCH = YES;
@@ -291,174 +363,7 @@
 			};
 			name = MinSizeRel;
 		};
-		06C0D2D1B5854A09ADC9CC89 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Debug;
-		};
-		138BF8D2E50C48A9B5BBE092 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = MinSizeRel;
-		};
-		14DF430259B14B448F83528B /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = MinSizeRel;
-		};
-		2BE51CAE576641D3AA04F50F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Release;
-		};
-		3746FF2112D848A4B5838D89 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
-				LIBRARY_SEARCH_PATHS = (
-					"/usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/lib,
-					"/usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/opt/openssl/lib,
-					"/usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/Cellar/libuv/1.11.0/lib,
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"-std=c++11",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					"-lz",
-					"-lssl",
-					"-luv",
-					"-luWS",
-				);
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = path_planning;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = MinSizeRel;
-		};
-		68F340B95FB8484C94CFDA0F /* Release */ = {
+		08FCCB507A684472AE77C6EF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ONLY_ACTIVE_ARCH = YES;
@@ -467,125 +372,7 @@
 			};
 			name = Release;
 		};
-		707B0A3538994E2890D36071 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
-				LIBRARY_SEARCH_PATHS = (
-					"/usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/lib,
-					"/usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/opt/openssl/lib,
-					"/usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/Cellar/libuv/1.11.0/lib,
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"-std=c++11",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					"-lz",
-					"-lssl",
-					"-luv",
-					"-luWS",
-				);
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = path_planning;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Release;
-		};
-		827261FFB84F4F15841F4DA1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild/build";
-			};
-			name = Debug;
-		};
-		8661ED7D7B944C27AF2F6BE0 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = RelWithDebInfo;
-		};
-		B4D0EB958A35413BA52CFC20 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Debug;
-		};
-		C88E2A67B60D45C8A441B987 /* Debug */ = {
+		0FA2EFAC95244BC49268802A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -594,84 +381,24 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
 				INSTALL_PATH = "";
 				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
-				LIBRARY_SEARCH_PATHS = (
-					"/usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/lib,
-					"/usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/opt/openssl/lib,
-					"/usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/Cellar/libuv/1.11.0/lib,
-				);
+				LIBRARY_SEARCH_PATHS = " /usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/lib /usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/Cellar/libuv/1.11.0/lib";
 				OTHER_CPLUSPLUSFLAGS = "     -std=c++11";
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					"-lz",
-					"-lssl",
-					"-luv",
-					"-luWS",
-				);
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -lz -lssl -luv -luWS";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = path_planning;
 				SECTORDER_FLAGS = "";
 				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Debug;
 		};
-		D40C853B18AD4962987A668A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Release;
-		};
-		D728DE26680C4D84AAAD72DF /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild/build";
-			};
-			name = RelWithDebInfo;
-		};
-		EAA54234BD9C463FA5551210 /* RelWithDebInfo */ = {
+		1E8238B4B2814DB7A02BEEBB /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -680,61 +407,110 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 2;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
 				INSTALL_PATH = "";
 				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
-				LIBRARY_SEARCH_PATHS = (
-					"/usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/lib,
-					"/usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/opt/openssl/lib,
-					"/usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
-					/usr/local/Cellar/libuv/1.11.0/lib,
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"-std=c++11",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					"-lz",
-					"-lssl",
-					"-luv",
-					"-luWS",
-				);
+				LIBRARY_SEARCH_PATHS = " /usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/lib /usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/Cellar/libuv/1.11.0/lib";
+				OTHER_CPLUSPLUSFLAGS = "       -DNDEBUG   -std=c++11";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -lz -lssl -luv -luWS";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = path_planning;
 				SECTORDER_FLAGS = "";
 				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = RelWithDebInfo;
 		};
-		FD696BC6B9CD4088BF4E440D /* RelWithDebInfo */ = {
+		221B15A0B2A147FEB38F133C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					/usr/local/opt/openssl/include,
-				);
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		4BFDBF508C6E4503891195EC /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		6906228C7F634E11BFE0679B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
+				LIBRARY_SEARCH_PATHS = " /usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/lib /usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/Cellar/libuv/1.11.0/lib";
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   -std=c++11";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -lz -lssl -luv -luWS";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = path_planning;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		8CA22DFC11F64FCBAFE37BBB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild/build";
+			};
+			name = Debug;
+		};
+		9B35CD257D1E4F04A554391B /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
@@ -742,63 +518,198 @@
 				SECTORDER_FLAGS = "";
 				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		B7F174F1A7ED41EC8EE779CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		B82C3D95647C490E967451AD /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		B833F96DF8B34057AC4689FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		C2A150F036644CEB8158FF52 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = "/usr/local/lib /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib";
+				LIBRARY_SEARCH_PATHS = " /usr/local/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/lib /usr/local/opt/openssl/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/opt/openssl/lib /usr/local/Cellar/libuv/1.11.0/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /usr/local/Cellar/libuv/1.11.0/lib";
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   -std=c++11";
+				OTHER_LDFLAGS = " -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -lz -lssl -luv -luWS";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = path_planning;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		E67B5C8C285E4674A0352856 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		E78A47C2836D4015B4979CB1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include,/usr/local/opt/openssl/include);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		F1CFCBFB1A4C46E9BB98030C /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = "/Users/student/Udacity/sdcn3/1_Path_Planning/MyProject/CarND-Path-Planning-Project-P11/xbuild/build";
 			};
 			name = RelWithDebInfo;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		79F766B045B84C019ED9339B /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+		0917F5B4374A41EEB9F87A1F /* Build configuration list for PBXNativeTarget "path_planning" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B4D0EB958A35413BA52CFC20 /* Debug */,
-				2BE51CAE576641D3AA04F50F /* Release */,
-				14DF430259B14B448F83528B /* MinSizeRel */,
-				8661ED7D7B944C27AF2F6BE0 /* RelWithDebInfo */,
+				0FA2EFAC95244BC49268802A /* Debug */,
+				6906228C7F634E11BFE0679B /* Release */,
+				C2A150F036644CEB8158FF52 /* MinSizeRel */,
+				1E8238B4B2814DB7A02BEEBB /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		9F78B337B4EF473ABCDE8E58 /* Build configuration list for PBXNativeTarget "path_planning" */ = {
+		4B6203511E29464989FA395D /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C88E2A67B60D45C8A441B987 /* Debug */,
-				707B0A3538994E2890D36071 /* Release */,
-				3746FF2112D848A4B5838D89 /* MinSizeRel */,
-				EAA54234BD9C463FA5551210 /* RelWithDebInfo */,
+				221B15A0B2A147FEB38F133C /* Debug */,
+				B7F174F1A7ED41EC8EE779CA /* Release */,
+				4BFDBF508C6E4503891195EC /* MinSizeRel */,
+				B82C3D95647C490E967451AD /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		D040393312ED49C1BC567349 /* Build configuration list for PBXProject "Path_Planning" */ = {
+		5761C94B7AE348BB9F7919D9 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				827261FFB84F4F15841F4DA1 /* Debug */,
-				68F340B95FB8484C94CFDA0F /* Release */,
-				052BB135A1FC4A6C9464445C /* MinSizeRel */,
-				D728DE26680C4D84AAAD72DF /* RelWithDebInfo */,
+				B833F96DF8B34057AC4689FE /* Debug */,
+				E78A47C2836D4015B4979CB1 /* Release */,
+				E67B5C8C285E4674A0352856 /* MinSizeRel */,
+				9B35CD257D1E4F04A554391B /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		FF06BB7B8CAB499CB81DB65B /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+		CB8B596484A8460DB1C0B370 /* Build configuration list for PBXProject "Path_Planning" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				06C0D2D1B5854A09ADC9CC89 /* Debug */,
-				D40C853B18AD4962987A668A /* Release */,
-				138BF8D2E50C48A9B5BBE092 /* MinSizeRel */,
-				FD696BC6B9CD4088BF4E440D /* RelWithDebInfo */,
+				8CA22DFC11F64FCBAFE37BBB /* Debug */,
+				08FCCB507A684472AE77C6EF /* Release */,
+				02171D9F134E4C2AAD9652D2 /* MinSizeRel */,
+				F1CFCBFB1A4C46E9BB98030C /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 75E72B1303514D278517EE65 /* Project object */;
+	rootObject = D8B4E6BBE741487F96902412 /* Project object */;
 }

@@ -1,140 +1,202 @@
-# CarND-Path-Planning-Project
-Self-Driving Car Engineer Nanodegree Program
-   
-### Simulator.
-You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
+# **Path Planning Project**
 
-### Goals
-In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 10 m/s^3.
+**Udacity Self Driving Car Nanodegree - Project #11**
 
-#### The map of the highway is in data/highway_map.txt
-Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
+2018/02/06
 
-The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
+## Overview
 
-## Basic Build Instructions
+This project implements a **Path Planning** algorithm in C++ to **autonomously drive a simulated vehicle (ego car) around a freeway track** through various traffic conditions.
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./path_planning`.
+The vehicle must always stay below a **50 mph speed limit** and must also maintain **acceleration <10 m/s^2** and **jerk <10 m/s^3** while **staying in the lanes** to prevent violation incidents that reset the distance and time counters.  The vehicle drives by moving to each (x,y) coordinate in the path every 20 ms without any filtering or vehicle dynamics.  The path planner must continuously provide a new path that is seamlessly connected to the previous path despite possible communication delays with the simulator.
 
-Here is the data provided from the Simulator to the C++ Program
+The other vehicles vary their speed at +/- 10 mph from the 50 mph limit and may also change lanes, swerve, or do hard braking so **the path planner must be able to control speed and change lanes safely and smoothly to avoid collisions while trying to keep close to the 50 mph target limit.**
 
-#### Main car's localization Data (No Noise)
+#### Video of project result:
 
-["x"] The car's x position in map coordinates
+[<img src="./images/path_video_screenshot.png" width="800">](https://vimeo.com/254558470)
 
-["y"] The car's y position in map coordinates
+## Project Reflection
 
-["s"] The car's s position in frenet coordinates
+Path planning is one of the most challenging parts of a self-driving car because it incorporates the high-level "brains" of the driving behavior.  This project integrates the following parts:
 
-["d"] The car's d position in frenet coordinates
+1. **Sensor Fusion** - Gather and process data about the vehicle's state and the surrounding vehicles
+2. **Prediction** - Estimate where the surrounding vehicles will be over a finite time horizon
+3. **Behavior Planning** - Decide the vehicle's driving intent and target operating conditions
+4. **Trajectory Generation** - Make a path trajectory that achieves the behavior target safely
+5. **Control** - Actuate the vehicle to follow the planned path trajectory
 
-["yaw"] The car's yaw angle in the map
+<img src="./images/control_overview.png" width="400">
 
-["speed"] The car's speed in MPH
+*Image source: Udacity Behavioral Planning lesson video*
 
-#### Previous path data given to the Planner
+#### 1. Sensor Fusion
 
-//Note: Return the previous list but with processed points removed, can be a nice tool to show how far along
-the path has processed since last time. 
+In this project, the simulator provides some sensor data already processed for localization of the vehicle's global (x,y) position, the surrounding vehicles' global (x,y) positions and (vx,vy) velocities, and the previous path coordinates that have not been driven yet.  A map of sparse waypoints around the freeway track is also provided.  However, some **additional processing was needed** to prepare the data for path planning.
 
-["previous_path_x"] The previous list of x points previously given to the simulator
+For this section, the following steps were implemented:
 
-["previous_path_y"] The previous list of y points previously given to the simulator
+1. Process previous ego car path to determine where in the path the ego car is now
+2. Use received (x,y) to update the ego car's state (convert to Frenet with custom functions)
+3. Process detected cars within sensor range (to realistically limit available info)
+4. Group detected car ID's by lane # for easier lookups
 
-#### Previous path's end s and d values 
+In order to simplify the coordinate system, all (x,y) coordinates are converted to **[Frenet](https://en.wikipedia.org/wiki/Frenet–Serret_formulas) (s,d) coordinates**, where **s** is the tangential distance along the road centerline and **d** is the normal (lateral) distance from the road centerline.  The original provided Frenet conversion functions were not accurate enough to generate smooth paths from direct (s,d)->(x,y) conversion, so a **custom Frenet conversion implementation** was made instead to avoid the need for spline interpolation of the path trajectory.  Splines were only used to interpolate the sparse map waypoints to a higher resolution.
 
-["end_path_s"] The previous list's last point's frenet s value
+The Frenet (s,d) coordinates were then used to estimate each vehicle's state (s, s_dot, s_dotdot, d, d_dot, d_dotdot) and lane position.
 
-["end_path_d"] The previous list's last point's frenet d value
+#### 2. Prediction
 
-#### Sensor Fusion Data, a list of all other car's attributes on the same side of the road. (No Noise)
+Once the detected surrounding vehicles' states are known, their estimated paths can be predicted over a finite time horizon (~1.5 sec) with some probabilities that account for the prediction uncertainty.  These **predictions are needed to be able to choose a trajectory that considers the possible risk of collision with these surrounding vehicles at some future point in the path**.
 
-["sensor_fusion"] A 2d vector of cars and then that car's [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, car's s position in frenet coordinates, car's d position in frenet coordinates. 
+For this section, the following step was implemented:
 
-## Details
+1. Predict detected car trajectories over fixed time horizon for each possible behavior with associated probabilities
 
-1. The car uses a perfect controller and will visit every (x,y) point it recieves in the list every .02 seconds. The units for the (x,y) points are in meters and the spacing of the points determines the speed of the car. The vector going from a point to the next point in the list dictates the angle of the car. Acceleration both in the tangential and normal directions is measured along with the jerk, the rate of change of total Acceleration. The (x,y) point paths that the planner recieves should not have a total acceleration that goes over 10 m/s^2, also the jerk should not go over 50 m/s^3. (NOTE: As this is BETA, these requirements might change. Also currently jerk is over a .02 second interval, it would probably be better to average total acceleration over 1 second and measure jerk from that.
+Some estimations were made about the probabilities of a surrounding vehicle keeping it's lane or changing lanes and at what speed it would maintain based on the other vehicles around it.  The surrounding vehicle's start/end state acceleration for the predicted time horizon was assumed to be zero.
 
-2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
+#### 3. Behavior Planning
 
-## Tips
+The behavior planning section performs the highest level decision making to choose a target behavior including target lane, target intent, target speed, and target time to achieve them.  The surrounding vehicles are considered when setting these targets, but possible collisions are not factored in so that the ideal overall target is not restricted.
 
-A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
+For this section, the following steps were implemented:
 
----
+1. Decide the **target lane** to be in based on a **cost function**
+2. Decide **target intent** based on the target lane using a **Finite State Machine** with the following states:
+*Keep Lane, Plan Lane Change Left, Plan Lane Change Right, Lane Change Left, Lane Change Right*
+3. Decide **target time** for the planned path
+4. Decide **target speed** for the end of the planned path
 
-## Dependencies
+The target lane is chosen using a cost function that considers:
+
+* Cost by distance to car ahead
+* Cost by speed of car ahead
+* Cost of fast car coming up from close behind
+* Cost of changing lanes
+* Cost of frequent lane changes
+
+The target speed is limited to follow the car ahead and also considers the speed of a car in the target lane when changing lanes.
+
+The target path time is usually a fixed value of 2.5 sec for smooth transitions, but can be shortened to 1.5 sec for faster response if the risk of collision is high.
+
+#### 4. Trajectory Generation
+
+Once a target behavior is decided, a final trajectory needs to be generated to achieve it while avoiding possible collisions with surrounding vehicles.
+
+For this section, the following steps were implemented:
+
+1. Keep some of the previous path as a buffer to start the next trajectory
+2. **Generate a new ego car path trajectory** to achieve the target behavior
+3. Append the new trajectory after the previous path buffer
+
+Due to communication latency between the simulator and path planner, a portion of the previous path (~0.5 sec) is kept as a buffer and the new path is appended after that to keep smooth continuous transitions.
+
+Starting from the end of the previous path buffer, the **new trajectory is generated by solving for a [Jerk Minimizing Trajectory (JMT)](http://courses.shadmehrlab.org/Shortcourse/minimumjerk.pdf) set of polynomial coefficients (5th order)** that connect the start state to the target end state.  This is done for Frenet s and d separately, and the corresponding state variables are (s, s_dot, s_dotdot) and (d, d_dot, d_dotdot).
+
+To **decide the best trajectory that also avoids collisions** with surrounding vehicles, the following steps were implemented:
+
+1. Generate **multiple trajectories with random variations** in target speed and time
+2. Limit the trajectories' max speed and accel in (x,y) to stay within **feasibility limits**
+3. **Assign a cost to each trajectory** based on **accumulated collision risk** from the predicted paths of detected vehicles, and the **amount of deviation** from the base target
+4. Add a **backup trajectory** to keep current lane and slightly slow down in case all other trajs have risk cost above an allowable threshold
+5. Select the **final trajectory with the lowest cost**
+
+The trajectory in Frenet (s,d) coordinates is then **converted directly to (x,y) coordinates** as the final trajectory with the custom conversion functions.
+
+#### 5. Control
+
+The simulator follows the path by simply moving the vehicle to each coordinate every 20 ms, so **no actual vehicle controller is needed in this project**.  In a real vehicle, a PID or MPC controller could use the final trajectory to decide vehicle control inputs (throttle, steering, etc) to actuate it but the purpose of this project is to focus on the path planning portion so the raw path trajectory coordinates are the final output sent to the simulator.
+
+For this section, the following steps were implemented:
+
+1. Pack and send JSON path trajectory coordinates
+
+## Endurance Test Result
+
+As an additional test, the path planner was able to complete driving **50 miles in 1 hour 4 minutes (ave 47 mph)** keeping speed close to the 50 mph target limit without any violation incidents, shown in the image below.
+
+<img src="./images/path_endurance_1hr.png" width="600">
+
+## Key Files
+
+| File                         | Description                                                                                                                       |
+|:----------------------------:|:---------------------------------------------------------------------------------------------------------------------------------:|
+| /src/main.cpp                | Source code for **main loop** that handles **uWebSockets communication to simulator** and implements the **overall path planner** |
+| /src/path_common.cpp, .hpp   | Source code for **common parameters** and **helper functions**, such as the **custom Frenet conversion functions**                |
+| /src/vehicle.cpp, .hpp       | Source code for **Vehicle** base class, **EgoVehicle** and **DetectedVehicle** subclasses, and general vehicle functions          |
+| /src/sensor_fusion.cpp, .hpp | Source code for **Sensor Fusion** algorithm that processes the provided sensor data to update the vehicles' states                |
+| /src/prediction.cpp, .hpp    | Source code for **Prediction** algorithm that estimates the future possible paths of the surrounding vehicles                     |
+| /src/behavior.cpp, .hpp      | Source code for **Behavior Planning** algorithm that chooses a target driving behavior                                            |
+| /src/trajectory.cpp, .hpp    | Source code for **Trajectory Generation** algorithm that makes a path trajectory to achieve the target behavior                   |
+| /src/spline.h                | Source code for [Cubic Spline interpolation in C++](http://kluge.in-chemnitz.de/opensource/spline/), used to interpolate the sparse map waypoints to a higher resolution |
+| /data/highway_map.csv        | Map of sparse waypoints along the centerline of the road                                                                          |
+| /build/path_planning         | Output **executable program binary**                                                                                              |
+| install-mac.sh               | Script for Mac to install uWebSocketIO required to interface with simulator                                                       |
+| install-ubuntu.sh            | Script for Linux to install uWebSocketIO required to interface with simulator                                                     |
+
+The original Udacity project repository is [here](https://github.com/udacity/CarND-Path-Planning-Project).
+
+## How to Build and Run Code
+
+This project involves the Udacity Term 3 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2)
+
+This repository includes two scripts (**install-mac.sh** and **install-ubuntu.sh**) that can be used to set up and install [uWebSocketIO](https://github.com/uWebSockets/uWebSockets) for either Linux or Mac systems.
+
+Once the install for uWebSocketIO is complete, the main program can be built and run by doing the following from the project top directory.
+
+1. mkdir build
+2. cd build
+3. cmake ..
+4. make
+5. ./path_planning
+
+If using Xcode to build, run the following commands:
+
+1. mkdir xbuild
+2. cd xbuild
+3. cmake -G "Xcode" ..
+4. Open "Path_Planning.xcodeproj" in Xcode and build
+5. cd Debug
+6. ./path_planning
+
+## Other Important Dependencies
 
 * cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1
+  * All OSes: [click here for installation instructions](https://cmake.org/install/)
+
+* make >= 4.1 (Linux, Mac), 3.81 (Windows)
   * Linux: make is installed by default on most Linux distros
   * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
   * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
+
 * gcc/g++ >= 5.4
   * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
+  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
   * Windows: recommend using [MinGW](http://www.mingw.org/)
-* [uWebSockets](https://github.com/uWebSockets/uWebSockets)
-  * Run either `install-mac.sh` or `install-ubuntu.sh`.
-  * If you install from source, checkout to commit `e94b6e1`, i.e.
-    ```
-    git clone https://github.com/uWebSockets/uWebSockets 
-    cd uWebSockets
-    git checkout e94b6e1
-    ```
 
-## Editor Settings
+* uWebSockets (see above)
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+* [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). This is already part of the repo so you shouldn't have to worry about it.
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+* [Cubic Spline interpolation in C++](http://kluge.in-chemnitz.de/opensource/spline/)
 
-## Code Style
+## Communication protocol between uWebSocketIO and Simulator
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+**INPUT to main.cpp**: values provided by the simulator to the C++ program
 
-## Project Instructions and Rubric
+* ["x"] The car's x position in map coordinates
+* ["y"] The car's y position in map coordinates
+* ["previous_path_x"] The previous list of x points previously given to the simulator
+* ["previous_path_y"] The previous list of y points previously given to the simulator
+* ["sensor_fusion"] A 2d vector of cars and then that car's sensed data [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, *car's s position in frenet coordinates* **(NOT USED)**, *car's d position in frenet coordinates* **(NOT USED)**].
+* *["s"] The car's s position in frenet coordinates* **(NOT USED)**
+* *["d"] The car's d position in frenet coordinates* **(NOT USED)**
+* *["yaw"] The car's yaw angle in the map* **(NOT USED)**
+* *["speed"] The car's speed in MPH* **(NOT USED)**
+* *["end_path_s"] The previous list's last point's frenet s value* **(NOT USED)**
+* *["end_path_d"] The previous list's last point's frenet d value* **(NOT USED)**
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+**OUTPUT from main.cpp**: values provided by the C++ program to the simulator
 
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+* ["next_x"] Path x coordinates for the car to drive along
+* ["next_y"] Path y coordinates for the car to drive along

@@ -308,7 +308,7 @@ int main() {
              *   1. Keep some of prev path as a buffer to start the next traj
              *   2. Generate a new ego car path trajectory to achieve the
              *      target behavior
-             *  3. Append the new traj after the prev path buffer
+             *   3. Append the new traj after the prev path buffer
              *
              * Output:
              *   ego_car.traj_ : Final trajectory for ego car
